@@ -1,0 +1,56 @@
+{
+  "languages": {
+    "JavaScript": {
+      "formatter": {
+        "external": {
+          "command": "bunx",
+          "arguments": [
+            "biome",
+            "format",
+            "--stdin-file-path",
+            "{buffer_path}",
+          ],
+        },
+      },
+    },
+    "TypeScript": {
+      "formatter": {
+        "external": {
+          "command": "bunx",
+          "arguments": [
+            "biome",
+            "format",
+            "--stdin-file-path",
+            "{buffer_path}",
+          ],
+        },
+      },
+    },
+    "JSON": {
+      "formatter": {
+        "external": {
+          "command": "bunx",
+          "arguments": [
+            "biome",
+            "format",
+            "--stdin-file-path",
+            "{buffer_path}",
+          ],
+        },
+      },
+    },
+    "JSONC": {
+      "formatter": {
+        "external": {
+          "command": "bunx",
+          "arguments": [
+            "biome",
+            "format",
+            "--stdin-file-path",
+            "{buffer_path}",
+          ],
+        },
+      },
+    },
+  },
+}
