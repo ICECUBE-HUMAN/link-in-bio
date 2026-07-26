@@ -9,10 +9,11 @@ import { useEffect, useState } from "react";
 import { Gear, Loader, StackPerspective } from "reicon-react";
 import { EditableParagraph } from "@/components/page/editable-paragraph";
 import { PageImageEditor } from "@/components/page/page-image-editor";
-import { usePageAutoSave } from "@/components/page/use-page-auto-save";
 import { Button } from "@/components/ui/button";
 import { getPageByHandleQueryOptions } from "@/lib/api/pages.functions";
 import { getSessionQueryOptions } from "@/lib/api/session.functions";
+import { getPageMode } from "@/lib/page/page-mode";
+import { usePageAutoSave } from "@/lib/page/use-page-auto-save";
 
 type HandleLoaderData = {
 	page: PageResponse;
@@ -20,25 +21,19 @@ type HandleLoaderData = {
 };
 
 export const Route = createFileRoute("/$handle")({
-	beforeLoad: async ({ context }) => {
-		const { data: session } = await context.queryClient.ensureQueryData(
-			getSessionQueryOptions(),
-		);
+	loader: async ({ context, params }): Promise<HandleLoaderData> => {
+		const [{ data: session }, result] = await Promise.all([
+			context.queryClient.ensureQueryData(getSessionQueryOptions()),
+			context.queryClient.ensureQueryData(
+				getPageByHandleQueryOptions(params.handle),
+			),
+		]);
 
 		if (session?.user && !session.user.primaryPageId) {
 			throw redirect({
 				to: "/new",
 			});
 		}
-
-		return {
-			sessionUserId: session?.user.id ?? null,
-		};
-	},
-	loader: async ({ context, params }): Promise<HandleLoaderData> => {
-		const result = await context.queryClient.ensureQueryData(
-			getPageByHandleQueryOptions(params.handle),
-		);
 
 		if (!result) {
 			throw notFound({
@@ -48,7 +43,7 @@ export const Route = createFileRoute("/$handle")({
 
 		return {
 			page: result.page,
-			isCurrentUserPage: context.sessionUserId === result.page.userId,
+			isCurrentUserPage: session?.user.id === result.page.userId,
 		};
 	},
 	component: HandlePage,
@@ -56,11 +51,13 @@ export const Route = createFileRoute("/$handle")({
 
 function HandlePage() {
 	const loaderData = Route.useLoaderData();
-	const { page } = loaderData;
+	const { page, isCurrentUserPage } = loaderData;
+	const mode = getPageMode(isCurrentUserPage);
 	const [isAsideShown, setIsAsideShown] = useState(false);
 	const { draft, status, updateField } = usePageAutoSave({
 		page,
 		handle: page.handle,
+		enabled: mode === "edit",
 	});
 
 	useEffect(() => {
@@ -79,6 +76,7 @@ function HandlePage() {
 							<PageImageEditor
 								initialImage={draft.image}
 								handle={page.handle}
+								mode={mode}
 								onImageChange={(image) => updateField("image", image)}
 							/>
 						</div>
@@ -86,16 +84,18 @@ function HandlePage() {
 							<EditableParagraph
 								value={draft.name}
 								placeholder="Name"
+								mode={mode}
 								onChange={(name) => updateField("name", name)}
 								rows={1}
-								className="t-stagger-line t-stagger-line--2 text-3xl font-bold leading-tight tracking-tight xl:text-4xl"
+								className="t-stagger-line t-stagger-line--2 text-3xl font-bold leading-tight tracking-tight xl:text-[40px]"
 							/>
 							<EditableParagraph
 								value={draft.bio}
 								placeholder="Tell about you"
+								mode={mode}
 								onChange={(bio) => updateField("bio", bio)}
 								rows={2}
-								className="t-stagger-line t-stagger-line--3 px-0.5 text-base leading-6 text-primary/80 xl:text-lg"
+								className="t-stagger-line t-stagger-line--3 px-0.5 text-base leading-6 text-primary/80 xl:text-xl"
 							/>
 						</div>
 					</aside>

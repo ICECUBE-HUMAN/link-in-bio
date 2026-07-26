@@ -8,12 +8,14 @@ import {
 type PageImageEditorProps = {
 	initialImage: string | null;
 	handle: string;
+	mode: "view" | "edit";
 	onImageChange: (image: string) => void;
 };
 
 export function PageImageEditor({
 	initialImage,
 	handle,
+	mode,
 	onImageChange,
 }: PageImageEditorProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -60,30 +62,45 @@ export function PageImageEditor({
 		}
 	}
 
+	const imageContent = image ? (
+		<img
+			className="size-full object-cover"
+			src={image}
+			alt="Profile"
+			loading="eager"
+		/>
+	) : mode === "edit" ? (
+		<div>
+			<Upload3 weight="Filled" className="" size={32} />
+		</div>
+	) : null;
+	const imageClassName =
+		"flex size-28 items-center justify-center overflow-hidden rounded-full bg-secondary/80 text-sm font-medium text-muted-foreground/60 sm:size-32 xl:size-46";
+
 	return (
 		<div className="flex flex-col items-start gap-3">
-			<input
-				ref={inputRef}
-				type="file"
-				accept="image/*"
-				hidden
-				onChange={handleImageChange}
-			/>
-			<button
-				type="button"
-				aria-label="Change profile image"
-				disabled={isUploading}
-				className="flex size-28 xl:size-46 items-center justify-center overflow-hidden rounded-full bg-secondary/80 text-sm font-medium text-muted-foreground/60 transition-transform duration-150 ease-out hover:bg-muted active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring sm:size-32"
-				onClick={() => inputRef.current?.click()}
-			>
-				{image ? (
-					<img className="size-full object-cover" src={image} alt="Profile" loading="eager" />
-				) : (
-					<div>
-						<Upload3 weight="Filled" className="" size={32} />
-					</div>
-				)}
-			</button>
+			{mode === "edit" ? (
+				<input
+					ref={inputRef}
+					type="file"
+					accept="image/*"
+					hidden
+					onChange={handleImageChange}
+				/>
+			) : null}
+			{mode === "edit" ? (
+				<button
+					type="button"
+					aria-label="Change profile image"
+					disabled={isUploading}
+					className={`${imageClassName} transition-transform duration-150 ease-out hover:bg-muted active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring`}
+					onClick={() => inputRef.current?.click()}
+				>
+					{imageContent}
+				</button>
+			) : (
+				<div className={imageClassName}>{imageContent}</div>
+			)}
 			{error ? <p className="text-xs text-destructive">{error}</p> : null}
 		</div>
 	);
