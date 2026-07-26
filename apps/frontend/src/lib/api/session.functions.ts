@@ -46,12 +46,13 @@ export const getSession = createServerFn({ method: "GET" }).handler(
 );
 
 export const SESSION_QUERY_KEY = ["auth", "session"] as const;
+export const SESSION_STALE_TIME_MS = 30_000;
 
 export function getSessionQueryOptions() {
 	return queryOptions({
 		queryKey: SESSION_QUERY_KEY,
 		queryFn: getSession,
-		staleTime: 0,
+		staleTime: SESSION_STALE_TIME_MS,
 	});
 }
 

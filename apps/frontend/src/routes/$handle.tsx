@@ -1,9 +1,11 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { getSession } from "@/lib/api/session.functions";
+import { getSessionQueryOptions } from "@/lib/api/session.functions";
 
 export const Route = createFileRoute("/$handle")({
-	beforeLoad: async () => {
-		const { data: session } = await getSession();
+	beforeLoad: async ({ context }) => {
+		const { data: session } = await context.queryClient.ensureQueryData(
+			getSessionQueryOptions(),
+		);
 
 		if (session?.user && !session.user.primaryPageId) {
 			throw redirect({

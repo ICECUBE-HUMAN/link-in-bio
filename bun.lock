@@ -44,6 +44,7 @@
         "@fontsource/open-runde": "^5.2.1",
         "@phosphor-icons/react": "^2.1.10",
         "@shadcn/react": "^0.2.0",
+        "@sinabro/api": "workspace:*",
         "@sinabro/backend": "workspace:*",
         "@t3-oss/env-core": "^0.13.10",
         "@tailwindcss/vite": "^4.1.18",
@@ -93,6 +94,7 @@
         "tw-animate-css": "^1.3.6",
         "unified": "^11.0.5",
         "unist-util-visit": "^5.1.0",
+        "valibot": "^1.4.2",
         "vaul": "^1.1.2",
       },
       "devDependencies": {
