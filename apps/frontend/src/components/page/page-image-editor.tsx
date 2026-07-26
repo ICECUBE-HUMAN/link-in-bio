@@ -77,7 +77,7 @@ export function PageImageEditor({
 				onClick={() => inputRef.current?.click()}
 			>
 				{image ? (
-					<img className="size-full object-cover" src={image} alt="Profile" />
+					<img className="size-full object-cover" src={image} alt="Profile" loading="eager" />
 				) : (
 					<div>
 						<Upload3 weight="Filled" className="" size={32} />
