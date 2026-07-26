@@ -21,7 +21,8 @@ export function PageImageEditor({ initialImage }: PageImageEditorProps) {
 		const file = event.target.files?.[0];
 		if (!file) return;
 
-		setImage(URL.createObjectURL(file));
+		const previewUrl = URL.createObjectURL(file);
+		setImage(previewUrl);
 	}
 
 	return (
@@ -41,10 +42,10 @@ export function PageImageEditor({ initialImage }: PageImageEditorProps) {
 			>
 				{image ? (
 					<img className="size-full object-cover" src={image} alt="Profile" />
-        ) : (
-            <div>
-              <Upload3 weight="Filled" className="" size={32} />
-            </div>
+				) : (
+					<div>
+						<Upload3 weight="Filled" className="" size={32} />
+					</div>
 				)}
 			</button>
 		</div>

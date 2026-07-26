@@ -1,32 +1,28 @@
-import { useRef } from "react";
+import type { ChangeEvent } from "react";
 
 type EditableParagraphProps = {
-	initialValue: string | null;
+	value: string | null;
 	placeholder: string;
 	className?: string;
+	onChange: (value: string) => void;
+	rows?: number;
 };
 
 export function EditableParagraph({
-	initialValue,
+	value,
 	placeholder,
 	className,
+	onChange,
+	rows = 2,
 }: EditableParagraphProps) {
-	const valueRef = useRef(initialValue ?? "");
+	const sharedProps = {
+		className: `editable-paragraph field-sizing-content min-h-fit w-full resize-none overflow-hidden outline-none transition-[background-color,box-shadow] duration-150 ease-out ${className ?? "text-base leading-6"}`,
+		"data-empty": !value?.trim(),
+		placeholder,
+		value: value ?? "",
+		onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+			onChange(event.currentTarget.value),
+	};
 
-	return (
-		<p
-			className={`editable-paragraph min-h-6 rounded-md outline-none transition-[background-color,box-shadow] duration-150 ease-out ${className ?? "text-base leading-6"}`}
-			contentEditable
-			data-empty={!initialValue?.trim()}
-			data-placeholder={placeholder}
-			suppressContentEditableWarning
-			onInput={(event) => {
-				const value = event.currentTarget.textContent ?? "";
-				valueRef.current = value;
-				event.currentTarget.dataset.empty = String(!value.trim());
-			}}
-		>
-			{initialValue}
-		</p>
-	);
+	return <textarea {...sharedProps} rows={rows} />;
 }

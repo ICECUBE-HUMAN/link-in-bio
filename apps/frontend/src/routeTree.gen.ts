@@ -18,6 +18,7 @@ import { Route as DemoIndexRouteImport } from './routes/demo/index'
 import { Route as ExploreIndexRouteImport } from './routes/explore/index'
 import { Route as LogInIndexRouteImport } from './routes/log-in/index'
 import { Route as UpdateIndexRouteImport } from './routes/update/index'
+import { Route as ApiPagesHandleRouteImport } from './routes/api/pages/$handle'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +65,11 @@ const UpdateIndexRoute = UpdateIndexRouteImport.update({
   path: '/update/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPagesHandleRoute = ApiPagesHandleRouteImport.update({
+  id: '/api/pages/$handle',
+  path: '/api/pages/$handle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/explore/': typeof ExploreIndexRoute
   '/log-in/': typeof LogInIndexRoute
   '/update/': typeof UpdateIndexRoute
+  '/api/pages/$handle': typeof ApiPagesHandleRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/explore': typeof ExploreIndexRoute
   '/log-in': typeof LogInIndexRoute
   '/update': typeof UpdateIndexRoute
+  '/api/pages/$handle': typeof ApiPagesHandleRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/explore/': typeof ExploreIndexRoute
   '/log-in/': typeof LogInIndexRoute
   '/update/': typeof UpdateIndexRoute
+  '/api/pages/$handle': typeof ApiPagesHandleRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/explore/'
     | '/log-in/'
     | '/update/'
+    | '/api/pages/$handle'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/explore'
     | '/log-in'
     | '/update'
+    | '/api/pages/$handle'
   id:
     | '__root__'
     | '/'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/explore/'
     | '/log-in/'
     | '/update/'
+    | '/api/pages/$handle'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +157,7 @@ export interface RootRouteChildren {
   ExploreIndexRoute: typeof ExploreIndexRoute
   LogInIndexRoute: typeof LogInIndexRoute
   UpdateIndexRoute: typeof UpdateIndexRoute
+  ApiPagesHandleRoute: typeof ApiPagesHandleRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UpdateIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/pages/$handle': {
+      id: '/api/pages/$handle'
+      path: '/api/pages/$handle'
+      fullPath: '/api/pages/$handle'
+      preLoaderRoute: typeof ApiPagesHandleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -225,6 +245,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExploreIndexRoute: ExploreIndexRoute,
   LogInIndexRoute: LogInIndexRoute,
   UpdateIndexRoute: UpdateIndexRoute,
+  ApiPagesHandleRoute: ApiPagesHandleRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

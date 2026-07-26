@@ -45,9 +45,7 @@ export const Route = createFileRoute("/new")({
 			});
 		}
 
-		return {
-			userName: session.user.name,
-		};
+		return {};
 	},
 	head: () =>
 		createSeo({
@@ -70,7 +68,7 @@ const handleAvailabilityIcons = {
 };
 
 function NewPage() {
-	const { queryClient, userName } = Route.useRouteContext();
+	const { queryClient } = Route.useRouteContext();
 	const navigate = useNavigate({ from: Route.fullPath });
 	const [handle, setHandle] = useState("");
 	const [availability, setAvailability] =
@@ -141,7 +139,7 @@ function NewPage() {
 			const response = await createPage({
 				data: {
 					handle: handleStatus.normalizedHandle,
-					name: userName,
+					name: null,
 				},
 			});
 

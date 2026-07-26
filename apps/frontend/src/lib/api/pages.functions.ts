@@ -7,9 +7,6 @@ import {
 	normalizePageHandle,
 	type PageByHandleResponse,
 	pageByHandleResponseSchema,
-	type UpdatePageRequest,
-	updatePageRequestSchema,
-	updatePageResponseSchema,
 } from "@sinabro/api";
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
@@ -87,29 +84,6 @@ export const getMyPage = createServerFn({ method: "GET" }).handler(async () => {
 
 	return v.parse(myPageResponseSchema, await response.json());
 });
-
-export const updateMyPage = createServerFn({
-	method: "PATCH",
-})
-	.validator((data: UpdatePageRequest) =>
-		v.parse(updatePageRequestSchema, data),
-	)
-	.handler(async ({ data }) => {
-		const headers = createCookieHeaders();
-		headers.set("content-type", "application/json");
-
-		const response = await fetchBackend("/pages/me", {
-			method: "PATCH",
-			headers,
-			body: JSON.stringify(data),
-		});
-
-		if (!response.ok) {
-			throw new Error(`Page update failed with status ${response.status}.`);
-		}
-
-		return v.parse(updatePageResponseSchema, await response.json());
-	});
 
 export const getPageByHandle = createServerFn({ method: "GET" })
 	.validator((data: { handle: string }) => ({

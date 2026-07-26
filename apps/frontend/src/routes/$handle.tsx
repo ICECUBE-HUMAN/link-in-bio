@@ -1,8 +1,10 @@
 import type { PageResponse } from "@sinabro/api";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Loader } from "reicon-react";
 import { EditableParagraph } from "@/components/page/editable-paragraph";
 import { PageImageEditor } from "@/components/page/page-image-editor";
+import { usePageAutoSave } from "@/components/page/use-page-auto-save";
 import { getPageByHandleQueryOptions } from "@/lib/api/pages.functions";
 import { getSessionQueryOptions } from "@/lib/api/session.functions";
 
@@ -50,6 +52,10 @@ function HandlePage() {
 	const loaderData = Route.useLoaderData();
 	const { page } = loaderData;
 	const [isAsideShown, setIsAsideShown] = useState(false);
+	const { draft, status, updateField } = usePageAutoSave({
+		page,
+		handle: page.handle,
+	});
 
 	useEffect(() => {
 		const frame = requestAnimationFrame(() => setIsAsideShown(true));
@@ -63,17 +69,21 @@ function HandlePage() {
 					className={`t-stagger flex w-full flex-col gap-8 p-6 pt-12 sm:max-w-[24rem] xl:w-md xl:max-w-none xl:pt-16 ${isAsideShown ? "is-shown" : ""}`}
 				>
 					<div className="t-stagger-line t-stagger-line--1">
-						<PageImageEditor initialImage={page.image} />
+						<PageImageEditor initialImage={draft.image} />
 					</div>
 					<div className="flex flex-col gap-4 xl:px-2">
 						<EditableParagraph
-							initialValue={page.name}
+							value={draft.name}
 							placeholder="Name"
+							onChange={(name) => updateField("name", name)}
+							rows={1}
 							className="t-stagger-line t-stagger-line--2 text-3xl xl:text-4xl font-bold leading-tight tracking-tight"
 						/>
 						<EditableParagraph
-							initialValue={page.bio}
+							value={draft.bio}
 							placeholder="Tell about you"
+							onChange={(bio) => updateField("bio", bio)}
+							rows={2}
 							className="t-stagger-line t-stagger-line--3 text-base xl:text-lg leading-6 text-primary/80 px-0.5"
 						/>
 					</div>
@@ -82,6 +92,18 @@ function HandlePage() {
 					grid later
 				</section>
 			</div>
+			<aside
+				className="fixed inset-x-0 bottom-0 z-50 flex w-full justify-start p-4"
+				aria-live="polite"
+				aria-label="Saving status"
+			>
+				{status === "saving" ? (
+					<span className="flex items-center gap-2 text-xs text-muted-foreground">
+						<Loader className="size-4 animate-spin" />
+						Saving
+					</span>
+				) : null}
+			</aside>
 		</main>
 	);
 }
