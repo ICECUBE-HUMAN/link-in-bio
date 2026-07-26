@@ -4,7 +4,11 @@ import {
 	createPageResponseSchema,
 	handleAvailabilityResponseSchema,
 	myPageResponseSchema,
+	normalizePageHandle,
+	type PageByHandleResponse,
+	pageByHandleResponseSchema,
 } from "@sinabro/api";
+import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import * as v from "valibot";
@@ -81,4 +85,43 @@ export const getMyPage = createServerFn({ method: "GET" }).handler(async () => {
 	return v.parse(myPageResponseSchema, await response.json());
 });
 
+export const getPageByHandle = createServerFn({ method: "GET" })
+	.validator((data: { handle: string }) => ({
+		handle: normalizePageHandle(data.handle),
+	}))
+	.handler(async ({ data }): Promise<PageByHandleResponse | null> => {
+		const response = await fetchBackend(
+			`/pages/${encodeURIComponent(data.handle)}`,
+			{
+				method: "GET",
+				headers: createCookieHeaders(),
+			},
+		);
+
+		if (response.status === 404) {
+			return null;
+		}
+
+		if (!response.ok) {
+			throw new Error(`Page request failed with status ${response.status}.`);
+		}
+
+		return v.parse(pageByHandleResponseSchema, await response.json());
+	});
+
 export const MY_PAGE_QUERY_KEY = ["pages", "me"] as const;
+
+export function getPageByHandleQueryOptions(handle: string) {
+	const normalizedHandle = normalizePageHandle(handle);
+
+	return queryOptions({
+		queryKey: ["pages", normalizedHandle] as const,
+		queryFn: (): Promise<PageByHandleResponse | null> =>
+			getPageByHandle({
+				data: {
+					handle: normalizedHandle,
+				},
+			}),
+		staleTime: 30_000,
+	});
+}

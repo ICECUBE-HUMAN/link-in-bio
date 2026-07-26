@@ -48,6 +48,23 @@ export const pageHandleSchema = v.pipe(
 );
 
 const optionalTextSchema = v.optional(v.pipe(v.string(), v.trim()));
+const nullableTrimmedNameSchema = v.pipe(
+	v.string(),
+	v.trim(),
+	v.maxLength(80, "Name must be at most 80 characters."),
+	v.transform((value) => (value.length === 0 ? null : value)),
+);
+const nullableTrimmedBioSchema = v.pipe(
+	v.string(),
+	v.trim(),
+	v.maxLength(500, "Text must be at most 500 characters."),
+	v.transform((value) => (value.length === 0 ? null : value)),
+);
+const nullableTrimmedImageSchema = v.pipe(
+	v.string(),
+	v.trim(),
+	v.transform((value) => (value.length === 0 ? null : value)),
+);
 
 /**
  * Public HTTP response contracts shared by the backend and its consumers.
@@ -63,12 +80,7 @@ export type HealthResponse = v.InferOutput<typeof healthResponseSchema>;
 
 export const createPageRequestSchema = v.object({
 	handle: pageHandleSchema,
-	name: v.pipe(
-		v.string(),
-		v.trim(),
-		v.minLength(1, "Name is required."),
-		v.maxLength(80, "Name must be at most 80 characters."),
-	),
+	name: v.nullable(nullableTrimmedNameSchema),
 	bio: v.optional(
 		v.pipe(
 			v.string(),
@@ -82,11 +94,19 @@ export const createPageRequestSchema = v.object({
 
 export type CreatePageRequest = v.InferOutput<typeof createPageRequestSchema>;
 
+export const updatePageRequestSchema = v.object({
+	name: v.optional(v.nullable(nullableTrimmedNameSchema)),
+	bio: v.optional(nullableTrimmedBioSchema),
+	image: v.optional(nullableTrimmedImageSchema),
+});
+
+export type UpdatePageRequest = v.InferOutput<typeof updatePageRequestSchema>;
+
 export const pageResponseSchema = v.object({
 	id: v.string(),
 	userId: v.string(),
 	handle: pageHandleSchema,
-	name: v.string(),
+	name: v.nullable(v.string()),
 	bio: v.nullable(v.string()),
 	image: v.nullable(v.string()),
 	role: v.nullable(v.string()),
@@ -102,11 +122,63 @@ export const createPageResponseSchema = v.object({
 
 export type CreatePageResponse = v.InferOutput<typeof createPageResponseSchema>;
 
+export const updatePageResponseSchema = v.object({
+	page: pageResponseSchema,
+});
+
+export type UpdatePageResponse = v.InferOutput<typeof updatePageResponseSchema>;
+
+export const pageByHandleResponseSchema = v.object({
+	page: pageResponseSchema,
+});
+
+export type PageByHandleResponse = v.InferOutput<
+	typeof pageByHandleResponseSchema
+>;
+
 export const myPageResponseSchema = v.object({
 	page: v.nullable(pageResponseSchema),
 });
 
 export type MyPageResponse = v.InferOutput<typeof myPageResponseSchema>;
+
+export const profileImageUploadRequestSchema = v.object({
+	contentType: v.pipe(
+		v.string(),
+		v.trim(),
+		v.regex(/^image\/[a-z0-9.+-]+$/i),
+	),
+	size: v.pipe(
+		v.number(),
+		v.integer(),
+		v.minValue(1),
+	),
+});
+
+export type ProfileImageUploadRequest = v.InferOutput<
+	typeof profileImageUploadRequestSchema
+>;
+
+export const profileImageUploadResponseSchema = v.object({
+	objectKey: v.pipe(v.string(), v.minLength(1)),
+	uploadUrl: v.pipe(v.string(), v.url()),
+	expiresAt: v.string(),
+});
+
+export type ProfileImageUploadResponse = v.InferOutput<
+	typeof profileImageUploadResponseSchema
+>;
+
+export const profileImageCompleteRequestSchema = v.object({
+	objectKey: v.pipe(v.string(), v.minLength(1)),
+});
+
+export type ProfileImageCompleteRequest = v.InferOutput<
+	typeof profileImageCompleteRequestSchema
+>;
+
+export const profileImageCompleteResponseSchema = updatePageResponseSchema;
+export type ProfileImageCompleteResponse = UpdatePageResponse;
 
 export const handleAvailabilityQuerySchema = v.object({
 	handle: pageHandleSchema,

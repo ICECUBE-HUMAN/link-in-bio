@@ -18,6 +18,9 @@ import { Route as DemoIndexRouteImport } from './routes/demo/index'
 import { Route as ExploreIndexRouteImport } from './routes/explore/index'
 import { Route as LogInIndexRouteImport } from './routes/log-in/index'
 import { Route as UpdateIndexRouteImport } from './routes/update/index'
+import { Route as ApiPagesHandleRouteImport } from './routes/api/pages/$handle'
+import { Route as ApiPagesHandleImageUploadRouteImport } from './routes/api/pages/$handle/image-upload'
+import { Route as ApiPagesHandleImageUploadCompleteRouteImport } from './routes/api/pages/$handle/image-upload/complete'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +67,23 @@ const UpdateIndexRoute = UpdateIndexRouteImport.update({
   path: '/update/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPagesHandleRoute = ApiPagesHandleRouteImport.update({
+  id: '/api/pages/$handle',
+  path: '/api/pages/$handle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPagesHandleImageUploadRoute =
+  ApiPagesHandleImageUploadRouteImport.update({
+    id: '/image-upload',
+    path: '/image-upload',
+    getParentRoute: () => ApiPagesHandleRoute,
+  } as any)
+const ApiPagesHandleImageUploadCompleteRoute =
+  ApiPagesHandleImageUploadCompleteRouteImport.update({
+    id: '/complete',
+    path: '/complete',
+    getParentRoute: () => ApiPagesHandleImageUploadRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -75,6 +95,9 @@ export interface FileRoutesByFullPath {
   '/explore/': typeof ExploreIndexRoute
   '/log-in/': typeof LogInIndexRoute
   '/update/': typeof UpdateIndexRoute
+  '/api/pages/$handle': typeof ApiPagesHandleRouteWithChildren
+  '/api/pages/$handle/image-upload': typeof ApiPagesHandleImageUploadRouteWithChildren
+  '/api/pages/$handle/image-upload/complete': typeof ApiPagesHandleImageUploadCompleteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +109,9 @@ export interface FileRoutesByTo {
   '/explore': typeof ExploreIndexRoute
   '/log-in': typeof LogInIndexRoute
   '/update': typeof UpdateIndexRoute
+  '/api/pages/$handle': typeof ApiPagesHandleRouteWithChildren
+  '/api/pages/$handle/image-upload': typeof ApiPagesHandleImageUploadRouteWithChildren
+  '/api/pages/$handle/image-upload/complete': typeof ApiPagesHandleImageUploadCompleteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +124,9 @@ export interface FileRoutesById {
   '/explore/': typeof ExploreIndexRoute
   '/log-in/': typeof LogInIndexRoute
   '/update/': typeof UpdateIndexRoute
+  '/api/pages/$handle': typeof ApiPagesHandleRouteWithChildren
+  '/api/pages/$handle/image-upload': typeof ApiPagesHandleImageUploadRouteWithChildren
+  '/api/pages/$handle/image-upload/complete': typeof ApiPagesHandleImageUploadCompleteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +140,9 @@ export interface FileRouteTypes {
     | '/explore/'
     | '/log-in/'
     | '/update/'
+    | '/api/pages/$handle'
+    | '/api/pages/$handle/image-upload'
+    | '/api/pages/$handle/image-upload/complete'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +154,9 @@ export interface FileRouteTypes {
     | '/explore'
     | '/log-in'
     | '/update'
+    | '/api/pages/$handle'
+    | '/api/pages/$handle/image-upload'
+    | '/api/pages/$handle/image-upload/complete'
   id:
     | '__root__'
     | '/'
@@ -133,6 +168,9 @@ export interface FileRouteTypes {
     | '/explore/'
     | '/log-in/'
     | '/update/'
+    | '/api/pages/$handle'
+    | '/api/pages/$handle/image-upload'
+    | '/api/pages/$handle/image-upload/complete'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +183,7 @@ export interface RootRouteChildren {
   ExploreIndexRoute: typeof ExploreIndexRoute
   LogInIndexRoute: typeof LogInIndexRoute
   UpdateIndexRoute: typeof UpdateIndexRoute
+  ApiPagesHandleRoute: typeof ApiPagesHandleRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -212,8 +251,56 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UpdateIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/pages/$handle': {
+      id: '/api/pages/$handle'
+      path: '/api/pages/$handle'
+      fullPath: '/api/pages/$handle'
+      preLoaderRoute: typeof ApiPagesHandleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/pages/$handle/image-upload': {
+      id: '/api/pages/$handle/image-upload'
+      path: '/image-upload'
+      fullPath: '/api/pages/$handle/image-upload'
+      preLoaderRoute: typeof ApiPagesHandleImageUploadRouteImport
+      parentRoute: typeof ApiPagesHandleRoute
+    }
+    '/api/pages/$handle/image-upload/complete': {
+      id: '/api/pages/$handle/image-upload/complete'
+      path: '/complete'
+      fullPath: '/api/pages/$handle/image-upload/complete'
+      preLoaderRoute: typeof ApiPagesHandleImageUploadCompleteRouteImport
+      parentRoute: typeof ApiPagesHandleImageUploadRoute
+    }
   }
 }
+
+interface ApiPagesHandleImageUploadRouteChildren {
+  ApiPagesHandleImageUploadCompleteRoute: typeof ApiPagesHandleImageUploadCompleteRoute
+}
+
+const ApiPagesHandleImageUploadRouteChildren: ApiPagesHandleImageUploadRouteChildren =
+  {
+    ApiPagesHandleImageUploadCompleteRoute:
+      ApiPagesHandleImageUploadCompleteRoute,
+  }
+
+const ApiPagesHandleImageUploadRouteWithChildren =
+  ApiPagesHandleImageUploadRoute._addFileChildren(
+    ApiPagesHandleImageUploadRouteChildren,
+  )
+
+interface ApiPagesHandleRouteChildren {
+  ApiPagesHandleImageUploadRoute: typeof ApiPagesHandleImageUploadRouteWithChildren
+}
+
+const ApiPagesHandleRouteChildren: ApiPagesHandleRouteChildren = {
+  ApiPagesHandleImageUploadRoute: ApiPagesHandleImageUploadRouteWithChildren,
+}
+
+const ApiPagesHandleRouteWithChildren = ApiPagesHandleRoute._addFileChildren(
+  ApiPagesHandleRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -225,6 +312,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExploreIndexRoute: ExploreIndexRoute,
   LogInIndexRoute: LogInIndexRoute,
   UpdateIndexRoute: UpdateIndexRoute,
+  ApiPagesHandleRoute: ApiPagesHandleRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

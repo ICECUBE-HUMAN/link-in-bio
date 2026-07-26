@@ -153,7 +153,7 @@ export const pages = pgTable(
 				onDelete: "cascade",
 			}),
 		handle: text("handle").notNull(),
-		name: text("name").notNull(),
+		name: text("name"),
 		bio: text("bio"),
 		image: text("image"),
 		role: text("role"),

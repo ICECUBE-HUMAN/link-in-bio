@@ -14,15 +14,19 @@
 			"FRONTEND_URL",
 			"GOOGLE_CLIENT_ID",
 			"GOOGLE_CLIENT_SECRET",
+			"R2_ACCOUNT_ID",
+			"R2_ACCESS_KEY_ID",
+			"R2_SECRET_ACCESS_KEY",
 		]
 	},
 	"account_id": "849b4ba384d03f3c7d2bea5ed1ab9a3c",
-	// "r2_buckets": [
-	//   {
-	//     "binding": "MY_BUCKET",
-	//     "bucket_name": "my-bucket"
-	//   }
-	// ],
+	"r2_buckets": [
+		{
+			"binding": "IMAGES",
+			"bucket_name": "test-images",
+			"remote": true,
+		}
+	],
 	"observability": {
 		"enabled": true,
 		"head_sampling_rate": 0.5

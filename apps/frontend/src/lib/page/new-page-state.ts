@@ -9,6 +9,12 @@ const handleAvailabilityMessages = {
 	taken: "This handle is already taken.",
 } as const;
 
+export type HandleAvailabilityState =
+	| "idle"
+	| "checking"
+	| "available"
+	| "duplicate";
+
 export function getHandleAvailabilityError(
 	availability: HandleAvailabilityResponse | null,
 ) {
@@ -22,15 +28,31 @@ export function getHandleAvailabilityError(
 export function getHandleAvailabilityStatus(
 	handle: string,
 	availability: HandleAvailabilityResponse | null,
+	isCheckingHandle = false,
 ) {
 	const normalizedHandle = normalizePageHandle(handle);
+	const isCurrentAvailability = availability?.handle === normalizedHandle;
 	const canCreatePage =
-		availability?.available === true &&
-		availability.handle === normalizedHandle;
+		availability?.available === true && isCurrentAvailability;
+	const availabilityState: HandleAvailabilityState = isCheckingHandle
+		? "checking"
+		: canCreatePage
+			? "available"
+			: availability?.available === false && isCurrentAvailability
+				? "duplicate"
+				: "idle";
+	const availabilityMessage = {
+		checking: "Checking availability...",
+		available: "No duplicate found.",
+		duplicate: "Duplicate found.",
+		idle: null,
+	}[availabilityState];
 
 	return {
 		normalizedHandle,
 		canCreatePage,
+		availabilityState,
+		availabilityMessage,
 		error: getHandleAvailabilityError(availability),
 	};
 }

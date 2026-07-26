@@ -1,0 +1,1 @@
+ALTER TABLE "pages" ALTER COLUMN "name" DROP NOT NULL;

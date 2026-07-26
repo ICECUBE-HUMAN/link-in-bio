@@ -1,22 +1,16 @@
 import CTAButton from "@/components/auth/cta-button";
-import { DEFAULT_APP_LOGO, DEFAULT_SITE_NAME } from "@/lib/seo/metadata";
 
 export default function HeroSection() {
 	return (
-		<section className="flex min-h-lvh flex-col items-center gap-16 justify-center">
+		<section className="flex min-h-lvh flex-col gap-16 pt-40">
 			<div className="flex flex-col items-center justify-center gap-12">
-				<img
-					src={DEFAULT_APP_LOGO}
-					alt={DEFAULT_SITE_NAME}
-					className="size-20 rounded-md object-contain"
-				/>
-				<div className="flex max-w-2xl flex-col items-center justify-center gap-6 text-center">
-					<h1 className="text-5xl font-semibold md:text-7xl">
-						Beautiful link in bio
+				<div className="flex flex-col gap-6 text-center">
+          <h1 className="text-6xl/18 tracking-tighter text-fg-4 font-semibold md:text-balance max-w-2xl flex flex-col">
+            <span>Experience-first</span>
+            <span>link in bio</span>
 					</h1>
-					<h2 className="max-w-md text-lg text-gray-bright text-balance">
-						Share everything you do, all in one place, create your page that
-						shows you.
+					<h2 className="max-w-md text-lg text-primary/80 text-balance">
+					  No more dashboard, just drag&drop all items that represent you.
 					</h2>
 				</div>
 			</div>
