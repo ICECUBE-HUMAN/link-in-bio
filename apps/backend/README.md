@@ -56,3 +56,22 @@ bun run typecheck
 - Drizzle 스키마는 `src/db/schema.ts`
 - Supabase pooler를 쓰므로 prepared statement를 자동으로 끕니다.
 - 로그인 옵션은 이메일/비밀번호, 매직 링크, Google, GitHub 입니다.
+
+## Profile image R2 setup
+
+The backend expects an R2 bucket binding named `IMAGES` pointing to the
+`test-images` bucket. Configure these Worker secrets before deploying:
+
+- `R2_ACCOUNT_ID`
+- `R2_ACCESS_KEY_ID`
+- `R2_SECRET_ACCESS_KEY`
+
+The access key must be an R2 API token with Object Read and Object Write access
+to `test-images`. The browser uploads through a short-lived presigned PUT URL;
+the bucket must have CORS configured to allow the frontend origin to send PUT
+requests with the `Content-Type` header.
+
+Make the bucket publicly readable through an R2 custom domain (or an `r2.dev`
+subdomain for development) and configure the matching `VITE_R2_PUBLIC_URL` in
+the frontend. Database rows store only the object key, such as
+`users/profile/uuid.webp`.

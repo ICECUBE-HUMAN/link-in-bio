@@ -10,12 +10,18 @@ import {
 	type HandleAvailabilityResponse,
 	handleAvailabilityResponseSchema,
 	isReservedPageHandle,
-	normalizePageHandle,
 	type MyPageResponse,
 	myPageResponseSchema,
-	pageByHandleResponseSchema,
+	normalizePageHandle,
 	type PageResponse,
+	type ProfileImageCompleteResponse,
+	type ProfileImageUploadResponse,
+	pageByHandleResponseSchema,
 	pageHandleSchema,
+	profileImageCompleteRequestSchema,
+	profileImageCompleteResponseSchema,
+	profileImageUploadRequestSchema,
+	profileImageUploadResponseSchema,
 	type UpdatePageResponse,
 	updatePageRequestSchema,
 	updatePageResponseSchema,
@@ -30,6 +36,13 @@ import {
 	Hono,
 } from "hono";
 import * as v from "valibot";
+import {
+	createProfileImageKey,
+	createProfileImageUploadUrl,
+	isProfileImageKey,
+	MAX_PROFILE_IMAGE_SIZE,
+	validateProfileImageUpload,
+} from "../core/r2";
 import {
 	ConflictError,
 	ForbiddenError,
@@ -396,6 +409,228 @@ export const pagesController =
 				),
 			);
 		})
+		.post(
+			"/:handle/image-upload",
+			async (c) => {
+				const sessionUser =
+					c.get("user");
+
+				if (!sessionUser) {
+					throw new UnauthorizedError();
+				}
+
+				const parsedHandle =
+					v.safeParse(
+						pageHandleSchema,
+						c.req.param("handle"),
+					);
+
+				if (!parsedHandle.success) {
+					throw new NotFoundError(
+						"Page",
+					);
+				}
+
+				const page = await c
+					.get("db")
+					.query.pages.findFirst({
+						where: and(
+							eq(
+								pages.handle,
+								parsedHandle.output,
+							),
+							eq(
+								pages.userId,
+								sessionUser.id,
+							),
+						),
+					});
+
+				if (!page) {
+					throw new NotFoundError(
+						"Page",
+					);
+				}
+
+				const parsed = v.safeParse(
+					profileImageUploadRequestSchema,
+					await c.req.json(),
+				);
+
+				if (
+					!parsed.success ||
+					parsed.output.size >
+						MAX_PROFILE_IMAGE_SIZE ||
+					!validateProfileImageUpload(
+						parsed.output,
+					)
+				) {
+					throw new UnprocessableEntityError(
+						"Invalid profile image.",
+						"INVALID_PROFILE_IMAGE",
+					);
+				}
+
+				const objectKey =
+					createProfileImageKey(
+						parsed.output.contentType,
+					);
+
+				if (!objectKey) {
+					throw new UnprocessableEntityError(
+						"Unsupported profile image type.",
+						"INVALID_PROFILE_IMAGE",
+					);
+				}
+
+				const response = v.parse(
+					profileImageUploadResponseSchema,
+					await createProfileImageUploadUrl(
+						{
+							accountId:
+								c.env.R2_ACCOUNT_ID,
+							accessKeyId:
+								c.env.R2_ACCESS_KEY_ID,
+							secretAccessKey:
+								c.env
+									.R2_SECRET_ACCESS_KEY,
+							objectKey,
+							contentType:
+								parsed.output
+									.contentType,
+						},
+					),
+				) satisfies ProfileImageUploadResponse;
+
+				return c.json(response);
+			},
+		)
+		.post(
+			"/:handle/image-upload/complete",
+			async (c) => {
+				const sessionUser =
+					c.get("user");
+
+				if (!sessionUser) {
+					throw new UnauthorizedError();
+				}
+
+				const parsedHandle =
+					v.safeParse(
+						pageHandleSchema,
+						c.req.param("handle"),
+					);
+
+				if (!parsedHandle.success) {
+					throw new NotFoundError(
+						"Page",
+					);
+				}
+
+				const parsed = v.safeParse(
+					profileImageCompleteRequestSchema,
+					await c.req.json(),
+				);
+
+				if (
+					!parsed.success ||
+					!isProfileImageKey(
+						parsed.output.objectKey,
+					)
+				) {
+					throw new UnprocessableEntityError(
+						"Invalid profile image key.",
+						"INVALID_PROFILE_IMAGE",
+					);
+				}
+
+				const page = await c
+					.get("db")
+					.query.pages.findFirst({
+						where: and(
+							eq(
+								pages.handle,
+								parsedHandle.output,
+							),
+							eq(
+								pages.userId,
+								sessionUser.id,
+							),
+						),
+					});
+
+				if (!page) {
+					throw new NotFoundError(
+						"Page",
+					);
+				}
+
+				const uploadedObject =
+					await c.env.IMAGES.head(
+						parsed.output.objectKey,
+					);
+				if (
+					!uploadedObject ||
+					uploadedObject.size >
+						MAX_PROFILE_IMAGE_SIZE ||
+					!uploadedObject.httpMetadata?.contentType?.startsWith(
+						"image/",
+					)
+				) {
+					throw new UnprocessableEntityError(
+						"Uploaded profile image was not found.",
+						"PROFILE_IMAGE_NOT_FOUND",
+					);
+				}
+
+				if (
+					page.image &&
+					page.image !==
+						parsed.output.objectKey &&
+					isProfileImageKey(page.image)
+				) {
+					await c.env.IMAGES.delete(
+						page.image,
+					);
+				}
+
+				const [updatedPage] = await c
+					.get("db")
+					.update(pages)
+					.set({
+						image:
+							parsed.output.objectKey,
+						updatedAt: new Date(),
+					})
+					.where(
+						and(
+							eq(pages.id, page.id),
+							eq(
+								pages.userId,
+								sessionUser.id,
+							),
+						),
+					)
+					.returning();
+
+				if (!updatedPage) {
+					throw new NotFoundError(
+						"Page",
+					);
+				}
+
+				const response = v.parse(
+					profileImageCompleteResponseSchema,
+					{
+						page: mapPageResponse(
+							updatedPage,
+						),
+					},
+				) satisfies ProfileImageCompleteResponse;
+
+				return c.json(response);
+			},
+		)
 		.get("/:handle", async (c) => {
 			const rawHandle =
 				c.req.param("handle");

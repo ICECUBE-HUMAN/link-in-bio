@@ -142,6 +142,44 @@ export const myPageResponseSchema = v.object({
 
 export type MyPageResponse = v.InferOutput<typeof myPageResponseSchema>;
 
+export const profileImageUploadRequestSchema = v.object({
+	contentType: v.pipe(
+		v.string(),
+		v.trim(),
+		v.regex(/^image\/[a-z0-9.+-]+$/i),
+	),
+	size: v.pipe(
+		v.number(),
+		v.integer(),
+		v.minValue(1),
+	),
+});
+
+export type ProfileImageUploadRequest = v.InferOutput<
+	typeof profileImageUploadRequestSchema
+>;
+
+export const profileImageUploadResponseSchema = v.object({
+	objectKey: v.pipe(v.string(), v.minLength(1)),
+	uploadUrl: v.pipe(v.string(), v.url()),
+	expiresAt: v.string(),
+});
+
+export type ProfileImageUploadResponse = v.InferOutput<
+	typeof profileImageUploadResponseSchema
+>;
+
+export const profileImageCompleteRequestSchema = v.object({
+	objectKey: v.pipe(v.string(), v.minLength(1)),
+});
+
+export type ProfileImageCompleteRequest = v.InferOutput<
+	typeof profileImageCompleteRequestSchema
+>;
+
+export const profileImageCompleteResponseSchema = updatePageResponseSchema;
+export type ProfileImageCompleteResponse = UpdatePageResponse;
+
 export const handleAvailabilityQuerySchema = v.object({
 	handle: pageHandleSchema,
 });

@@ -69,7 +69,11 @@ function HandlePage() {
 					className={`t-stagger flex w-full flex-col gap-8 p-6 pt-12 sm:max-w-[24rem] xl:w-md xl:max-w-none xl:pt-16 ${isAsideShown ? "is-shown" : ""}`}
 				>
 					<div className="t-stagger-line t-stagger-line--1">
-						<PageImageEditor initialImage={draft.image} />
+						<PageImageEditor
+							initialImage={draft.image}
+							handle={page.handle}
+							onImageChange={(image) => updateField("image", image)}
+						/>
 					</div>
 					<div className="flex flex-col gap-4 xl:px-2">
 						<EditableParagraph
