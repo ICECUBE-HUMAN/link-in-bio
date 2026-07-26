@@ -3,6 +3,7 @@ import {
 	createPageRequestSchema,
 	createPageResponseSchema,
 	handleAvailabilityResponseSchema,
+	myPageResponseSchema,
 } from "@sinabro/api";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
@@ -62,3 +63,22 @@ export const createPage = createServerFn({ method: "POST" })
 
 		return v.parse(createPageResponseSchema, await response.json());
 	});
+
+export const getMyPage = createServerFn({ method: "GET" }).handler(async () => {
+	const response = await fetchBackend("/pages/me", {
+		method: "GET",
+		headers: createCookieHeaders(),
+	});
+
+	if (response.status === 401) {
+		return v.parse(myPageResponseSchema, { page: null });
+	}
+
+	if (!response.ok) {
+		throw new Error(`My page request failed with status ${response.status}.`);
+	}
+
+	return v.parse(myPageResponseSchema, await response.json());
+});
+
+export const MY_PAGE_QUERY_KEY = ["pages", "me"] as const;

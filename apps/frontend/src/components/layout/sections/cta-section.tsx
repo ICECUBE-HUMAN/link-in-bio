@@ -1,5 +1,4 @@
-import { Link } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
+import CTAButton from "@/components/auth/cta-button";
 
 export default function CTASection() {
 	return (
@@ -12,16 +11,7 @@ export default function CTASection() {
 					<p className="font-normal text-base text-gray-bright text-balance"></p>
 				</div>
 				<div className="flex flex-row justify-center gap-3">
-					<Button
-						size={"lg"}
-						className={"rounded-md px-10 h-12 text-base"}
-						nativeButton={false}
-						render={
-							<Link to={"/log-in"} search={{ redirect: "/$handle" }}>
-								Get started
-							</Link>
-						}
-					/>
+					<CTAButton title="Get started" />
 				</div>
 			</div>
 		</section>

@@ -1,5 +1,4 @@
-import { Link } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
+import CTAButton from "@/components/auth/cta-button";
 import { DEFAULT_APP_LOGO, DEFAULT_SITE_NAME } from "@/lib/seo/metadata";
 
 export default function HeroSection() {
@@ -23,16 +22,7 @@ export default function HeroSection() {
 			</div>
 
 			<div className="flex flex-wrap items-center justify-center gap-3">
-				<Button
-					size={"lg"}
-					className={"rounded-md px-10 h-12 text-base"}
-					nativeButton={false}
-					render={
-						<Link to={"/log-in"} search={{ redirect: "/$handle" }}>
-							Make your own
-						</Link>
-					}
-				/>
+				<CTAButton />
 			</div>
 		</section>
 	);

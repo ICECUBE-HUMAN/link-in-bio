@@ -102,6 +102,12 @@ export const createPageResponseSchema = v.object({
 
 export type CreatePageResponse = v.InferOutput<typeof createPageResponseSchema>;
 
+export const myPageResponseSchema = v.object({
+	page: v.nullable(pageResponseSchema),
+});
+
+export type MyPageResponse = v.InferOutput<typeof myPageResponseSchema>;
+
 export const handleAvailabilityQuerySchema = v.object({
 	handle: pageHandleSchema,
 });

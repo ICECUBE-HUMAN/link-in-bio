@@ -144,6 +144,100 @@ function createTestApp({
 }
 
 describe("pagesController", () => {
+	it("returns the signed-in user's primary page at /pages/me", async () => {
+		const user = {
+			id: "user_1",
+			name: "Kim",
+			email: "kim@example.com",
+			primaryPageId: "page_1",
+		};
+		const { db } = createFakeDb({
+			currentUser: user,
+			existingPages: [
+				{
+					id: "page_1",
+					userId: "user_1",
+					handle: "kim",
+					name: "Kim",
+					bio: null,
+					image: null,
+					role: null,
+					createdAt: now,
+					updatedAt: now,
+				},
+			],
+		});
+		const app = createTestApp({
+			db,
+			user,
+		});
+
+		const response = await app.request(
+			"/pages/me",
+		);
+
+		expect(response.status).toBe(200);
+		const body =
+			(await response.json()) as {
+				page: TestPage | null;
+			};
+		expect(body.page).toMatchObject({
+			id: "page_1",
+			userId: "user_1",
+			handle: "kim",
+			name: "Kim",
+		});
+	});
+
+	it("returns null at /pages/me when the signed-in user has no primary page", async () => {
+		const user = {
+			id: "user_1",
+			name: "Kim",
+			email: "kim@example.com",
+			primaryPageId: null,
+		};
+		const { db } = createFakeDb({
+			currentUser: user,
+		});
+		const app = createTestApp({
+			db,
+			user,
+		});
+
+		const response = await app.request(
+			"/pages/me",
+		);
+
+		expect(response.status).toBe(200);
+		const body =
+			(await response.json()) as unknown;
+		expect(body).toEqual({
+			page: null,
+		});
+	});
+
+	it("requires a signed-in user at /pages/me", async () => {
+		const user = {
+			id: "user_1",
+			name: "Kim",
+			email: "kim@example.com",
+			primaryPageId: null,
+		};
+		const { db } = createFakeDb({
+			currentUser: user,
+		});
+		const app = createTestApp({
+			db,
+			user: null,
+		});
+
+		const response = await app.request(
+			"/pages/me",
+		);
+
+		expect(response.status).toBe(401);
+	});
+
 	it("reports reserved handles as unavailable at /pages/check", async () => {
 		const user = {
 			id: "user_1",

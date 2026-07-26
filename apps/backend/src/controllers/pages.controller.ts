@@ -10,6 +10,8 @@ import {
 	type HandleAvailabilityResponse,
 	handleAvailabilityResponseSchema,
 	isReservedPageHandle,
+	type MyPageResponse,
+	myPageResponseSchema,
 	normalizePageHandle,
 	type PageResponse,
 	pageHandleSchema,
@@ -126,6 +128,56 @@ const createHandleAvailabilityResponse =
 
 export const pagesController =
 	new Hono<AppEnv>()
+		.get("/me", async (c) => {
+			const sessionUser = c.get("user");
+
+			if (!sessionUser) {
+				throw new UnauthorizedError();
+			}
+
+			const sessionPrimaryPageId =
+				"primaryPageId" in
+					sessionUser &&
+				typeof sessionUser.primaryPageId ===
+					"string"
+					? sessionUser.primaryPageId
+					: null;
+
+			if (!sessionPrimaryPageId) {
+				const response = v.parse(
+					myPageResponseSchema,
+					{ page: null },
+				) satisfies MyPageResponse;
+
+				return c.json(response);
+			}
+
+			const page = await c
+				.get("db")
+				.query.pages.findFirst({
+					where: and(
+						eq(
+							pages.id,
+							sessionPrimaryPageId,
+						),
+						eq(
+							pages.userId,
+							sessionUser.id,
+						),
+					),
+				});
+
+			const response = v.parse(
+				myPageResponseSchema,
+				{
+					page: page
+						? mapPageResponse(page)
+						: null,
+				},
+			) satisfies MyPageResponse;
+
+			return c.json(response);
+		})
 		.get("/check", async (c) => {
 			await assertEligibleUser(c);
 
