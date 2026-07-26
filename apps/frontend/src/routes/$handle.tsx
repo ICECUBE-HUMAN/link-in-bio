@@ -66,7 +66,7 @@ function HandlePage() {
 	}, []);
 
 	return (
-		<main className="box-border min-h-dvh w-full px-[clamp(1rem,2vw,3rem)] xl:h-dvh xl:overflow-hidden xl:flex xl:justify-center">
+		<main className="box-border min-h-dvh w-full px-[clamp(1rem,2vw,3rem)] xl:h-dvh xl:overflow-hidden xl:flex xl:justify-center relative">
 			<div className="flex w-full flex-col gap-8 sm:items-center xl:h-full xl:min-h-0 xl:flex-row xl:items-start xl:justify-around">
 				<div className="flex w-full max-w-[24rem] flex-col xl:h-full xl:w-md xl:max-w-none">
 					<aside
@@ -100,7 +100,7 @@ function HandlePage() {
 						</div>
 					</aside>
 					<aside
-						className="hidden w-full items-center justify-between p-6 py-8 xl:flex"
+						className="hidden items-center gap-2 xl:flex xl:fixed xl:bottom-10 xl:px-6"
 						aria-label="Page controls"
 					>
 						<div className="flex items-center gap-0">
@@ -134,8 +134,8 @@ function HandlePage() {
 						</div>
 					</aside>
 				</div>
-				<section className="min-h-[calc(100dvh-3rem)] w-full overflow-y-auto p-6 pt-0 sm:max-w-[24rem] xl:h-full xl:min-h-[calc(100dvh-4rem)] xl:w-4xl xl:max-w-none xl:shrink-0 xl:pt-16">
-					grid later
+				<section className="min-h-[calc(100dvh-3rem)] w-full overflow-y-auto p-6 pt-0 sm:max-w-[24rem] xl:h-full xl:min-h-[calc(100dvh-4rem)] xl:w-4xl xl:max-w-none xl:shrink-0 xl:pt-16 no-scrollbar">
+          grid later
 				</section>
 			</div>
 		</main>

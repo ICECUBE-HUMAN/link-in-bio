@@ -58,6 +58,15 @@
 	color: color-mix(in oklab, var(--muted-foreground) 50%, transparent);
 }
 
+@utility no-scrollbar {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+
+	&::-webkit-scrollbar {
+		display: none;
+	}
+}
+
 @theme inline {
 
     --font-heading: var(--font-sans);
