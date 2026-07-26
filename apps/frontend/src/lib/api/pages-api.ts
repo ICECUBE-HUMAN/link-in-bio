@@ -3,7 +3,7 @@ import {
 	type UpdatePageRequest,
 	type UpdatePageResponse,
 } from "@sinabro/api";
-import { parsePageUpdateResponse } from "@/components/page/page-update";
+import { parsePageUpdateResponse } from "@/lib/page/page-update";
 
 export async function updatePage(
 	handle: string,

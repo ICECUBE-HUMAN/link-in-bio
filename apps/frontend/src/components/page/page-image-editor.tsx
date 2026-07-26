@@ -1,5 +1,6 @@
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
-import { Upload3 } from "reicon-react";
+import { Trash2, Upload3 } from "reicon-react";
+import { Button } from "@/components/ui/button";
 import {
 	getProfileImageUrl,
 	uploadPageImage,
@@ -8,12 +9,14 @@ import {
 type PageImageEditorProps = {
 	initialImage: string | null;
 	handle: string;
-	onImageChange: (image: string) => void;
+	mode: "view" | "edit";
+	onImageChange: (image: string | null) => void;
 };
 
 export function PageImageEditor({
 	initialImage,
 	handle,
+	mode,
 	onImageChange,
 }: PageImageEditorProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -60,30 +63,69 @@ export function PageImageEditor({
 		}
 	}
 
+	function handleImageRemove() {
+		setImage(null);
+		setError(null);
+		onImageChange(null);
+	}
+
+	const imageContent = image ? (
+		<img
+			className="size-full object-cover transition-transform duration-250 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover/image:scale-105 motion-reduce:transition-none"
+			src={image}
+			alt="Profile"
+			loading="eager"
+		/>
+	) : mode === "edit" ? (
+		<div>
+			<Upload3 weight="Filled" className="" size={32} />
+		</div>
+	) : null;
+	const imageClassName =
+		"flex size-28 items-center justify-center overflow-hidden rounded-full bg-secondary/80 text-sm font-medium text-muted-foreground/60 sm:size-32 xl:size-46";
+
 	return (
 		<div className="flex flex-col items-start gap-3">
-			<input
-				ref={inputRef}
-				type="file"
-				accept="image/*"
-				hidden
-				onChange={handleImageChange}
-			/>
-			<button
-				type="button"
-				aria-label="Change profile image"
-				disabled={isUploading}
-				className="flex size-28 xl:size-46 items-center justify-center overflow-hidden rounded-full bg-secondary/80 text-sm font-medium text-muted-foreground/60 transition-transform duration-150 ease-out hover:bg-muted active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring sm:size-32"
-				onClick={() => inputRef.current?.click()}
-			>
-				{image ? (
-					<img className="size-full object-cover" src={image} alt="Profile" loading="eager" />
-				) : (
-					<div>
-						<Upload3 weight="Filled" className="" size={32} />
-					</div>
-				)}
-			</button>
+			{mode === "edit" ? (
+				<input
+					ref={inputRef}
+					type="file"
+					accept="image/*"
+					hidden
+					onChange={handleImageChange}
+				/>
+			) : null}
+			{mode === "edit" ? (
+				<div className="group/image relative isolate">
+					<button
+						type="button"
+						aria-label="Change profile image"
+						disabled={isUploading}
+						className={`${imageClassName} relative transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-muted active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring`}
+						onClick={() => inputRef.current?.click()}
+					>
+						{imageContent}
+						{image ? (
+							<span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/25 text-white opacity-0 transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover/image:opacity-100 group-focus-within/image:opacity-100 motion-reduce:transition-none"></span>
+						) : null}
+					</button>
+					{image ? (
+						<Button
+							type="button"
+							variant="ghost"
+							size="icon-sm"
+							aria-label="Remove profile image"
+							disabled={isUploading}
+							onClick={handleImageRemove}
+							className="absolute top-0 right-0 inline-flex size-10 items-center justify-center rounded-full bg-background border border-border/60 opacity-0 shadow-md transition-[opacity,transform,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:scale-100 focus-visible:opacity-100 group-hover/image:scale-100 group-hover/image:opacity-100 group-focus-within/image:scale-100 group-focus-within/image:opacity-100 active:scale-95 motion-reduce:transition-none xl:top-2 xl:right-2"
+						>
+							<Trash2 className="size-6" />
+						</Button>
+					) : null}
+				</div>
+			) : (
+				<div className={imageClassName}>{imageContent}</div>
+			)}
 			{error ? <p className="text-xs text-destructive">{error}</p> : null}
 		</div>
 	);

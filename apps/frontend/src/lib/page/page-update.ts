@@ -6,10 +6,7 @@ import {
 } from "@sinabro/api";
 import * as v from "valibot";
 
-export type EditablePageFields = Pick<
-	PageResponse,
-	"name" | "bio" | "image"
->;
+export type EditablePageFields = Pick<PageResponse, "name" | "bio" | "image">;
 
 export function getChangedPageFields(
 	draft: EditablePageFields,

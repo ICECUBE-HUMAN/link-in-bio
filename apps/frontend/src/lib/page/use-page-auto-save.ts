@@ -17,6 +17,7 @@ export type PageAutoSaveStatus = "saved" | "dirty" | "saving" | "error";
 type UsePageAutoSaveOptions = {
 	page: PageResponse;
 	handle: string;
+	enabled?: boolean;
 };
 
 function updateCachedPage<T extends { page: PageResponse | null }>(
@@ -31,7 +32,11 @@ function updateCachedPage<T extends { page: PageResponse | null }>(
 	};
 }
 
-export function usePageAutoSave({ page, handle }: UsePageAutoSaveOptions) {
+export function usePageAutoSave({
+	page,
+	handle,
+	enabled = true,
+}: UsePageAutoSaveOptions) {
 	const queryClient = useQueryClient();
 	const [draft, setDraft] = useState<EditablePageFields>({
 		name: page.name,
@@ -172,6 +177,8 @@ export function usePageAutoSave({ page, handle }: UsePageAutoSaveOptions) {
 			field: Field,
 			value: EditablePageFields[Field],
 		) => {
+			if (!enabled) return;
+
 			const nextDraft = {
 				...draftRef.current,
 				[field]: value,
@@ -186,7 +193,7 @@ export function usePageAutoSave({ page, handle }: UsePageAutoSaveOptions) {
 			setStatus("dirty");
 			scheduleSave();
 		},
-		[scheduleSave],
+		[enabled, scheduleSave],
 	);
 
 	return { draft, errorMessage, status, updateField };

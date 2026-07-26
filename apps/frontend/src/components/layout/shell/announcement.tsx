@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRightIcon, XIcon } from "lucide-react";
 import { useState } from "react";
+import { isAnnouncementEnabled } from "@/lib/layout/announcement.config";
 import { DEFAULT_SITE_NAME } from "@/lib/seo/metadata";
 import { cn } from "@/lib/shared/utils";
-import { isAnnouncementEnabled } from "./announcement.config";
 
 type AnnouncementProps = {
 	message?: string;
