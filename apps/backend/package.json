@@ -6,6 +6,7 @@
 	"scripts": {
 		"dev": "wrangler dev",
 		"deploy": "wrangler deploy --minify --secrets-file .env.production",
+		"test": "bun test",
 		"check": "tsc --noEmit",
 		"cf-typegen": "wrangler types --env-interface CloudflareBindings",
 		"auth:generate": "bun x auth@latest generate --config ./auth.ts --output ./src/db/schema.ts --adapter drizzle --dialect postgresql --yes",
