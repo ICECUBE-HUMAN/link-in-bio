@@ -131,7 +131,9 @@ const createHandleAvailabilityResponse =
 			response,
 		);
 
-const getPrimaryPageId = (user: unknown) => {
+const getPrimaryPageId = (
+	user: unknown,
+) => {
 	if (
 		typeof user !== "object" ||
 		user === null
@@ -196,11 +198,20 @@ export const pagesController =
 
 			return c.json(response);
 		})
-		.patch("/me", async (c) => {
+		.patch("/:handle", async (c) => {
 			const sessionUser = c.get("user");
 
 			if (!sessionUser) {
 				throw new UnauthorizedError();
+			}
+
+			const parsedHandle = v.safeParse(
+				pageHandleSchema,
+				c.req.param("handle"),
+			);
+
+			if (!parsedHandle.success) {
+				throw new NotFoundError("Page");
 			}
 
 			const body = await c.req.json();
@@ -217,9 +228,12 @@ export const pagesController =
 			}
 
 			const hasAnyField =
-				typeof parsed.output.name !== "undefined" ||
-				typeof parsed.output.bio !== "undefined" ||
-				typeof parsed.output.image !== "undefined";
+				typeof parsed.output.name !==
+					"undefined" ||
+				typeof parsed.output.bio !==
+					"undefined" ||
+				typeof parsed.output.image !==
+					"undefined";
 
 			if (!hasAnyField) {
 				throw new UnprocessableEntityError(
@@ -231,20 +245,20 @@ export const pagesController =
 			const updatedPage = await c
 				.get("db")
 				.transaction(async (tx) => {
-					const currentUser = await tx.query.user.findFirst(
-						{
-							where: eq(
-								userTable.id,
-								sessionUser.id,
-							),
-						},
-					);
+					const currentUser =
+						await tx.query.user.findFirst(
+							{
+								where: eq(
+									userTable.id,
+									sessionUser.id,
+								),
+							},
+						);
 
-					const currentPageId =
-						getPrimaryPageId(currentUser);
-
-					if (!currentUser || !currentPageId) {
-						throw new NotFoundError("Page");
+					if (!currentUser) {
+						throw new NotFoundError(
+							"Page",
+						);
 					}
 
 					const existingPage =
@@ -252,8 +266,8 @@ export const pagesController =
 							{
 								where: and(
 									eq(
-										pages.id,
-										currentPageId,
+										pages.handle,
+										parsedHandle.output,
 									),
 									eq(
 										pages.userId,
@@ -264,23 +278,27 @@ export const pagesController =
 						);
 
 					if (!existingPage) {
-						throw new NotFoundError("Page");
+						throw new NotFoundError(
+							"Page",
+						);
 					}
 
 					const [page] = await tx
 						.update(pages)
 						.set({
 							name:
-								parsed.output.name ??
-								existingPage.name,
+								typeof parsed.output
+									.name === "undefined"
+									? existingPage.name
+									: parsed.output.name,
 							bio:
-								typeof parsed.output.bio ===
-								"undefined"
+								typeof parsed.output
+									.bio === "undefined"
 									? existingPage.bio
 									: parsed.output.bio,
 							image:
-								typeof parsed.output.image ===
-								"undefined"
+								typeof parsed.output
+									.image === "undefined"
 									? existingPage.image
 									: parsed.output.image,
 							updatedAt: new Date(),
@@ -289,7 +307,7 @@ export const pagesController =
 							and(
 								eq(
 									pages.id,
-									currentPageId,
+									existingPage.id,
 								),
 								eq(
 									pages.userId,
@@ -300,7 +318,9 @@ export const pagesController =
 						.returning();
 
 					if (!page) {
-						throw new NotFoundError("Page");
+						throw new NotFoundError(
+							"Page",
+						);
 					}
 
 					return page;
@@ -309,7 +329,9 @@ export const pagesController =
 			const response = v.parse(
 				updatePageResponseSchema,
 				{
-					page: mapPageResponse(updatedPage),
+					page: mapPageResponse(
+						updatedPage,
+					),
 				},
 			) satisfies UpdatePageResponse;
 
@@ -375,7 +397,8 @@ export const pagesController =
 			);
 		})
 		.get("/:handle", async (c) => {
-			const rawHandle = c.req.param("handle");
+			const rawHandle =
+				c.req.param("handle");
 			const parsed = v.safeParse(
 				pageHandleSchema,
 				rawHandle,

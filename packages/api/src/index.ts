@@ -48,6 +48,12 @@ export const pageHandleSchema = v.pipe(
 );
 
 const optionalTextSchema = v.optional(v.pipe(v.string(), v.trim()));
+const nullableTrimmedNameSchema = v.pipe(
+	v.string(),
+	v.trim(),
+	v.maxLength(80, "Name must be at most 80 characters."),
+	v.transform((value) => (value.length === 0 ? null : value)),
+);
 const nullableTrimmedBioSchema = v.pipe(
 	v.string(),
 	v.trim(),
@@ -74,12 +80,7 @@ export type HealthResponse = v.InferOutput<typeof healthResponseSchema>;
 
 export const createPageRequestSchema = v.object({
 	handle: pageHandleSchema,
-	name: v.pipe(
-		v.string(),
-		v.trim(),
-		v.minLength(1, "Name is required."),
-		v.maxLength(80, "Name must be at most 80 characters."),
-	),
+	name: v.nullable(nullableTrimmedNameSchema),
 	bio: v.optional(
 		v.pipe(
 			v.string(),
@@ -94,14 +95,7 @@ export const createPageRequestSchema = v.object({
 export type CreatePageRequest = v.InferOutput<typeof createPageRequestSchema>;
 
 export const updatePageRequestSchema = v.object({
-	name: v.optional(
-		v.pipe(
-			v.string(),
-			v.trim(),
-			v.minLength(1, "Name is required."),
-			v.maxLength(80, "Name must be at most 80 characters."),
-		),
-	),
+	name: v.optional(v.nullable(nullableTrimmedNameSchema)),
 	bio: v.optional(nullableTrimmedBioSchema),
 	image: v.optional(nullableTrimmedImageSchema),
 });
@@ -112,7 +106,7 @@ export const pageResponseSchema = v.object({
 	id: v.string(),
 	userId: v.string(),
 	handle: pageHandleSchema,
-	name: v.string(),
+	name: v.nullable(v.string()),
 	bio: v.nullable(v.string()),
 	image: v.nullable(v.string()),
 	role: v.nullable(v.string()),

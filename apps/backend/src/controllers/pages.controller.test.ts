@@ -19,7 +19,7 @@ type TestPage = {
 	id: string;
 	userId: string;
 	handle: string;
-	name: string;
+	name: string | null;
 	bio: string | null;
 	image: string | null;
 	role: string | null;
@@ -45,12 +45,20 @@ function findHandleEqualityValue(
 		queryChunks?: unknown[];
 	};
 
-	if (!Array.isArray(maybeSql.queryChunks)) {
+	if (
+		!Array.isArray(maybeSql.queryChunks)
+	) {
 		return null;
 	}
 
-	for (let index = 0; index < maybeSql.queryChunks.length; index += 1) {
-		const chunk = maybeSql.queryChunks[index] as
+	for (
+		let index = 0;
+		index < maybeSql.queryChunks.length;
+		index += 1
+	) {
+		const chunk = maybeSql.queryChunks[
+			index
+		] as
 			| {
 					name?: unknown;
 					queryChunks?: unknown[];
@@ -62,12 +70,12 @@ function findHandleEqualityValue(
 			typeof chunk.name === "string" &&
 			chunk.name === "handle"
 		) {
-			const valueChunk =
-				maybeSql.queryChunks[index + 2] as
-					| {
-							value?: unknown;
-					  }
-					| undefined;
+			const valueChunk = maybeSql
+				.queryChunks[index + 2] as
+				| {
+						value?: unknown;
+				  }
+				| undefined;
 
 			if (
 				typeof valueChunk?.value ===
@@ -105,7 +113,8 @@ function createFakeDb({
 		[
 			...state.existingPages,
 			...state.insertedPages,
-		].find((page) => page.id === id) ?? null;
+		].find((page) => page.id === id) ??
+		null;
 
 	const tx = {
 		query: {
@@ -114,11 +123,9 @@ function createFakeDb({
 					state.currentUser,
 			},
 			pages: {
-				findFirst: async (
-					options?: {
-						where?: unknown;
-					},
-				) => {
+				findFirst: async (options?: {
+					where?: unknown;
+				}) => {
 					const handle =
 						findHandleEqualityValue(
 							options?.where,
@@ -164,7 +171,7 @@ function createFakeDb({
 		update: () => ({
 			set: (value: {
 				primaryPageId?: string;
-				name?: string;
+				name?: string | null;
 				bio?: string | null;
 				image?: string | null;
 				updatedAt?: Date;
@@ -202,20 +209,27 @@ function createFakeDb({
 						}
 
 						const page = findPageById(
-							state.currentUser.primaryPageId,
+							state.currentUser
+								.primaryPageId,
 						);
 
 						if (!page) {
 							return [];
 						}
 
-						page.name = value.name ?? page.name;
+						page.name =
+							typeof value.name ===
+							"undefined"
+								? page.name
+								: value.name;
 						page.bio =
-							typeof value.bio === "undefined"
+							typeof value.bio ===
+							"undefined"
 								? page.bio
 								: value.bio;
 						page.image =
-							typeof value.image === "undefined"
+							typeof value.image ===
+							"undefined"
 								? page.image
 								: value.image;
 						page.updatedAt =
@@ -600,7 +614,7 @@ describe("pagesController", () => {
 		).toBe(body.page.id);
 	});
 
-	it("patches the signed-in user's page at /pages/me", async () => {
+	it("patches the signed-in user's page at /pages/:handle", async () => {
 		const user = {
 			id: "user_1",
 			name: "Kim",
@@ -629,7 +643,7 @@ describe("pagesController", () => {
 		});
 
 		const response = await app.request(
-			"/pages/me",
+			"/pages/kim",
 			{
 				method: "PATCH",
 				headers: {
@@ -639,7 +653,8 @@ describe("pagesController", () => {
 				body: JSON.stringify({
 					name: "Kim Updated",
 					bio: "",
-					image: "https://example.com/avatar.png",
+					image:
+						"https://example.com/avatar.png",
 				}),
 			},
 		);
@@ -653,18 +668,20 @@ describe("pagesController", () => {
 			id: "page_1",
 			name: "Kim Updated",
 			bio: null,
-			image: "https://example.com/avatar.png",
+			image:
+				"https://example.com/avatar.png",
 		});
 		expect(
 			state.existingPages[0],
 		).toMatchObject({
 			name: "Kim Updated",
 			bio: null,
-			image: "https://example.com/avatar.png",
+			image:
+				"https://example.com/avatar.png",
 		});
 	});
 
-	it("returns 404 when patching /pages/me without a page", async () => {
+	it("returns 404 when patching /pages/:handle without a page", async () => {
 		const user = {
 			id: "user_1",
 			name: "Kim",
@@ -680,7 +697,7 @@ describe("pagesController", () => {
 		});
 
 		const response = await app.request(
-			"/pages/me",
+			"/pages/kim",
 			{
 				method: "PATCH",
 				headers: {
@@ -696,7 +713,7 @@ describe("pagesController", () => {
 		expect(response.status).toBe(404);
 	});
 
-	it("returns 422 when patching /pages/me without fields", async () => {
+	it("returns 422 when patching /pages/:handle without fields", async () => {
 		const user = {
 			id: "user_1",
 			name: "Kim",
@@ -725,7 +742,7 @@ describe("pagesController", () => {
 		});
 
 		const response = await app.request(
-			"/pages/me",
+			"/pages/kim",
 			{
 				method: "PATCH",
 				headers: {
@@ -737,5 +754,60 @@ describe("pagesController", () => {
 		);
 
 		expect(response.status).toBe(422);
+	});
+
+	it("allows clearing a page name", async () => {
+		const user = {
+			id: "user_1",
+			name: "Kim",
+			email: "kim@example.com",
+			primaryPageId: "page_1",
+		};
+		const { db, state } = createFakeDb({
+			currentUser: user,
+			existingPages: [
+				{
+					id: "page_1",
+					userId: "user_1",
+					handle: "kim",
+					name: "Kim",
+					bio: null,
+					image: null,
+					role: null,
+					createdAt: now,
+					updatedAt: now,
+				},
+			],
+		});
+		const app = createTestApp({
+			db,
+			user,
+		});
+
+		const response = await app.request(
+			"/pages/kim",
+			{
+				method: "PATCH",
+				headers: {
+					"Content-Type":
+						"application/json",
+				},
+				body: JSON.stringify({
+					name: "",
+				}),
+			},
+		);
+
+		expect(response.status).toBe(200);
+		expect(
+			state.existingPages[0]?.name,
+		).toBeNull();
+		expect(
+			(await response.json()) as {
+				page: TestPage;
+			},
+		).toMatchObject({
+			page: { name: null },
+		});
 	});
 });
