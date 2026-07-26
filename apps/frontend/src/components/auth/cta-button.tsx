@@ -34,7 +34,7 @@ export default function CTAButton({
 	return (
 		<Button
 			size="lg"
-			className="h-12 rounded-md px-10 text-base"
+			className="h-12 rounded-xl px-10 text-base"
 			nativeButton={false}
 			render={link}
 		/>

@@ -48,6 +48,17 @@ export const pageHandleSchema = v.pipe(
 );
 
 const optionalTextSchema = v.optional(v.pipe(v.string(), v.trim()));
+const nullableTrimmedBioSchema = v.pipe(
+	v.string(),
+	v.trim(),
+	v.maxLength(500, "Text must be at most 500 characters."),
+	v.transform((value) => (value.length === 0 ? null : value)),
+);
+const nullableTrimmedImageSchema = v.pipe(
+	v.string(),
+	v.trim(),
+	v.transform((value) => (value.length === 0 ? null : value)),
+);
 
 /**
  * Public HTTP response contracts shared by the backend and its consumers.
@@ -82,6 +93,21 @@ export const createPageRequestSchema = v.object({
 
 export type CreatePageRequest = v.InferOutput<typeof createPageRequestSchema>;
 
+export const updatePageRequestSchema = v.object({
+	name: v.optional(
+		v.pipe(
+			v.string(),
+			v.trim(),
+			v.minLength(1, "Name is required."),
+			v.maxLength(80, "Name must be at most 80 characters."),
+		),
+	),
+	bio: v.optional(nullableTrimmedBioSchema),
+	image: v.optional(nullableTrimmedImageSchema),
+});
+
+export type UpdatePageRequest = v.InferOutput<typeof updatePageRequestSchema>;
+
 export const pageResponseSchema = v.object({
 	id: v.string(),
 	userId: v.string(),
@@ -101,6 +127,20 @@ export const createPageResponseSchema = v.object({
 });
 
 export type CreatePageResponse = v.InferOutput<typeof createPageResponseSchema>;
+
+export const updatePageResponseSchema = v.object({
+	page: pageResponseSchema,
+});
+
+export type UpdatePageResponse = v.InferOutput<typeof updatePageResponseSchema>;
+
+export const pageByHandleResponseSchema = v.object({
+	page: pageResponseSchema,
+});
+
+export type PageByHandleResponse = v.InferOutput<
+	typeof pageByHandleResponseSchema
+>;
 
 export const myPageResponseSchema = v.object({
 	page: v.nullable(pageResponseSchema),

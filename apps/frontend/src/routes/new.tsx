@@ -1,17 +1,15 @@
 import type { HandleAvailabilityResponse } from "@sinabro/api";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { CheckCircle, Loader, XCircle } from "reicon-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Field, FieldError } from "@/components/ui/field";
 import {
-	Field,
-	FieldContent,
-	FieldDescription,
-	FieldError,
-	FieldGroup,
-	FieldLabel,
-	FieldSet,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+	InputGroup,
+	InputGroupAddon,
+	InputGroupInput,
+} from "@/components/ui/input-group";
+import { env } from "@/env";
 import {
 	checkPageHandleAvailability,
 	createPage,
@@ -65,6 +63,12 @@ export const Route = createFileRoute("/new")({
 	component: NewPage,
 });
 
+const handleAvailabilityIcons = {
+	checking: <Loader className="animate-spin size-full" />,
+	available: <CheckCircle weight="Filled" className="size-full" />,
+	duplicate: <XCircle weight="Filled" className="size-full"/>,
+};
+
 function NewPage() {
 	const { queryClient, userName } = Route.useRouteContext();
 	const navigate = useNavigate({ from: Route.fullPath });
@@ -76,9 +80,13 @@ function NewPage() {
 	const [submitError, setSubmitError] = useState<string | null>(null);
 
 	const handleStatus = useMemo(
-		() => getHandleAvailabilityStatus(handle, availability),
-		[handle, availability],
+		() => getHandleAvailabilityStatus(handle, availability, isCheckingHandle),
+		[handle, availability, isCheckingHandle],
 	);
+	const HandleAvailabilityIcon =
+		handleStatus.availabilityState === "idle"
+			? null
+			: handleAvailabilityIcons[handleStatus.availabilityState];
 
 	useEffect(() => {
 		setSubmitError(null);
@@ -153,21 +161,23 @@ function NewPage() {
 	};
 
 	return (
-		<main className="mx-auto flex min-h-lvh w-full max-w-xl flex-col justify-center px-5 py-20">
-			<form className="flex flex-col gap-8" onSubmit={onSubmit}>
-				<div className="space-y-3">
-					<p className="font-medium text-muted-foreground text-sm">New page</p>
-					<h1 className="text-3xl font-bold text-balance md:text-4xl">
-						Create your page
+    <main className="mx-auto flex min-h-lvh w-full max-w-md flex-col justify-center px-5">
+      <div className="flex-1 basis-0"/>
+			<form className="flex flex-col gap-16" onSubmit={onSubmit}>
+        <div className="space-y-2 leading-tight">
+					<h1 className="text-3xl font-semibold text-balance md:text-4xl">
+						Claim your handle
 					</h1>
+					<h2 className="text-base font-medium text-muted-foreground/80 md:text-lg">
+						It will be used in your public page
+					</h2>
 				</div>
 
-				<FieldSet>
-					<FieldGroup>
-						<Field>
-							<FieldLabel htmlFor="handle">Handle</FieldLabel>
-							<Input
-								aria-describedby="handle-description handle-error"
+				<div className="flex flex-col gap-4">
+					<Field className="gap-2">
+						<InputGroup className="h-12">
+							<InputGroupInput
+								aria-describedby="handle-status handle-error"
 								aria-invalid={Boolean(handleStatus.error)}
 								id="handle"
 								name="handle"
@@ -177,29 +187,46 @@ function NewPage() {
 								placeholder="your-handle"
 								type="text"
 								value={handle}
+								autoComplete="off"
+								className="placeholder:text-base! placeholder:text-muted-foreground/50 placeholder:font-normal pl-1! text-base!"
 							/>
-							<FieldDescription id="handle-description">
-								This will be used in your public page URL.
-							</FieldDescription>
-							<FieldContent>
-								<FieldError id="handle-error">{handleStatus.error}</FieldError>
-							</FieldContent>
-						</Field>
-					</FieldGroup>
-				</FieldSet>
+							<InputGroupAddon align={"inline-start"} className="text-base! pl-4">
+								{env.VITE_APP_DOMAIN}/
+              </InputGroupAddon>
+              <InputGroupAddon
+                align="inline-end"
+                data-state={handleStatus.availabilityState}
+                id="handle-status"
+                className="size-10 data-[state=available]:text-green-500 data-[state=duplicate]:text-destructive"
+              >
+                {HandleAvailabilityIcon}
+              </InputGroupAddon>
+            </InputGroup>
+            {submitError ? <FieldError className="text-center text-xs">{submitError}</FieldError> : null}
+					</Field>
 
-				{submitError ? <FieldError>{submitError}</FieldError> : null}
-
-				<Button
-					disabled={
-						!handleStatus.canCreatePage || isCheckingHandle || isCreatingPage
-					}
-					size="lg"
-					type="submit"
-				>
-					{isCreatingPage ? "Creating..." : "Create page"}
-				</Button>
+					<Button
+						disabled={
+							!handleStatus.canCreatePage || isCheckingHandle || isCreatingPage
+						}
+						variant={"secondary"}
+						size="lg"
+						type="submit"
+						className={"rounded-xl h-12 text-base font-medium"}
+					>
+            {isCreatingPage ?
+              <span className="flex items-center gap-2">
+                <Loader className="animate-spin" />
+                Creating...
+              </span>
+              : "Create page"
+            }
+          </Button>
+				</div>
 			</form>
+      <div className="flex-1 basis-0 flex items-end text-xs text-muted-foreground/80 justify-center p-5">
+        <span>Only lowercase letters, numbers, and hyphens are allowed.</span>
+			</div>
 		</main>
 	);
 }

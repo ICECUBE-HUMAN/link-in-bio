@@ -11,6 +11,7 @@ import {
 	defaultHeadLinks,
 } from "@/lib/seo/metadata";
 import appCss from "../styles.css?url";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 interface MyRouterContext {
 	queryClient: QueryClient;
@@ -51,8 +52,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			<head>
 				<HeadContent />
 			</head>
-			<body className="flex min-h-lvh flex-col">
-				<main className="flex min-h-lvh flex-1 flex-col">{children}</main>
+      <body className="flex min-h-lvh flex-col">
+        <TooltipProvider><main className="flex min-h-lvh flex-1 flex-col">{children}</main></TooltipProvider>
 				<Toaster position="bottom-center" />
 				<Scripts />
 			</body>

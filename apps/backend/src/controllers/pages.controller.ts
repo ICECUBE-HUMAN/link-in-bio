@@ -10,11 +10,15 @@ import {
 	type HandleAvailabilityResponse,
 	handleAvailabilityResponseSchema,
 	isReservedPageHandle,
+	normalizePageHandle,
 	type MyPageResponse,
 	myPageResponseSchema,
-	normalizePageHandle,
+	pageByHandleResponseSchema,
 	type PageResponse,
 	pageHandleSchema,
+	type UpdatePageResponse,
+	updatePageRequestSchema,
+	updatePageResponseSchema,
 } from "@sinabro/api";
 import {
 	and,
@@ -29,6 +33,7 @@ import * as v from "valibot";
 import {
 	ConflictError,
 	ForbiddenError,
+	NotFoundError,
 	UnauthorizedError,
 	UnprocessableEntityError,
 } from "../exceptions/http-exceptions";
@@ -126,6 +131,24 @@ const createHandleAvailabilityResponse =
 			response,
 		);
 
+const getPrimaryPageId = (user: unknown) => {
+	if (
+		typeof user !== "object" ||
+		user === null
+	) {
+		return null;
+	}
+
+	const maybeUser = user as {
+		primaryPageId?: unknown;
+	};
+
+	return typeof maybeUser.primaryPageId ===
+		"string"
+		? maybeUser.primaryPageId
+		: null;
+};
+
 export const pagesController =
 	new Hono<AppEnv>()
 		.get("/me", async (c) => {
@@ -136,12 +159,7 @@ export const pagesController =
 			}
 
 			const sessionPrimaryPageId =
-				"primaryPageId" in
-					sessionUser &&
-				typeof sessionUser.primaryPageId ===
-					"string"
-					? sessionUser.primaryPageId
-					: null;
+				getPrimaryPageId(sessionUser);
 
 			if (!sessionPrimaryPageId) {
 				const response = v.parse(
@@ -175,6 +193,125 @@ export const pagesController =
 						: null,
 				},
 			) satisfies MyPageResponse;
+
+			return c.json(response);
+		})
+		.patch("/me", async (c) => {
+			const sessionUser = c.get("user");
+
+			if (!sessionUser) {
+				throw new UnauthorizedError();
+			}
+
+			const body = await c.req.json();
+			const parsed = v.safeParse(
+				updatePageRequestSchema,
+				body,
+			);
+
+			if (!parsed.success) {
+				throw new UnprocessableEntityError(
+					"Invalid page payload.",
+					"INVALID_PAGE_PAYLOAD",
+				);
+			}
+
+			const hasAnyField =
+				typeof parsed.output.name !== "undefined" ||
+				typeof parsed.output.bio !== "undefined" ||
+				typeof parsed.output.image !== "undefined";
+
+			if (!hasAnyField) {
+				throw new UnprocessableEntityError(
+					"At least one page field is required.",
+					"INVALID_PAGE_PAYLOAD",
+				);
+			}
+
+			const updatedPage = await c
+				.get("db")
+				.transaction(async (tx) => {
+					const currentUser = await tx.query.user.findFirst(
+						{
+							where: eq(
+								userTable.id,
+								sessionUser.id,
+							),
+						},
+					);
+
+					const currentPageId =
+						getPrimaryPageId(currentUser);
+
+					if (!currentUser || !currentPageId) {
+						throw new NotFoundError("Page");
+					}
+
+					const existingPage =
+						await tx.query.pages.findFirst(
+							{
+								where: and(
+									eq(
+										pages.id,
+										currentPageId,
+									),
+									eq(
+										pages.userId,
+										currentUser.id,
+									),
+								),
+							},
+						);
+
+					if (!existingPage) {
+						throw new NotFoundError("Page");
+					}
+
+					const [page] = await tx
+						.update(pages)
+						.set({
+							name:
+								parsed.output.name ??
+								existingPage.name,
+							bio:
+								typeof parsed.output.bio ===
+								"undefined"
+									? existingPage.bio
+									: parsed.output.bio,
+							image:
+								typeof parsed.output.image ===
+								"undefined"
+									? existingPage.image
+									: parsed.output.image,
+							updatedAt: new Date(),
+						})
+						.where(
+							and(
+								eq(
+									pages.id,
+									currentPageId,
+								),
+								eq(
+									pages.userId,
+									currentUser.id,
+								),
+							),
+						)
+						.returning();
+
+					if (!page) {
+						throw new NotFoundError("Page");
+					}
+
+					return page;
+				});
+
+			const response = v.parse(
+				updatePageResponseSchema,
+				{
+					page: mapPageResponse(updatedPage),
+				},
+			) satisfies UpdatePageResponse;
 
 			return c.json(response);
 		})
@@ -236,6 +373,39 @@ export const pagesController =
 					},
 				),
 			);
+		})
+		.get("/:handle", async (c) => {
+			const rawHandle = c.req.param("handle");
+			const parsed = v.safeParse(
+				pageHandleSchema,
+				rawHandle,
+			);
+
+			if (!parsed.success) {
+				throw new NotFoundError("Page");
+			}
+
+			const page = await c
+				.get("db")
+				.query.pages.findFirst({
+					where: eq(
+						pages.handle,
+						parsed.output,
+					),
+				});
+
+			if (!page) {
+				throw new NotFoundError("Page");
+			}
+
+			const response = v.parse(
+				pageByHandleResponseSchema,
+				{
+					page: mapPageResponse(page),
+				},
+			);
+
+			return c.json(response);
 		})
 		.post("/", async (c) => {
 			const currentUser =
