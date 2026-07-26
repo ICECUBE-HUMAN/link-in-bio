@@ -1,0 +1,30 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "backend",
+	"main": "./src/index.ts",
+	"compatibility_date": "2026-07-02",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"secrets": {
+		"required": [
+			"BETTER_AUTH_URL",
+			"BETTER_AUTH_SECRET",
+			"DATABASE_URL",
+			"FRONTEND_URL",
+			"GOOGLE_CLIENT_ID",
+			"GOOGLE_CLIENT_SECRET",
+		]
+	},
+	"account_id": "849b4ba384d03f3c7d2bea5ed1ab9a3c",
+	// "r2_buckets": [
+	//   {
+	//     "binding": "MY_BUCKET",
+	//     "bucket_name": "my-bucket"
+	//   }
+	// ],
+	"observability": {
+		"enabled": true,
+		"head_sampling_rate": 0.5
+	}
+}

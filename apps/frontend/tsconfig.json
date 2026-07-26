@@ -1,0 +1,39 @@
+{
+  "include": ["**/*.ts", "**/*.tsx", "**/*.d.ts", "../backend/worker-configuration.d.ts"],
+  "compilerOptions": {
+    "target": "ES2022",
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "content-collections": ["./.content-collections/generated"],
+      "@controllers/*": ["../backend/src/controllers/*"],
+      "@middlewares/*": ["../backend/src/middlewares/*"],
+      "@services/*": ["../backend/src/services/*"],
+      "@schemas/*": ["../backend/src/schemas/*"],
+      "@core/*": ["../backend/src/core/*"],
+      "@db/*": ["../backend/src/db/*"],
+      "types/*": ["../backend/src/types/*"],
+      "@types/*": ["../backend/src/types/*"]
+    },
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"],
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+
+    /* Linting */
+    "skipLibCheck": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+
+    "ignoreDeprecations": "6.0",
+  }
+}

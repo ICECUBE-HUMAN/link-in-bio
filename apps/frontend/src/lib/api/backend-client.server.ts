@@ -1,0 +1,40 @@
+import { env } from "cloudflare:workers";
+import type { AppType } from "@sinabro/backend";
+import { hc } from "hono/client";
+import { getApiBaseUrl } from "@/lib/site/api-base-url";
+
+type ServiceBinding = {
+	fetch: typeof fetch;
+};
+
+function getBackendBaseUrl() {
+	return env.BETTER_AUTH_URL ?? getApiBaseUrl();
+}
+
+function getBackendBinding() {
+	return (env as unknown as { BACKEND?: ServiceBinding }).BACKEND;
+}
+
+export function createBackendClient() {
+	const binding = getBackendBinding();
+	const baseUrl = getBackendBaseUrl();
+
+	if (binding) {
+		return hc<AppType>(baseUrl, {
+			fetch: binding.fetch.bind(binding),
+		});
+	}
+
+	return hc<AppType>(baseUrl);
+}
+
+export function fetchBackend(path: string, init?: RequestInit) {
+	const binding = getBackendBinding();
+	const url = new URL(path, getBackendBaseUrl()).toString();
+
+	if (binding) {
+		return binding.fetch(url, init);
+	}
+
+	return fetch(url, init);
+}

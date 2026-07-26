@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1784986843790,
+      "tag": "0000_loud_chat",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785038871496,
+      "tag": "0001_create_pages",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785040228024,
+      "tag": "0002_calm_ozymandias",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1785041418302,
+      "tag": "0003_overconfident_princess_powerful",
+      "breakpoints": true
+    }
+  ]
+}

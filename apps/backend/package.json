@@ -1,0 +1,37 @@
+{
+	"name": "@sinabro/backend",
+	"private": true,
+	"type": "module",
+	"exports": "./src/index.ts",
+	"scripts": {
+		"dev": "wrangler dev",
+		"deploy": "wrangler deploy --minify --secrets-file .env.production",
+		"check": "tsc --noEmit",
+		"cf-typegen": "wrangler types --env-interface CloudflareBindings",
+		"auth:generate": "bun x auth@latest generate --config ./auth.ts --output ./src/db/schema.ts --adapter drizzle --dialect postgresql --yes",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@sinabro/api": "workspace:*",
+		"@creem_io/better-auth": "^1.1.3",
+		"@hono/standard-validator": "^0.2.3",
+		"@scalar/hono-api-reference": "^0.11.8",
+		"@valibot/to-json-schema": "^1.7.1",
+		"better-auth": "^1.6.23",
+		"drizzle-orm": "^0.45.2",
+		"hono": "^4.12.27",
+		"hono-openapi": "^1.3.0",
+		"pg": "^8.22.0",
+		"postgres": "^3.4.9",
+		"valibot": "^1.4.2"
+	},
+	"devDependencies": {
+		"@types/bun": "^1.3.14",
+		"@types/node": "^26.1.1",
+		"@types/pg": "^8.15.5",
+		"drizzle-kit": "^0.31.10",
+		"wrangler": "^4.70.0"
+	}
+}

@@ -1,0 +1,8 @@
+declare module "cloudflare:workers" {
+	export const env: {
+		BACKEND?: {
+			fetch: typeof fetch;
+		};
+		BETTER_AUTH_URL?: string;
+	};
+}

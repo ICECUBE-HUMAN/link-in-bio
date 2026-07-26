@@ -1,0 +1,36 @@
+{
+	"include": ["src/**/*.ts"],
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"strict": true,
+		"skipLibCheck": true,
+		"ignoreDeprecations": "6.0",
+		"types": [
+			"node",
+			"./worker-configuration.d.ts"
+		],
+		"lib": [
+			"ES2022",
+			"DOM",
+			"DOM.Iterable"
+		],
+
+		"baseUrl": "./src",
+		"paths": {
+			"@app": ["index"],
+			"@controllers/*": [
+				"controllers/*"
+			],
+			"@middlewares/*": [
+				"middlewares/*"
+			],
+			"@services/*": ["services/*"],
+			"@schemas/*": ["schemas/*"],
+			"@core/*": ["core/*"],
+			"@db/*": ["db/*"],
+			"@types/*": ["types/*"]
+		}
+	}
+}
