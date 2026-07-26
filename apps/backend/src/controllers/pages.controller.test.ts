@@ -681,6 +681,50 @@ describe("pagesController", () => {
 		});
 	});
 
+	it("persists a null image when patching /pages/:handle", async () => {
+		const user = {
+			id: "user_1",
+			name: "Kim",
+			email: "kim@example.com",
+			primaryPageId: "page_1",
+		};
+		const { db, state } = createFakeDb({
+			currentUser: user,
+			existingPages: [
+				{
+					id: "page_1",
+					userId: "user_1",
+					handle: "kim",
+					name: "Kim",
+					bio: "Hello",
+					image: "images/kim.png",
+					role: null,
+					createdAt: now,
+					updatedAt: now,
+				},
+			],
+		});
+		const app = createTestApp({
+			db,
+			user,
+		});
+
+		const response = await app.request(
+			"/pages/kim",
+			{
+				method: "PATCH",
+				headers: {
+					"Content-Type":
+						"application/json",
+				},
+				body: JSON.stringify({ image: null }),
+			},
+		);
+
+		expect(response.status).toBe(200);
+		expect(state.existingPages[0]?.image).toBeNull();
+	});
+
 	it("returns 404 when patching /pages/:handle without a page", async () => {
 		const user = {
 			id: "user_1",

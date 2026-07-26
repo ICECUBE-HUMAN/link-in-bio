@@ -97,7 +97,7 @@ export type CreatePageRequest = v.InferOutput<typeof createPageRequestSchema>;
 export const updatePageRequestSchema = v.object({
 	name: v.optional(v.nullable(nullableTrimmedNameSchema)),
 	bio: v.optional(nullableTrimmedBioSchema),
-	image: v.optional(nullableTrimmedImageSchema),
+	image: v.optional(v.nullable(nullableTrimmedImageSchema)),
 });
 
 export type UpdatePageRequest = v.InferOutput<typeof updatePageRequestSchema>;
