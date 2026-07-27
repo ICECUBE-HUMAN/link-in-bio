@@ -15,6 +15,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
 	getMyPage,
 	getPageByHandleQueryOptions,
 	MY_PAGE_QUERY_KEY,
@@ -218,7 +223,12 @@ function HandlePageContent({
 					>
 						<div className="flex items-center gap-0">
 							{isCurrentUserPage ? (
-								<PageSettingsMenu page={page} onChanged={onPageChange} />
+								<Tooltip>
+									<TooltipTrigger render={<span className="inline-flex" />}>
+										<PageSettingsMenu page={page} onChanged={onPageChange} />
+									</TooltipTrigger>
+									<TooltipContent>Settings</TooltipContent>
+								</Tooltip>
 							) : isSignedIn && myPage ? (
 								<Button
 									render={
@@ -254,24 +264,38 @@ function HandlePageContent({
 									Log in
 								</Button>
 							)}
-							<Button
-								render={<Link to="/explore" />}
-								variant={"ghost"}
-								nativeButton={false}
-								size="icon-sm"
-								aria-label="Explore"
-								className={"text-muted-foreground/80 rounded-md"}
-							>
-								<StackPerspective weight="Filled" />
-							</Button>
-							<Button
-								variant={"ghost"}
-								size={"icon-sm"}
-								aria-label="Feedback"
-								className={"text-muted-foreground/80 rounded-md"}
-							>
-								<Send weight="Filled" />
-							</Button>
+							<Tooltip>
+								<TooltipTrigger
+									render={
+										<Button
+											render={<Link to="/explore" />}
+											variant="ghost"
+											nativeButton={false}
+											size="icon-sm"
+											aria-label="Explore"
+											className="text-muted-foreground/80 rounded-md"
+										/>
+									}
+								>
+									<StackPerspective weight="Filled" />
+								</TooltipTrigger>
+								<TooltipContent>Explore</TooltipContent>
+							</Tooltip>
+							<Tooltip>
+								<TooltipTrigger
+									render={
+										<Button
+											variant="ghost"
+											size="icon-sm"
+											aria-label="Feedback"
+											className="text-muted-foreground/80 rounded-md"
+										/>
+									}
+								>
+									<Send weight="Filled" />
+								</TooltipTrigger>
+								<TooltipContent>Feedback</TooltipContent>
+							</Tooltip>
 						</div>
 						{status === "saving" && (
 							<Badge

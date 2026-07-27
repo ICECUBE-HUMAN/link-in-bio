@@ -4,7 +4,7 @@ import { createSeo } from "@/lib/seo/metadata";
 import CTASection from "@/components/layout/sections/cta-section";
 import HeroSection from "@/components/layout/sections/hero-section";
 import MessageSection from "@/components/layout/sections/message-section";
-import FeatureSection, { FeatureSection2, FeatureSection3 } from "@/components/layout/sections/feature-section";
+import { FeatureSection2 } from "@/components/layout/sections/feature-section";
 
 import { Footer } from "@/components/layout/shell/footer";
 
