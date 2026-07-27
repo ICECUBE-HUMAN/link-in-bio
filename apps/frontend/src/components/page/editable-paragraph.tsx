@@ -17,12 +17,12 @@ export function EditableParagraph({
 	onChange,
 	rows = 2,
 }: EditableParagraphProps) {
-	const sharedClassName = `editable-paragraph field-sizing-content min-h-fit w-full resize-none overflow-hidden outline-none transition-[background-color,box-shadow] duration-150 ease-out ${className ?? "text-base leading-6"}`;
+	const sharedClassName = `editable-paragraph field-sizing-content min-h-fit w-full resize-none overflow-hidden whitespace-pre-wrap outline-none transition-[background-color,box-shadow] duration-150 ease-out ${className ?? "text-base leading-6"}`;
 
 	if (mode === "view") {
 		return (
 			<p className={sharedClassName} data-empty={!value?.trim()}>
-				{value || placeholder}
+				{value}
 			</p>
 		);
 	}

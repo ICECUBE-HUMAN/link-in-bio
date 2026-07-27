@@ -215,7 +215,6 @@ function NewPage() {
             {isCreatingPage ?
               <span className="flex items-center gap-2">
                 <Loader className="animate-spin" />
-                Creating...
               </span>
               : "Create page"
             }

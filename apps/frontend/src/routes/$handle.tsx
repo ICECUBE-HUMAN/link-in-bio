@@ -1,4 +1,5 @@
 import type { PageResponse } from "@sinabro/api";
+import { useQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
 	Link,
@@ -6,11 +7,18 @@ import {
 	redirect,
 } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Gear, Loader, Send, StackPerspective } from "reicon-react";
+import { Loader, Send, StackPerspective } from "reicon-react";
 import { EditableParagraph } from "@/components/page/editable-paragraph";
 import { PageImageEditor } from "@/components/page/page-image-editor";
+import { PageSettingsMenu } from "@/components/page/page-settings-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { getPageByHandleQueryOptions } from "@/lib/api/pages.functions";
+import {
+	getMyPage,
+	getPageByHandleQueryOptions,
+	MY_PAGE_QUERY_KEY,
+} from "@/lib/api/pages.functions";
+import { getProfileImageUrl } from "@/lib/api/profile-image-api";
 import { getSessionQueryOptions } from "@/lib/api/session.functions";
 import { getPageMode } from "@/lib/page/page-mode";
 import { usePageAutoSave } from "@/lib/page/use-page-auto-save";
@@ -51,7 +59,25 @@ export const Route = createFileRoute("/$handle")({
 
 function HandlePage() {
 	const loaderData = Route.useLoaderData();
-	const { page, isCurrentUserPage } = loaderData;
+
+	return (
+		<HandlePageContent key={loaderData.page.handle} loaderData={loaderData} />
+	);
+}
+
+function HandlePageContent({ loaderData }: { loaderData: HandleLoaderData }) {
+	const { page } = loaderData;
+	const { data: sessionResult } = useQuery(getSessionQueryOptions());
+	const isCurrentUserPage = sessionResult
+		? sessionResult.data?.user.id === page.userId
+		: loaderData.isCurrentUserPage;
+	const isSignedIn = Boolean(sessionResult?.data?.user);
+	const { data: myPageResult } = useQuery({
+		queryKey: MY_PAGE_QUERY_KEY,
+		queryFn: getMyPage,
+		enabled: isSignedIn && !isCurrentUserPage,
+	});
+	const myPage = myPageResult?.page;
 	const mode = getPageMode(isCurrentUserPage);
 	const [isAsideShown, setIsAsideShown] = useState(false);
 	const { draft, status, updateField } = usePageAutoSave({
@@ -95,7 +121,7 @@ function HandlePage() {
 								mode={mode}
 								onChange={(bio) => updateField("bio", bio)}
 								rows={2}
-								className="t-stagger-line t-stagger-line--3 px-0.5 text-base leading-6 text-primary/80 xl:text-xl"
+								className="t-stagger-line t-stagger-line--3 px-0.5 text-base leading-7 xl:leading-8 text-primary/80 xl:text-xl"
 							/>
 						</div>
 					</aside>
@@ -104,15 +130,43 @@ function HandlePage() {
 						aria-label="Page controls"
 					>
 						<div className="flex items-center gap-0">
-							<Button
-								type="button"
-								variant={"ghost"}
-								size="icon-sm"
-								aria-label="Settings"
-								className={"text-muted-foreground/80 rounded-md"}
-							>
-								<Gear weight="Filled" />
-							</Button>
+							{isCurrentUserPage ? (
+								<PageSettingsMenu page={page} />
+							) : isSignedIn && myPage ? (
+								<Button
+									render={
+										<Link to="/$handle" params={{ handle: myPage.handle }} />
+									}
+									variant="ghost"
+									nativeButton={false}
+									size="sm"
+									className="text-muted-foreground/80 rounded-md gap-1.5"
+								>
+									<Avatar size="xs">
+										<AvatarImage
+											src={getProfileImageUrl(myPage.image) ?? undefined}
+											alt=""
+										/>
+										<AvatarFallback />
+									</Avatar>
+									<span>My page</span>
+								</Button>
+							) : isSignedIn ? null : (
+								<Button
+									render={
+										<Link
+											to="/log-in"
+											search={{ redirect: `/${page.handle}` }}
+										/>
+									}
+									variant="ghost"
+									nativeButton={false}
+									size="sm"
+									className="text-muted-foreground/80 rounded-md"
+								>
+									Log in
+								</Button>
+							)}
 							<Button
 								render={<Link to="/explore" />}
 								variant={"ghost"}
@@ -122,14 +176,14 @@ function HandlePage() {
 								className={"text-muted-foreground/80 rounded-md"}
 							>
 								<StackPerspective weight="Filled" />
-              </Button>
-              <Button
-                variant={"ghost"}
-                size={'icon-sm'}
-                aria-label="Feedback"
-                className={"text-muted-foreground/80 rounded-md"}
-              >
-                <Send weight="Filled" />
+							</Button>
+							<Button
+								variant={"ghost"}
+								size={"icon-sm"}
+								aria-label="Feedback"
+								className={"text-muted-foreground/80 rounded-md"}
+							>
+								<Send weight="Filled" />
 							</Button>
 						</div>
 						<div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -143,7 +197,7 @@ function HandlePage() {
 					</aside>
 				</div>
 				<section className="min-h-[calc(100dvh-3rem)] w-full overflow-y-auto p-6 pt-0 sm:max-w-[24rem] xl:h-full xl:min-h-[calc(100dvh-4rem)] xl:w-4xl xl:max-w-none xl:shrink-0 xl:pt-16 no-scrollbar">
-          grid later
+					grid later
 				</section>
 			</div>
 		</main>

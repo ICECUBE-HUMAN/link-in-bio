@@ -1,68 +1,75 @@
-"use client";
+import { Accordion as AccordionPrimitive } from "@base-ui/react/accordion"
 
-import { Accordion as AccordionPrimitive } from "@base-ui/react/accordion";
-import { ChevronDownIcon } from "lucide-react";
-import type React from "react";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/lib/utils"
+import { ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 
-export function Accordion(
-  props: AccordionPrimitive.Root.Props,
-): React.ReactElement {
-  return <AccordionPrimitive.Root data-slot="accordion" {...props} />;
-}
-
-export function AccordionItem({
-  className,
-  ...props
-}: AccordionPrimitive.Item.Props): React.ReactElement {
+function Accordion({ className, ...props }: AccordionPrimitive.Root.Props) {
   return (
-    <AccordionPrimitive.Item
-      className={cn("border-b last:border-b-0", className)}
-      data-slot="accordion-item"
+    <AccordionPrimitive.Root
+      data-slot="accordion"
+      className={cn(
+        "flex w-full flex-col overflow-hidden rounded-2xl border",
+        className
+      )}
       {...props}
     />
-  );
+  )
 }
 
-export function AccordionTrigger({
+function AccordionItem({ className, ...props }: AccordionPrimitive.Item.Props) {
+  return (
+    <AccordionPrimitive.Item
+      data-slot="accordion-item"
+      className={cn("not-last:border-b data-open:bg-muted/50", className)}
+      {...props}
+    />
+  )
+}
+
+function AccordionTrigger({
   className,
   children,
   ...props
-}: AccordionPrimitive.Trigger.Props): React.ReactElement {
+}: AccordionPrimitive.Trigger.Props) {
   return (
     <AccordionPrimitive.Header className="flex">
       <AccordionPrimitive.Trigger
-        className={cn(
-          "flex flex-1 cursor-pointer items-start justify-between gap-4 rounded-md py-4 text-left font-medium text-sm outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-64 data-panel-open:*:data-[slot=accordion-indicator]:rotate-180",
-          className,
-        )}
         data-slot="accordion-trigger"
+        className={cn(
+          "group/accordion-trigger relative flex flex-1 items-start justify-between gap-6 border border-transparent p-4 text-left text-sm font-medium transition-all outline-none hover:underline aria-disabled:pointer-events-none aria-disabled:opacity-50 **:data-[slot=accordion-trigger-icon]:ml-auto **:data-[slot=accordion-trigger-icon]:size-4 **:data-[slot=accordion-trigger-icon]:text-muted-foreground",
+          className
+        )}
         {...props}
       >
         {children}
-        <ChevronDownIcon
-          className="pointer-events-none size-4 shrink-0 translate-y-0.5 opacity-80 transition-transform duration-200 ease-in-out"
-          data-slot="accordion-indicator"
-        />
+        <ChevronDownIcon data-slot="accordion-trigger-icon" className="pointer-events-none shrink-0 group-aria-expanded/accordion-trigger:hidden" />
+        <ChevronUpIcon data-slot="accordion-trigger-icon" className="pointer-events-none hidden shrink-0 group-aria-expanded/accordion-trigger:inline" />
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>
-  );
+  )
 }
 
-export function AccordionPanel({
+function AccordionContent({
   className,
   children,
   ...props
-}: AccordionPrimitive.Panel.Props): React.ReactElement {
+}: AccordionPrimitive.Panel.Props) {
   return (
     <AccordionPrimitive.Panel
-      className="h-(--accordion-panel-height) overflow-hidden text-muted-foreground text-sm transition-[height] duration-200 ease-in-out data-ending-style:h-0 data-starting-style:h-0"
-      data-slot="accordion-panel"
+      data-slot="accordion-content"
+      className="overflow-hidden px-4 text-sm data-open:animate-accordion-down data-closed:animate-accordion-up"
       {...props}
     >
-      <div className={cn("pt-0 pb-4", className)}>{children}</div>
+      <div
+        className={cn(
+          "h-(--accordion-panel-height) pt-0 pb-4 data-ending-style:h-0 data-starting-style:h-0 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-4",
+          className
+        )}
+      >
+        {children}
+      </div>
     </AccordionPrimitive.Panel>
-  );
+  )
 }
 
-export { AccordionPrimitive, AccordionPanel as AccordionContent };
+export { Accordion, AccordionItem, AccordionTrigger, AccordionContent }

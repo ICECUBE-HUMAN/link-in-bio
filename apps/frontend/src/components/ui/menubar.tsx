@@ -2,7 +2,7 @@ import * as React from "react"
 import { Menu as MenuPrimitive } from "@base-ui/react/menu"
 import { Menubar as MenubarPrimitive } from "@base-ui/react/menubar"
 
-import { cn } from "@/lib/shared/utils.ts"
+import { cn } from "@/lib/utils"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +17,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx"
+} from "@/components/ui/dropdown-menu"
 import { CheckIcon } from "lucide-react"
 
 function Menubar({ className, ...props }: MenubarPrimitive.Props) {
@@ -75,7 +75,7 @@ function MenubarContent({
       align={align}
       alignOffset={alignOffset}
       sideOffset={sideOffset}
-      className={cn("dark min-w-48 rounded-3xl bg-popover p-1.5 text-popover-foreground shadow-lg ring-1 ring-foreground/5 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 dark:ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95", className )}
+      className={cn("min-w-48 rounded-3xl bg-popover p-1.5 text-popover-foreground shadow-lg ring-1 ring-foreground/5 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 dark:ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95", className )}
       {...props}
     />
   )
@@ -249,7 +249,7 @@ function MenubarSubContent({
   return (
     <DropdownMenuSubContent
       data-slot="menubar-sub-content"
-      className={cn("dark min-w-32 rounded-3xl bg-popover p-1.5 text-popover-foreground shadow-lg ring-1 ring-foreground/5 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 dark:ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
+      className={cn("min-w-32 rounded-3xl bg-popover p-1.5 text-popover-foreground shadow-lg ring-1 ring-foreground/5 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 dark:ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
       {...props}
     />
   )

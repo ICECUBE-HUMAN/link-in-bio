@@ -30,6 +30,9 @@ export const betterAuthOptions = (
 
 		// .... More options
 		user: {
+			deleteUser: {
+				enabled: true,
+			},
 			additionalFields: {
 				role: {
 					type: "string",
