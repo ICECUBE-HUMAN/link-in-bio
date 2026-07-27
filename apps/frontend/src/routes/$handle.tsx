@@ -23,6 +23,7 @@ import { getProfileImageUrl } from "@/lib/api/profile-image-api";
 import { getSessionQueryOptions } from "@/lib/api/session.functions";
 import { getPageMode } from "@/lib/page/page-mode";
 import { usePageAutoSave } from "@/lib/page/use-page-auto-save";
+import { DEFAULT_APP_LOGO } from "@/lib/seo/metadata";
 
 type HandleLoaderData = {
 	page: PageResponse;
@@ -53,6 +54,29 @@ export const Route = createFileRoute("/$handle")({
 		return {
 			page: result.page,
 			isCurrentUserPage: session?.user.id === result.page.userId,
+		};
+	},
+	head: ({ loaderData }) => {
+		const title = loaderData?.page.name?.trim() || loaderData?.page.handle;
+		const image = loaderData
+			? (getProfileImageUrl(loaderData.page.image) ?? DEFAULT_APP_LOGO)
+			: DEFAULT_APP_LOGO;
+
+		return {
+			meta: [
+				{ title: title ?? "Sinabro" },
+				{ property: "og:title", content: title ?? "Sinabro" },
+				{ property: "og:image", content: image },
+				{ name: "twitter:title", content: title ?? "Sinabro" },
+				{ name: "twitter:image", content: image },
+			],
+			links: [
+				{
+					rel: "icon",
+					href: image,
+					"data-page-favicon": "true",
+				},
+			],
 		};
 	},
 	component: HandlePage,
@@ -107,6 +131,47 @@ function HandlePageContent({
 		handle: page.handle,
 		enabled: mode === "edit",
 	});
+
+	useEffect(() => {
+		document.title = draft.name?.trim() || page.handle;
+
+		const faviconHref = getProfileImageUrl(draft.image) ?? DEFAULT_APP_LOGO;
+		const iconLinks = Array.from(
+			document.head.querySelectorAll<HTMLLinkElement>('link[rel~="icon"]'),
+		);
+		const originalIconAttributes = iconLinks.map((link) => ({
+			href: link.getAttribute("href"),
+			type: link.getAttribute("type"),
+		}));
+		const favicon =
+			document.head.querySelector<HTMLLinkElement>(
+				'link[data-page-favicon="true"]',
+			) ?? document.createElement("link");
+		const isNewFavicon = !favicon.isConnected;
+
+		favicon.rel = "icon";
+		favicon.dataset.pageFavicon = "true";
+		favicon.href = faviconHref;
+		if (isNewFavicon) {
+			document.head.appendChild(favicon);
+		}
+
+		for (const link of iconLinks) {
+			link.href = faviconHref;
+			link.removeAttribute("type");
+		}
+
+		return () => {
+			iconLinks.forEach((link, index) => {
+				const original = originalIconAttributes[index];
+				if (original?.href === null) link.removeAttribute("href");
+				else if (original?.href) link.href = original.href;
+				if (original?.type === null) link.removeAttribute("type");
+				else if (original?.type) link.type = original.type;
+			});
+			if (isNewFavicon) favicon.remove();
+		};
+	}, [draft.image, draft.name, page.handle]);
 
 	useEffect(() => {
 		const frame = requestAnimationFrame(() => setIsAsideShown(true));
