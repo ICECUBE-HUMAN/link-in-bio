@@ -28,6 +28,7 @@ import {
 	MY_PAGE_QUERY_KEY,
 } from "@/lib/api/pages.functions";
 import { updatePage } from "@/lib/api/pages-api";
+import { clearSessionQuery } from "@/lib/api/session.functions";
 import { authClient } from "@/lib/auth/auth-client";
 import { getHandleAvailabilityStatus } from "@/lib/page/new-page-state";
 
@@ -45,6 +46,7 @@ const handleAvailabilityIcons = {
 
 export function PageSettingsMenu({ page }: PageSettingsMenuProps) {
 	const navigate = useNavigate();
+	const queryClient = useQueryClient();
 	const [view, setView] = useState<SettingsView>("menu");
 	const [open, setOpen] = useState(false);
 	const [isHandleSuccess, setIsHandleSuccess] = useState(false);
@@ -91,8 +93,16 @@ export function PageSettingsMenu({ page }: PageSettingsMenuProps) {
 							type="button"
 							variant="ghost"
 							className="w-full justify-start rounded-lg font-normal h-13"
-							onClick={() => {
-								void authClient.signOut().then(() => setOpen(false));
+							onClick={async () => {
+								const { error } = await authClient.signOut();
+								if (error) return;
+
+								await clearSessionQuery(queryClient);
+								queryClient.resetQueries({
+									queryKey: MY_PAGE_QUERY_KEY,
+									exact: true,
+								});
+								setOpen(false);
 							}}
 						>
 							Log out
@@ -123,7 +133,11 @@ export function PageSettingsMenu({ page }: PageSettingsMenuProps) {
 									setView("menu");
 								}}
 								onChanged={(handle) => {
-									void navigate({ to: "/$handle", params: { handle } });
+									void navigate({
+										to: "/$handle",
+										params: { handle },
+										replace: true,
+									});
 								}}
 								onSuccessChange={setIsHandleSuccess}
 							/>

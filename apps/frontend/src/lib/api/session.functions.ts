@@ -59,3 +59,12 @@ export function getSessionQueryOptions() {
 export function invalidateSessionQuery(queryClient: QueryClient) {
 	return queryClient.removeQueries({ queryKey: SESSION_QUERY_KEY });
 }
+
+export function clearSessionQuery(queryClient: QueryClient) {
+	queryClient.setQueryData<GetSessionResult>(SESSION_QUERY_KEY, {
+		data: null,
+		error: null,
+	});
+
+	return queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
+}
