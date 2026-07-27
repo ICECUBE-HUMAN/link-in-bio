@@ -25,6 +25,7 @@
     "@shadcn/react": "^0.2.0",
     "@sinabro/api": "workspace:*",
     "@sinabro/backend": "workspace:*",
+    "@sinabro/grid-layout": "workspace:*",
     "@t3-oss/env-core": "^0.13.10",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",

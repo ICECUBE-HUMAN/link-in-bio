@@ -16,6 +16,7 @@
         "@hono/standard-validator": "^0.2.3",
         "@scalar/hono-api-reference": "^0.11.8",
         "@sinabro/api": "workspace:*",
+        "@sinabro/grid-layout": "workspace:*",
         "@valibot/to-json-schema": "^1.7.1",
         "better-auth": "^1.6.23",
         "drizzle-orm": "^0.45.2",
@@ -46,6 +47,7 @@
         "@shadcn/react": "^0.2.0",
         "@sinabro/api": "workspace:*",
         "@sinabro/backend": "workspace:*",
+        "@sinabro/grid-layout": "workspace:*",
         "@t3-oss/env-core": "^0.13.10",
         "@tailwindcss/vite": "^4.1.18",
         "@tanstack/react-devtools": "latest",
@@ -130,6 +132,12 @@
       "devDependencies": {
         "@types/node": "^22.10.2",
         "typescript": "^6.0.2",
+      },
+    },
+    "packages/grid-layout": {
+      "name": "@sinabro/grid-layout",
+      "dependencies": {
+        "@sinabro/api": "workspace:*",
       },
     },
   },
@@ -613,6 +621,8 @@
     "@sinabro/backend": ["@sinabro/backend@workspace:apps/backend"],
 
     "@sinabro/frontend": ["@sinabro/frontend@workspace:apps/frontend"],
+
+    "@sinabro/grid-layout": ["@sinabro/grid-layout@workspace:packages/grid-layout"],
 
     "@sindresorhus/is": ["@sindresorhus/is@7.2.0", "", {}, "sha512-P1Cz1dWaFfR4IR+U13mqqiGsLFf1KbayybWwdd2vfctdV6hDpUkgCY0nKOLLTMSoRd/jJNjtbqzf13K8DCCXQw=="],
 
