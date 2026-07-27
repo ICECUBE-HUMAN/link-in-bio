@@ -1,10 +1,19 @@
-import type { ProfileImageUploadRequest } from "@sinabro/api";
+import type {
+	PageItemUploadRequest,
+	ProfileImageUploadRequest,
+} from "@sinabro/api";
 
 export const PROFILE_IMAGE_PREFIX =
 	"users/profile/";
 export const MAX_PROFILE_IMAGE_SIZE =
 	5 * 1024 * 1024;
 export const PROFILE_IMAGE_UPLOAD_TTL_SECONDS =
+	10 * 60;
+export const MAX_ITEM_MEDIA_SIZE =
+	25 * 1024 * 1024;
+export const ITEM_MEDIA_PREFIX =
+	"users/";
+export const ITEM_MEDIA_UPLOAD_TTL_SECONDS =
 	10 * 60;
 
 const supportedImageTypes = new Map([
@@ -14,6 +23,9 @@ const supportedImageTypes = new Map([
 	["image/png", "png"],
 	["image/webp", "webp"],
 ]);
+
+const mediaTypePattern =
+	/^(image|video)\/[a-z0-9.+-]+$/i;
 
 const awsEncode = (value: string) =>
 	encodeURIComponent(value).replace(
@@ -124,9 +136,85 @@ export const createProfileImageKey = (
 		supportedImageTypes.get(
 			contentType,
 		);
+
 	if (!extension) return null;
 	return `${PROFILE_IMAGE_PREFIX}${crypto.randomUUID()}.${extension}`;
 };
+
+export const isItemMediaKey = (
+	value: string,
+) =>
+	/^users\/[^/]+\/bento\/[^/]+\/[^/]+$/.test(
+		value,
+	) &&
+	!value.includes("..") &&
+	!value.includes("\\");
+
+export const sanitizeMediaFilename = (
+	filename: string,
+) => {
+	if (
+		filename.includes("/") ||
+		filename.includes("\\") ||
+		filename === "." ||
+		filename === ".."
+	)
+		return null;
+	const sanitized = filename
+		.normalize("NFKC")
+		.replace(/[^a-zA-Z0-9._-]/g, "-")
+		.replace(/-+/g, "-")
+		.replace(/^[-.]+|[-.]+$/g, "")
+		.slice(0, 120);
+	return sanitized || null;
+};
+
+const isSafePathSegment = (
+	value: string,
+) =>
+	/^[a-zA-Z0-9_-]+$/.test(value) &&
+	value !== "." &&
+	value !== "..";
+
+export const createItemMediaKey = ({
+	userId,
+	itemId,
+	filename,
+}: Pick<
+	PageItemUploadRequest,
+	"itemId" | "filename"
+> & { userId: string }) => {
+	const sanitized =
+		sanitizeMediaFilename(filename);
+	if (
+		!sanitized ||
+		!isSafePathSegment(userId) ||
+		!isSafePathSegment(itemId)
+	)
+		return null;
+	return `users/${userId}/bento/${itemId}/${sanitized}`;
+};
+
+export const validateItemMediaUpload =
+	({
+		contentType,
+		size,
+	}: Pick<
+		PageItemUploadRequest,
+		"contentType" | "size"
+	>) =>
+		mediaTypePattern.test(
+			contentType,
+		) && size <= MAX_ITEM_MEDIA_SIZE;
+
+export const getItemMediaUrl = (
+	publicBaseUrl: string | undefined,
+	objectKey: string,
+) =>
+	publicBaseUrl &&
+	isItemMediaKey(objectKey)
+		? `${publicBaseUrl.replace(/\/+$/, "")}/${objectKey.split("/").map(encodeURIComponent).join("/")}`
+		: undefined;
 
 export const validateProfileImageUpload =
 	(input: ProfileImageUploadRequest) =>
@@ -151,6 +239,57 @@ export async function createProfileImageUploadUrl({
 	contentType: string;
 	now?: Date;
 }) {
+	return createSignedUploadUrl({
+		accountId,
+		accessKeyId,
+		secretAccessKey,
+		objectKey,
+		contentType,
+		ttlSeconds:
+			PROFILE_IMAGE_UPLOAD_TTL_SECONDS,
+		now,
+	});
+}
+
+export async function createItemMediaUploadUrl({
+	accountId,
+	accessKeyId,
+	secretAccessKey,
+	objectKey,
+	contentType,
+	now = new Date(),
+}: Parameters<
+	typeof createProfileImageUploadUrl
+>[0]) {
+	return createSignedUploadUrl({
+		accountId,
+		accessKeyId,
+		secretAccessKey,
+		objectKey,
+		contentType,
+		ttlSeconds:
+			ITEM_MEDIA_UPLOAD_TTL_SECONDS,
+		now,
+	});
+}
+
+async function createSignedUploadUrl({
+	accountId,
+	accessKeyId,
+	secretAccessKey,
+	objectKey,
+	contentType,
+	ttlSeconds,
+	now,
+}: {
+	accountId: string;
+	accessKeyId: string;
+	secretAccessKey: string;
+	objectKey: string;
+	contentType: string;
+	ttlSeconds: number;
+	now: Date;
+}) {
 	const region = "auto";
 	const service = "s3";
 	const host = `${accountId}.r2.cloudflarestorage.com`;
@@ -171,9 +310,7 @@ export async function createProfileImageUploadUrl({
 		["X-Amz-Date", amzDate],
 		[
 			"X-Amz-Expires",
-			String(
-				PROFILE_IMAGE_UPLOAD_TTL_SECONDS,
-			),
+			String(ttlSeconds),
 		],
 		[
 			"X-Amz-SignedHeaders",
@@ -207,16 +344,15 @@ export async function createProfileImageUploadUrl({
 		scope,
 		await sha256(canonicalRequest),
 	].join("\n");
-	const signingKey = await hmacChain(
-		secretAccessKey,
-		shortDate,
-		region,
-		service,
-	);
 	const signature = toHex(
 		asArrayBuffer(
 			await hmac(
-				signingKey,
+				await hmacChain(
+					secretAccessKey,
+					shortDate,
+					region,
+					service,
+				),
 				stringToSign,
 			),
 		),
@@ -240,9 +376,7 @@ export async function createProfileImageUploadUrl({
 			)
 			.join("&")}`,
 		expiresAt: new Date(
-			now.getTime() +
-				PROFILE_IMAGE_UPLOAD_TTL_SECONDS *
-					1000,
+			now.getTime() + ttlSeconds * 1000,
 		).toISOString(),
 	};
 }

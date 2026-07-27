@@ -17,6 +17,7 @@
 			"R2_ACCOUNT_ID",
 			"R2_ACCESS_KEY_ID",
 			"R2_SECRET_ACCESS_KEY",
+			"R2_PUBLIC_URL",
 		]
 	},
 	"account_id": "849b4ba384d03f3c7d2bea5ed1ab9a3c",
@@ -27,6 +28,23 @@
 			"remote": true,
 		}
 	],
+	"queues": {
+		"producers": [
+			{
+				"binding": "ITEM_MEDIA_DELETE_QUEUE",
+				"queue": "sinabro-item-media-cleanup"
+			}
+		],
+		"consumers": [
+			{
+				"queue": "sinabro-item-media-cleanup",
+				"max_batch_size": 20
+			}
+		]
+	},
+	"triggers": {
+		"crons": ["0 3 * * *"]
+	},
 	"observability": {
 		"enabled": true,
 		"head_sampling_rate": 0.5

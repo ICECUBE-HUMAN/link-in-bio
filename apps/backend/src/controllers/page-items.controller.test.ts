@@ -1,0 +1,366 @@
+import {
+	describe,
+	expect,
+	it,
+} from "bun:test";
+import { pageItemsController } from "@controllers/page-items.controller";
+import type { AppEnv } from "@core/app-factory";
+import { errorHandler } from "@middlewares/error-handler.middleware";
+import { Hono } from "hono";
+
+const page = {
+	id: "page_1",
+	userId: "user_1",
+	handle: "kim",
+};
+
+function createApp(
+	user: { id: string } | null = null,
+) {
+	const app = new Hono<AppEnv>();
+	app.use("*", async (c, next) => {
+		c.set("user", user as never);
+		c.set("db", {
+			query: {
+				pages: {
+					findFirst: async () => page,
+				},
+				pageItems: {
+					findMany: async () => [],
+				},
+			},
+		} as never);
+		await next();
+	});
+	return app
+		.onError(errorHandler)
+		.route(
+			"/pages",
+			pageItemsController,
+		);
+}
+
+function createBatchApp() {
+	const items: Array<
+		Record<string, unknown>
+	> = [];
+	const db = {
+		query: {
+			pages: {
+				findFirst: async () => page,
+			},
+			pageItems: {
+				findMany: async () => items,
+			},
+		},
+		transaction: async (
+			callback: (
+				tx: unknown,
+			) => Promise<unknown>,
+		) => callback(db),
+		insert: () => {
+			const builder = {
+				values: (
+					values:
+						| Record<string, unknown>
+						| Array<
+								Record<string, unknown>
+						  >,
+				) => {
+					for (const value of Array.isArray(
+						values,
+					)
+						? values
+						: [values])
+						items.push({
+							...value,
+							createdAt: new Date(
+								"2026-07-27T00:00:00.000Z",
+							),
+							updatedAt: new Date(
+								"2026-07-27T00:00:00.000Z",
+							),
+						});
+					return builder;
+				},
+				onConflictDoUpdate: () =>
+					builder,
+			};
+			return builder;
+		},
+	};
+	const app = new Hono<AppEnv>();
+	app.use("*", async (c, next) => {
+		c.set("user", {
+			id: "user_1",
+		} as never);
+		c.set("db", db as never);
+		await next();
+	});
+	return {
+		app: app
+			.onError(errorHandler)
+			.route(
+				"/pages",
+				pageItemsController,
+			),
+		items,
+	};
+}
+
+describe("pageItemsController", () => {
+	it("requires authentication for item upload", async () => {
+		const response =
+			await createApp().request(
+				"/pages/kim/items/upload",
+				{ method: "POST", body: "{}" },
+			);
+		expect(response.status).toBe(401);
+	});
+
+	it("rejects path traversal filenames before signing an upload", async () => {
+		const response = await createApp({
+			id: "user_1",
+		}).request(
+			"/pages/kim/items/upload",
+			{
+				method: "POST",
+				headers: {
+					"content-type":
+						"application/json",
+				},
+				body: JSON.stringify({
+					itemId: "item_1",
+					filename: "../secret.png",
+					contentType: "image/png",
+					size: 10,
+				}),
+			},
+		);
+		expect(response.status).toBe(422);
+	});
+
+	it("rejects malformed JSON with a client error", async () => {
+		const response = await createApp({
+			id: "user_1",
+		}).request(
+			"/pages/kim/items/upload",
+			{
+				method: "POST",
+				headers: {
+					"content-type":
+						"application/json",
+				},
+				body: "{",
+			},
+		);
+		expect(response.status).toBe(422);
+	});
+
+	it("rejects duplicate and conflicting batch item IDs", async () => {
+		const duplicate = await createApp({
+			id: "user_1",
+		}).request("/pages/kim/batch", {
+			method: "PATCH",
+			headers: {
+				"content-type":
+					"application/json",
+			},
+			body: JSON.stringify({
+				upserts: [
+					{
+						id: "item_1",
+						type: "text",
+						data: { text: "One" },
+						style: {},
+						layouts: {
+							wide: {
+								x: 0,
+								y: 0,
+								w: 2,
+								h: 1,
+							},
+							compact: {
+								x: 0,
+								y: 0,
+								w: 2,
+								h: 1,
+							},
+						},
+					},
+					{
+						id: "item_1",
+						type: "text",
+						data: { text: "Two" },
+						style: {},
+						layouts: {
+							wide: {
+								x: 0,
+								y: 0,
+								w: 2,
+								h: 1,
+							},
+							compact: {
+								x: 0,
+								y: 0,
+								w: 2,
+								h: 1,
+							},
+						},
+					},
+				],
+				deletes: [],
+			}),
+		});
+		expect(duplicate.status).toBe(422);
+
+		const conflict = await createApp({
+			id: "user_1",
+		}).request("/pages/kim/batch", {
+			method: "PATCH",
+			headers: {
+				"content-type":
+					"application/json",
+			},
+			body: JSON.stringify({
+				upserts: [
+					{
+						id: "item_1",
+						type: "text",
+						data: { text: "One" },
+						style: {},
+						layouts: {
+							wide: {
+								x: 0,
+								y: 0,
+								w: 2,
+								h: 1,
+							},
+							compact: {
+								x: 0,
+								y: 0,
+								w: 2,
+								h: 1,
+							},
+						},
+					},
+				],
+				deletes: ["item_1"],
+			}),
+		});
+		expect(conflict.status).toBe(422);
+	});
+
+	it("completes an uploaded media object after checking its metadata", async () => {
+		const response = await createApp({
+			id: "user_1",
+		}).request(
+			"/pages/kim/items/upload/complete",
+			{
+				method: "POST",
+				headers: {
+					"content-type":
+						"application/json",
+				},
+				body: JSON.stringify({
+					objectKey:
+						"users/user_1/bento/item_1/photo.png",
+				}),
+			},
+			{
+				IMAGES: {
+					head: async () => ({
+						size: 10,
+						httpMetadata: {
+							contentType: "image/png",
+						},
+					}),
+				},
+			} as never,
+		);
+		expect(response.status).toBe(200);
+		expect(
+			await response.json(),
+		).toMatchObject({
+			objectKey:
+				"users/user_1/bento/item_1/photo.png",
+			mimeType: "image/png",
+			size: 10,
+		});
+	});
+
+	it("applies multiple new items in one batch", async () => {
+		const { app, items } =
+			createBatchApp();
+		const response = await app.request(
+			"/pages/kim/batch",
+			{
+				method: "PATCH",
+				headers: {
+					"content-type":
+						"application/json",
+				},
+				body: JSON.stringify({
+					upserts: [
+						{
+							id: "item_1",
+							type: "text",
+							data: { text: "One" },
+							style: {},
+							layouts: {
+								wide: {
+									x: 0,
+									y: 0,
+									w: 2,
+									h: 1,
+								},
+								compact: {
+									x: 0,
+									y: 0,
+									w: 2,
+									h: 1,
+								},
+							},
+						},
+						{
+							id: "item_2",
+							type: "text",
+							data: { text: "Two" },
+							style: {},
+							layouts: {
+								wide: {
+									x: 2,
+									y: 0,
+									w: 2,
+									h: 1,
+								},
+								compact: {
+									x: 0,
+									y: 1,
+									w: 2,
+									h: 1,
+								},
+							},
+						},
+					],
+					deletes: [],
+				}),
+			},
+		);
+		expect(response.status).toBe(200);
+		expect(items).toHaveLength(2);
+		expect(
+			items.map((item) => item.data),
+		).toEqual([
+			{ text: "One" },
+			{ text: "Two" },
+		]);
+		expect(
+			(
+				(await response.json()) as {
+					items: unknown[];
+				}
+			).items,
+		).toHaveLength(2);
+	});
+});

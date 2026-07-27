@@ -50,6 +50,10 @@ import {
 	UnauthorizedError,
 	UnprocessableEntityError,
 } from "../exceptions/http-exceptions";
+import {
+	listPageItems,
+	mapPageItemResponse,
+} from "./page-items.controller";
 
 const mapPageResponse = (
 	page: typeof pages.$inferSelect,
@@ -695,6 +699,21 @@ export const pagesController =
 				pageByHandleResponseSchema,
 				{
 					page: mapPageResponse(page),
+					items: (
+						await listPageItems(
+							c.get("db"),
+							page.id,
+						)
+					).map((item) =>
+						mapPageItemResponse(
+							item,
+							(
+								c.env as typeof c.env & {
+									R2_PUBLIC_URL?: string;
+								}
+							).R2_PUBLIC_URL,
+						),
+					),
 				},
 			);
 

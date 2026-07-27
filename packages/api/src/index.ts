@@ -1,4 +1,5 @@
 import * as v from "valibot";
+import * as grid from "./grid";
 
 export const reservedPageHandles = [
 	"admin",
@@ -131,6 +132,7 @@ export type UpdatePageResponse = v.InferOutput<typeof updatePageResponseSchema>;
 
 export const pageByHandleResponseSchema = v.object({
 	page: pageResponseSchema,
+	items: v.array(grid.pageItemResponseSchema),
 });
 
 export type PageByHandleResponse = v.InferOutput<
@@ -144,16 +146,8 @@ export const myPageResponseSchema = v.object({
 export type MyPageResponse = v.InferOutput<typeof myPageResponseSchema>;
 
 export const profileImageUploadRequestSchema = v.object({
-	contentType: v.pipe(
-		v.string(),
-		v.trim(),
-		v.regex(/^image\/[a-z0-9.+-]+$/i),
-	),
-	size: v.pipe(
-		v.number(),
-		v.integer(),
-		v.minValue(1),
-	),
+	contentType: v.pipe(v.string(), v.trim(), v.regex(/^image\/[a-z0-9.+-]+$/i)),
+	size: v.pipe(v.number(), v.integer(), v.minValue(1)),
 });
 
 export type ProfileImageUploadRequest = v.InferOutput<

@@ -147,6 +147,9 @@ function createFakeDb({
 					);
 				},
 			},
+			pageItems: {
+				findMany: async () => [],
+			},
 		},
 		insert: () => ({
 			values: (

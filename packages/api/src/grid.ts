@@ -26,7 +26,10 @@ export const itemLayoutSchema = v.object({
 
 export type ItemLayout = v.InferOutput<typeof itemLayoutSchema>;
 
-const itemStyleSchema = v.record(v.string(), v.unknown());
+const itemStyleSchema = v.record(
+	v.string(),
+	v.union([v.string(), v.number(), v.boolean(), v.null()]),
+);
 
 const httpsUrlSchema = v.pipe(
 	v.string(),
@@ -47,6 +50,11 @@ export const pageItemMediaDataSchema = v.object({
 		v.regex(/^(image|video)\/[a-z0-9.+-]+$/i, "Media MIME type required."),
 	),
 	caption: v.optional(v.string()),
+});
+
+export const pageItemMediaResponseDataSchema = v.object({
+	...pageItemMediaDataSchema.entries,
+	mediaUrl: v.optional(httpsUrlSchema),
 });
 
 export const pageItemMapDataSchema = v.object({
@@ -94,9 +102,9 @@ const pageItemResponseBaseSchema = v.object({
 	updatedAt: v.string(),
 });
 
-const pageItemVariantSchema = v.variant("type", [
+const pageItemResponseVariantSchema = v.variant("type", [
 	v.object({ type: v.literal("text"), data: pageItemTextDataSchema }),
-	v.object({ type: v.literal("media"), data: pageItemMediaDataSchema }),
+	v.object({ type: v.literal("media"), data: pageItemMediaResponseDataSchema }),
 	v.object({ type: v.literal("map"), data: pageItemMapDataSchema }),
 	v.object({ type: v.literal("section"), data: pageItemSectionDataSchema }),
 	v.object({ type: v.literal("link"), data: pageItemLinkDataSchema }),
@@ -104,7 +112,7 @@ const pageItemVariantSchema = v.variant("type", [
 
 export const pageItemResponseSchema = v.intersect([
 	pageItemResponseBaseSchema,
-	pageItemVariantSchema,
+	pageItemResponseVariantSchema,
 ]);
 
 export type PageItemResponse = v.InferOutput<typeof pageItemResponseSchema>;
@@ -117,7 +125,13 @@ const pageItemUpsertBaseSchema = v.object({
 
 export const pageItemUpsertSchema = v.intersect([
 	pageItemUpsertBaseSchema,
-	pageItemVariantSchema,
+	v.variant("type", [
+		v.object({ type: v.literal("text"), data: pageItemTextDataSchema }),
+		v.object({ type: v.literal("media"), data: pageItemMediaDataSchema }),
+		v.object({ type: v.literal("map"), data: pageItemMapDataSchema }),
+		v.object({ type: v.literal("section"), data: pageItemSectionDataSchema }),
+		v.object({ type: v.literal("link"), data: pageItemLinkDataSchema }),
+	]),
 ]);
 
 export type PageItemUpsert = v.InferOutput<typeof pageItemUpsertSchema>;
@@ -137,4 +151,47 @@ export const pageItemBatchResponseSchema = v.object({
 
 export type PageItemBatchResponse = v.InferOutput<
 	typeof pageItemBatchResponseSchema
+>;
+
+export const pageItemUploadRequestSchema = v.object({
+	itemId: v.pipe(v.string(), v.minLength(1)),
+	filename: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(180)),
+	contentType: v.pipe(
+		v.string(),
+		v.trim(),
+		v.regex(/^(image|video)\/[a-z0-9.+-]+$/i),
+	),
+	size: v.pipe(v.number(), v.integer(), v.minValue(1)),
+});
+
+export type PageItemUploadRequest = v.InferOutput<
+	typeof pageItemUploadRequestSchema
+>;
+
+export const pageItemUploadResponseSchema = v.object({
+	objectKey: v.pipe(v.string(), v.minLength(1)),
+	uploadUrl: v.pipe(v.string(), v.url()),
+	expiresAt: v.string(),
+});
+
+export type PageItemUploadResponse = v.InferOutput<
+	typeof pageItemUploadResponseSchema
+>;
+
+export const pageItemUploadCompleteRequestSchema = v.object({
+	objectKey: v.pipe(v.string(), v.minLength(1)),
+});
+
+export type PageItemUploadCompleteRequest = v.InferOutput<
+	typeof pageItemUploadCompleteRequestSchema
+>;
+
+export const pageItemUploadCompleteResponseSchema = v.object({
+	objectKey: v.pipe(v.string(), v.minLength(1)),
+	mimeType: v.pipe(v.string(), v.regex(/^(image|video)\/[a-z0-9.+-]+$/i)),
+	size: v.pipe(v.number(), v.integer(), v.minValue(1)),
+});
+
+export type PageItemUploadCompleteResponse = v.InferOutput<
+	typeof pageItemUploadCompleteResponseSchema
 >;

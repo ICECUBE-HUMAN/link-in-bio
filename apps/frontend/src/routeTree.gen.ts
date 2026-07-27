@@ -21,6 +21,8 @@ import { Route as UpdateIndexRouteImport } from './routes/update/index'
 import { Route as ApiPagesHandleRouteImport } from './routes/api/pages/$handle'
 import { Route as ApiPagesHandleImageUploadRouteImport } from './routes/api/pages/$handle/image-upload'
 import { Route as ApiPagesHandleImageUploadCompleteRouteImport } from './routes/api/pages/$handle/image-upload/complete'
+import { Route as ApiPagesHandleItemsUploadRouteImport } from './routes/api/pages/$handle/items/upload'
+import { Route as ApiPagesHandleItemsUploadCompleteRouteImport } from './routes/api/pages/$handle/items/upload/complete'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -84,6 +86,18 @@ const ApiPagesHandleImageUploadCompleteRoute =
     path: '/complete',
     getParentRoute: () => ApiPagesHandleImageUploadRoute,
   } as any)
+const ApiPagesHandleItemsUploadRoute =
+  ApiPagesHandleItemsUploadRouteImport.update({
+    id: '/items/upload',
+    path: '/items/upload',
+    getParentRoute: () => ApiPagesHandleRoute,
+  } as any)
+const ApiPagesHandleItemsUploadCompleteRoute =
+  ApiPagesHandleItemsUploadCompleteRouteImport.update({
+    id: '/complete',
+    path: '/complete',
+    getParentRoute: () => ApiPagesHandleItemsUploadRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -98,6 +112,8 @@ export interface FileRoutesByFullPath {
   '/api/pages/$handle': typeof ApiPagesHandleRouteWithChildren
   '/api/pages/$handle/image-upload': typeof ApiPagesHandleImageUploadRouteWithChildren
   '/api/pages/$handle/image-upload/complete': typeof ApiPagesHandleImageUploadCompleteRoute
+  '/api/pages/$handle/items/upload': typeof ApiPagesHandleItemsUploadRouteWithChildren
+  '/api/pages/$handle/items/upload/complete': typeof ApiPagesHandleItemsUploadCompleteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -112,6 +128,8 @@ export interface FileRoutesByTo {
   '/api/pages/$handle': typeof ApiPagesHandleRouteWithChildren
   '/api/pages/$handle/image-upload': typeof ApiPagesHandleImageUploadRouteWithChildren
   '/api/pages/$handle/image-upload/complete': typeof ApiPagesHandleImageUploadCompleteRoute
+  '/api/pages/$handle/items/upload': typeof ApiPagesHandleItemsUploadRouteWithChildren
+  '/api/pages/$handle/items/upload/complete': typeof ApiPagesHandleItemsUploadCompleteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -127,6 +145,8 @@ export interface FileRoutesById {
   '/api/pages/$handle': typeof ApiPagesHandleRouteWithChildren
   '/api/pages/$handle/image-upload': typeof ApiPagesHandleImageUploadRouteWithChildren
   '/api/pages/$handle/image-upload/complete': typeof ApiPagesHandleImageUploadCompleteRoute
+  '/api/pages/$handle/items/upload': typeof ApiPagesHandleItemsUploadRouteWithChildren
+  '/api/pages/$handle/items/upload/complete': typeof ApiPagesHandleItemsUploadCompleteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -143,6 +163,8 @@ export interface FileRouteTypes {
     | '/api/pages/$handle'
     | '/api/pages/$handle/image-upload'
     | '/api/pages/$handle/image-upload/complete'
+    | '/api/pages/$handle/items/upload'
+    | '/api/pages/$handle/items/upload/complete'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -157,6 +179,8 @@ export interface FileRouteTypes {
     | '/api/pages/$handle'
     | '/api/pages/$handle/image-upload'
     | '/api/pages/$handle/image-upload/complete'
+    | '/api/pages/$handle/items/upload'
+    | '/api/pages/$handle/items/upload/complete'
   id:
     | '__root__'
     | '/'
@@ -171,6 +195,8 @@ export interface FileRouteTypes {
     | '/api/pages/$handle'
     | '/api/pages/$handle/image-upload'
     | '/api/pages/$handle/image-upload/complete'
+    | '/api/pages/$handle/items/upload'
+    | '/api/pages/$handle/items/upload/complete'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -272,6 +298,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPagesHandleImageUploadCompleteRouteImport
       parentRoute: typeof ApiPagesHandleImageUploadRoute
     }
+    '/api/pages/$handle/items/upload': {
+      id: '/api/pages/$handle/items/upload'
+      path: '/items/upload'
+      fullPath: '/api/pages/$handle/items/upload'
+      preLoaderRoute: typeof ApiPagesHandleItemsUploadRouteImport
+      parentRoute: typeof ApiPagesHandleRoute
+    }
+    '/api/pages/$handle/items/upload/complete': {
+      id: '/api/pages/$handle/items/upload/complete'
+      path: '/complete'
+      fullPath: '/api/pages/$handle/items/upload/complete'
+      preLoaderRoute: typeof ApiPagesHandleItemsUploadCompleteRouteImport
+      parentRoute: typeof ApiPagesHandleItemsUploadRoute
+    }
   }
 }
 
@@ -290,12 +330,29 @@ const ApiPagesHandleImageUploadRouteWithChildren =
     ApiPagesHandleImageUploadRouteChildren,
   )
 
+interface ApiPagesHandleItemsUploadRouteChildren {
+  ApiPagesHandleItemsUploadCompleteRoute: typeof ApiPagesHandleItemsUploadCompleteRoute
+}
+
+const ApiPagesHandleItemsUploadRouteChildren: ApiPagesHandleItemsUploadRouteChildren =
+  {
+    ApiPagesHandleItemsUploadCompleteRoute:
+      ApiPagesHandleItemsUploadCompleteRoute,
+  }
+
+const ApiPagesHandleItemsUploadRouteWithChildren =
+  ApiPagesHandleItemsUploadRoute._addFileChildren(
+    ApiPagesHandleItemsUploadRouteChildren,
+  )
+
 interface ApiPagesHandleRouteChildren {
   ApiPagesHandleImageUploadRoute: typeof ApiPagesHandleImageUploadRouteWithChildren
+  ApiPagesHandleItemsUploadRoute: typeof ApiPagesHandleItemsUploadRouteWithChildren
 }
 
 const ApiPagesHandleRouteChildren: ApiPagesHandleRouteChildren = {
   ApiPagesHandleImageUploadRoute: ApiPagesHandleImageUploadRouteWithChildren,
+  ApiPagesHandleItemsUploadRoute: ApiPagesHandleItemsUploadRouteWithChildren,
 }
 
 const ApiPagesHandleRouteWithChildren = ApiPagesHandleRoute._addFileChildren(

@@ -1,1 +1,2 @@
-export interface AppBindings extends CloudflareBindings {}
+export interface AppBindings
+	extends CloudflareBindings {}
