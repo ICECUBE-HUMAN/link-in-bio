@@ -1,6 +1,6 @@
 import { TrashIcon } from "lucide-react";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
-import { Upload3 } from "reicon-react";
+import { Loader, Upload3 } from "reicon-react";
 import { Button } from "@/components/ui/button";
 import {
 	getProfileImageUrl,
@@ -107,10 +107,16 @@ export function PageImageEditor({
 					>
 						{imageContent}
 						{image ? (
-							<span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/25 text-white opacity-0 transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover/image:opacity-100 group-focus-within/image:opacity-100 motion-reduce:transition-none"></span>
+							<span
+								className={`pointer-events-none absolute inset-0 flex items-center justify-center bg-black/25 text-white transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none ${isUploading ? "opacity-100" : "opacity-0 group-hover/image:opacity-100 group-focus-within/image:opacity-100"}`}
+							>
+								{isUploading ? (
+									<Loader className="size-8 animate-spin" />
+								) : null}
+							</span>
 						) : null}
 					</button>
-					{image ? (
+					{image && !isUploading ? (
 						<Button
 							type="button"
 							variant="ghost"
