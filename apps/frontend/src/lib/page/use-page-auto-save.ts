@@ -20,6 +20,14 @@ type UsePageAutoSaveOptions = {
 	enabled?: boolean;
 };
 
+export function getEditablePageFields(page: PageResponse): EditablePageFields {
+	return {
+		name: page.name,
+		bio: page.bio,
+		image: page.image,
+	};
+}
+
 function updateCachedPage<T extends { page: PageResponse | null }>(
 	current: T | undefined,
 	changes: UpdatePageRequest,
@@ -38,11 +46,9 @@ export function usePageAutoSave({
 	enabled = true,
 }: UsePageAutoSaveOptions) {
 	const queryClient = useQueryClient();
-	const [draft, setDraft] = useState<EditablePageFields>({
-		name: page.name,
-		bio: page.bio,
-		image: page.image,
-	});
+	const [draft, setDraft] = useState<EditablePageFields>(() =>
+		getEditablePageFields(page),
+	);
 	const [status, setStatus] = useState<PageAutoSaveStatus>("saved");
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const draftRef = useRef(draft);
@@ -50,6 +56,7 @@ export function usePageAutoSave({
 	const pendingRef = useRef<UpdatePageRequest>({});
 	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const saveSequenceRef = useRef(0);
+	const { name, bio, image } = page;
 	const pageMutation = useMutation({
 		mutationFn: (changes: UpdatePageRequest) => updatePage(handle, changes),
 		onMutate: async (changes) => {
@@ -83,6 +90,22 @@ export function usePageAutoSave({
 			if (timerRef.current) clearTimeout(timerRef.current);
 		};
 	}, []);
+
+	useEffect(() => {
+		if (timerRef.current) {
+			clearTimeout(timerRef.current);
+			timerRef.current = null;
+		}
+
+		const nextDraft = { name, bio, image };
+		pendingRef.current = {};
+		saveSequenceRef.current += 1;
+		draftRef.current = nextDraft;
+		persistedRef.current = nextDraft;
+		setDraft(nextDraft);
+		setStatus("saved");
+		setErrorMessage(null);
+	}, [name, bio, image]);
 
 	const applyOptimisticUpdate = useCallback(
 		(changes: UpdatePageRequest) => {
