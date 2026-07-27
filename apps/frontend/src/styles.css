@@ -495,12 +495,12 @@
 }
 
 @layer utilities {
-    .surface-bevel {
+    .surface-line {
       position: relative;
     }
   
-    .surface-bevel::before,
-    .surface-bevel::after {
+    .surface-line::before,
+    .surface-line::after {
       position: absolute;
       pointer-events: none;
       content: "";
@@ -509,12 +509,12 @@
       border-radius: inherit;
     }
   
-    .surface-bevel::before {
+    .surface-line::before {
       inset: 0;
       border-color: color-mix(in oklch, var(--foreground) 18%, transparent);
     }
   
-    .surface-bevel::after {
+    .surface-line::after {
       inset: 1px;
       border-color: rgb(255 255 255 / 40%);
       mask-image: linear-gradient(to bottom, black, transparent);

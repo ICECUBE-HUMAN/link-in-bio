@@ -1,23 +1,19 @@
+import { Blend2, Widget5 } from "reicon-react";
+
 export const FEATURE_ITEMS = [
 	{
-		title: "Copy to Figma",
-		description:
-			"Download designs you like or copy it straight into Figma with our new Figma plugin.",
+		icon: Blend2,
+		title: "Drag & Drop",
+		description: "Build your page by simply dragging and dropping.",
 		thumbnail: "",
-		preview: "type-tester",
+		preview: "drag-drop",
 	},
 	{
-		title: "Save to collections",
+		icon: Widget5,
+		title: "Rich Content",
 		description:
-			"Collect your favorite designs and upload your own screenshots into one place.",
+			"Create pages with links, text, images, videos, maps, and more.",
 		thumbnail: "",
-		preview: "layout-animation",
-	},
-	{
-		title: "Leave comments",
-		description:
-			"Take notes upon saving so you'll never forget the context in the future.",
-		thumbnail: "",
-		preview: "speed-indicator",
+		preview: "rich-content",
 	},
 ] as const;

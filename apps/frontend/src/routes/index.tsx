@@ -1,8 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createSeo } from "@/lib/seo/metadata";
+
 import CTASection from "@/components/layout/sections/cta-section";
 import HeroSection from "@/components/layout/sections/hero-section";
+import MessageSection from "@/components/layout/sections/message-section";
+import FeatureSection, { FeatureSection2, FeatureSection3 } from "@/components/layout/sections/feature-section";
+
 import { Footer } from "@/components/layout/shell/footer";
-import { createSeo } from "@/lib/seo/metadata";
+
 
 export const Route = createFileRoute("/")({
 	staticData: {
@@ -20,7 +25,9 @@ function Home() {
 		<main>
 			<div className="flex min-h-lvh flex-col">
 				<section className="flex-1 px-5 pb-16">
-					<HeroSection />
+          <HeroSection />
+          <FeatureSection2 />
+					<MessageSection />
 					<CTASection />
 				</section>
 			</div>
