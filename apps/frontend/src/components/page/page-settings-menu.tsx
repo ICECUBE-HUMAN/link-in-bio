@@ -70,7 +70,7 @@ export function PageSettingsMenu({ page }: PageSettingsMenuProps) {
 			<PopoverContent
 				align="start"
 				sideOffset={12}
-				className={`${isHandleSuccess ? "w-88" : view === "handle" ? "w-88" : "w-64"} t-resize overflow-hidden p-2 shadow-brand-small! rounded-2xl`}
+				className={`${isHandleSuccess ? "w-88" : view === "handle" ? "w-88" : "w-64"} t-resize overflow-hidden p-2 shadow-brand-small! ring-0 border border-border/40 bg-background rounded-2xl`}
 			>
 				<div
 					className="t-page-slide t-resize"
