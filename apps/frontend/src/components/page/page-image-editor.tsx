@@ -1,10 +1,11 @@
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
-import { Trash2, Upload3 } from "reicon-react";
+import { Upload3 } from "reicon-react";
 import { Button } from "@/components/ui/button";
 import {
 	getProfileImageUrl,
 	uploadPageImage,
 } from "@/lib/api/profile-image-api";
+import { TrashIcon } from "lucide-react";
 
 type PageImageEditorProps = {
 	initialImage: string | null;
@@ -119,7 +120,7 @@ export function PageImageEditor({
 							onClick={handleImageRemove}
 							className="absolute top-0 right-0 inline-flex size-10 items-center justify-center rounded-full bg-background border border-border/60 opacity-0 shadow-md transition-[opacity,transform,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:scale-100 focus-visible:opacity-100 group-hover/image:scale-100 group-hover/image:opacity-100 group-focus-within/image:scale-100 group-focus-within/image:opacity-100 active:scale-95 motion-reduce:transition-none xl:top-2 xl:right-2"
 						>
-							<Trash2 className="size-6" />
+							<TrashIcon className="size-5 stroke-3" />
 						</Button>
 					) : null}
 				</div>

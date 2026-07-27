@@ -6,7 +6,7 @@ import {
 	redirect,
 } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Gear, Loader, StackPerspective } from "reicon-react";
+import { Gear, Loader, Send, StackPerspective } from "reicon-react";
 import { EditableParagraph } from "@/components/page/editable-paragraph";
 import { PageImageEditor } from "@/components/page/page-image-editor";
 import { Button } from "@/components/ui/button";
@@ -122,6 +122,14 @@ function HandlePage() {
 								className={"text-muted-foreground/80 rounded-md"}
 							>
 								<StackPerspective weight="Filled" />
+              </Button>
+              <Button
+                variant={"ghost"}
+                size={'icon-sm'}
+                aria-label="Feedback"
+                className={"text-muted-foreground/80 rounded-md"}
+              >
+                <Send weight="Filled" />
 							</Button>
 						</div>
 						<div className="flex items-center gap-2 text-xs text-muted-foreground">
