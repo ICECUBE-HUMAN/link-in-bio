@@ -1,24 +1,35 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import LogInSection from "@/components/auth/log-in-section";
+import { getMyPage, MY_PAGE_QUERY_KEY } from "@/lib/api/pages.functions";
 import { getSessionQueryOptions } from "@/lib/api/session.functions";
-import { sanitizeAuthRedirect } from "@/lib/auth/auth-redirect";
 import { createWebPageJsonLd } from "@/lib/seo/json-ld";
 import { createSeo } from "@/lib/seo/metadata";
 
 const LOG_IN_DESCRIPTION = "Log in to your account";
 
 export const Route = createFileRoute("/log-in/")({
-	validateSearch: (search) => ({
-		redirect: sanitizeAuthRedirect(search.redirect), // TODO: 실제 handle로 인동
-	}),
-	beforeLoad: async ({ context, search }) => {
+	beforeLoad: async ({ context }) => {
 		const { data: session } = await context.queryClient.ensureQueryData(
 			getSessionQueryOptions(),
 		);
 
 		if (session?.user) {
+			const myPage = session.user.primaryPageId
+				? await context.queryClient.ensureQueryData({
+						queryKey: MY_PAGE_QUERY_KEY,
+						queryFn: getMyPage,
+					})
+				: null;
+
+			if (myPage?.page?.handle) {
+				throw redirect({
+					to: "/$handle",
+					params: { handle: myPage.page.handle },
+				});
+			}
+
 			throw redirect({
-				to: search.redirect,
+				to: "/new",
 			});
 		}
 	},

@@ -1,9 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import {
-	DEFAULT_APP_LOGO,
-	DEFAULT_SEO_DESCRIPTION,
-	DEFAULT_SITE_NAME,
-} from "@/lib/seo/metadata";
+import { DEFAULT_SEO_DESCRIPTION, DEFAULT_SITE_NAME } from "@/lib/seo/metadata";
 import { collectRoutes, type StaticRoute } from "@/lib/site/routes";
 import { routeTree } from "@/routeTree.gen";
 
@@ -15,22 +11,26 @@ export function Footer() {
 
 	return (
 		<footer className="bg-background">
-			<div className="mx-auto flex min-h-[36vh] w-full max-w-5xl flex-col items-center justify-center gap-20 px-5 py-14 text-center sm:min-h-[42vh] sm:px-8 sm:py-16">
-				<div className="flex flex-col items-center gap-12">
-					<img
+			<div className="mx-auto flex min-h-[24vh] w-full max-w-5xl flex-col justify-between gap-10 px-5 py-32 text-center sm:flex-row sm:px-8 sm:py-16">
+				<div className="flex flex-col gap-12">
+					{/*<img
 						src={DEFAULT_APP_LOGO}
 						alt={DEFAULT_SITE_NAME}
 						className="size-10 rounded-2xl object-contain sm:size-12"
-					/>
-					<div className="space-y-2">
-						<p className="max-w-md text-sm leading-6 font-light text-gray-bright">
-							{DEFAULT_SEO_DESCRIPTION}
+					/>*/}
+					<div className="flex flex-col items-start text-sm font-medium gap-3">
+						<div className="flex flex-col items-start tracking-tight leading-3">
+							<p className="max-w-md leading-6">{DEFAULT_SEO_DESCRIPTION}</p>
+							<p>Designed for everyone.</p>
+						</div>
+						<p className="">
+							&copy; {currentYear} {DEFAULT_SITE_NAME}
 						</p>
 					</div>
 				</div>
 
 				<nav aria-label="Footer">
-					<ul className="flex flex-col items-center justify-center gap-8 text-sm font-light text-gray-bright sm:flex-row">
+					<ul className="flex flex-col items-start gap-1 text-sm font-medium sm:flex-col">
 						{footerRoutes.map((route) => (
 							<li key={route.to}>
 								<Link
@@ -43,10 +43,6 @@ export function Footer() {
 						))}
 					</ul>
 				</nav>
-
-				<p className="text-sm font-medium text-gray-bright">
-					&copy; {currentYear} {DEFAULT_SITE_NAME}
-				</p>
 			</div>
 		</footer>
 	);

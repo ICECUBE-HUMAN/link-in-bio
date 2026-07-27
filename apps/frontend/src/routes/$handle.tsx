@@ -12,6 +12,7 @@ import { EditableParagraph } from "@/components/page/editable-paragraph";
 import { PageImageEditor } from "@/components/page/page-image-editor";
 import { PageSettingsMenu } from "@/components/page/page-settings-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	getMyPage,
@@ -59,13 +60,34 @@ export const Route = createFileRoute("/$handle")({
 
 function HandlePage() {
 	const loaderData = Route.useLoaderData();
+	const [page, setPage] = useState(loaderData.page);
+
+	useEffect(() => {
+		setPage(loaderData.page);
+	}, [loaderData.page]);
 
 	return (
-		<HandlePageContent key={loaderData.page.handle} loaderData={loaderData} />
+		<HandlePageContent
+			loaderData={{ ...loaderData, page }}
+			onPageChange={(nextPage) => {
+				setPage(nextPage);
+				window.history.replaceState(
+					window.history.state,
+					"",
+					`/${encodeURIComponent(nextPage.handle)}${window.location.search}${window.location.hash}`,
+				);
+			}}
+		/>
 	);
 }
 
-function HandlePageContent({ loaderData }: { loaderData: HandleLoaderData }) {
+function HandlePageContent({
+	loaderData,
+	onPageChange,
+}: {
+	loaderData: HandleLoaderData;
+	onPageChange: (page: PageResponse) => void;
+}) {
 	const { page } = loaderData;
 	const { data: sessionResult } = useQuery(getSessionQueryOptions());
 	const isCurrentUserPage = sessionResult
@@ -92,11 +114,11 @@ function HandlePageContent({ loaderData }: { loaderData: HandleLoaderData }) {
 	}, []);
 
 	return (
-		<main className="box-border min-h-dvh w-full px-[clamp(1rem,2vw,3rem)] xl:h-dvh xl:overflow-hidden xl:flex xl:justify-center relative">
-			<div className="flex w-full flex-col gap-8 sm:items-center xl:h-full xl:min-h-0 xl:flex-row xl:items-start xl:justify-around">
-				<div className="flex w-full max-w-[24rem] flex-col xl:h-full xl:w-md xl:max-w-none">
+		<main className="relative box-border min-h-dvh w-full px-[clamp(1rem,2vw,3rem)] min-[90rem]:flex min-[90rem]:h-dvh min-[90rem]:justify-center min-[90rem]:overflow-hidden">
+			<div className="flex w-full flex-col gap-8 sm:items-center min-[90rem]:h-full min-[90rem]:min-h-0 min-[90rem]:flex-row min-[90rem]:items-start min-[90rem]:justify-around">
+				<div className="flex min-w-0 w-full max-w-[24rem] flex-col min-[90rem]:h-full min-[90rem]:w-md min-[90rem]:max-w-none">
 					<aside
-						className={`t-stagger flex w-full flex-1 flex-col gap-8 p-6 pt-12 xl:pt-16 ${isAsideShown ? "is-shown" : ""}`}
+						className={`t-stagger flex w-full flex-1 flex-col gap-8 p-6 pt-12 min-[90rem]:pt-16 ${isAsideShown ? "is-shown" : ""}`}
 					>
 						<div className="t-stagger-line t-stagger-line--1">
 							<PageImageEditor
@@ -106,14 +128,14 @@ function HandlePageContent({ loaderData }: { loaderData: HandleLoaderData }) {
 								onImageChange={(image) => updateField("image", image)}
 							/>
 						</div>
-						<div className="flex flex-col gap-4 xl:px-2">
+						<div className="flex min-w-0 flex-col gap-4 min-[90rem]:px-2">
 							<EditableParagraph
 								value={draft.name}
 								placeholder="Name"
 								mode={mode}
 								onChange={(name) => updateField("name", name)}
 								rows={1}
-								className="t-stagger-line t-stagger-line--2 text-3xl font-bold leading-tight tracking-tight xl:text-[40px]"
+								className="t-stagger-line t-stagger-line--2 text-3xl font-bold leading-tight tracking-tight min-[90rem]:text-[40px]"
 							/>
 							<EditableParagraph
 								value={draft.bio}
@@ -121,17 +143,17 @@ function HandlePageContent({ loaderData }: { loaderData: HandleLoaderData }) {
 								mode={mode}
 								onChange={(bio) => updateField("bio", bio)}
 								rows={2}
-								className="t-stagger-line t-stagger-line--3 px-0.5 text-base leading-7 xl:leading-8 text-primary/80 xl:text-xl"
+								className="t-stagger-line t-stagger-line--3 px-0.5 text-base leading-7 text-primary/80 min-[90rem]:text-xl min-[90rem]:leading-8"
 							/>
 						</div>
 					</aside>
 					<aside
-						className="hidden items-center gap-2 xl:flex xl:fixed xl:bottom-10 xl:px-6"
+						className="hidden items-center gap-2 min-[90rem]:fixed min-[90rem]:bottom-10 min-[90rem]:flex min-[90rem]:px-6"
 						aria-label="Page controls"
 					>
 						<div className="flex items-center gap-0">
 							{isCurrentUserPage ? (
-								<PageSettingsMenu page={page} />
+								<PageSettingsMenu page={page} onChanged={onPageChange} />
 							) : isSignedIn && myPage ? (
 								<Button
 									render={
@@ -186,17 +208,20 @@ function HandlePageContent({ loaderData }: { loaderData: HandleLoaderData }) {
 								<Send weight="Filled" />
 							</Button>
 						</div>
-						<div className="flex items-center gap-2 text-xs text-muted-foreground">
-							{status === "saving" ? (
-								<span className="flex items-center gap-2">
+						{status === "saving" && (
+							<Badge
+								variant="secondary"
+								className="flex items-center gap-2 rounded-sm p-3.5 px-2 text-xs text-muted-foreground/80"
+							>
+								<span className="flex items-center gap-1.5">
 									<Loader className="size-4 animate-spin" />
 									Saving
 								</span>
-							) : null}
-						</div>
+							</Badge>
+						)}
 					</aside>
 				</div>
-				<section className="min-h-[calc(100dvh-3rem)] w-full overflow-y-auto p-6 pt-0 sm:max-w-[24rem] xl:h-full xl:min-h-[calc(100dvh-4rem)] xl:w-4xl xl:max-w-none xl:shrink-0 xl:pt-16 no-scrollbar">
+				<section className="min-h-[calc(100dvh-3rem)] w-full p-6 min overflow-y-auto pt-0 sm:max-w-[24rem] min-[90rem]:h-full min-[90rem]:min-h-[calc(100dvh-4rem)] min-[90rem]:w-4xl min-[90rem]:max-w-none min-[90rem]:shrink-0 min-[90rem]:pt-16 no-scrollbar">
 					grid later
 				</section>
 			</div>

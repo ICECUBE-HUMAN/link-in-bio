@@ -31,11 +31,13 @@ import { updatePage } from "@/lib/api/pages-api";
 import { clearSessionQuery } from "@/lib/api/session.functions";
 import { authClient } from "@/lib/auth/auth-client";
 import { getHandleAvailabilityStatus } from "@/lib/page/new-page-state";
+import { SharedLayoutBg } from "../motion/shared-layout-bg";
 
 type SettingsView = "menu" | "delete" | "handle";
 
 type PageSettingsMenuProps = {
 	page: PageResponse;
+	onChanged: (page: PageResponse) => void;
 };
 
 const handleAvailabilityIcons = {
@@ -44,7 +46,7 @@ const handleAvailabilityIcons = {
 	duplicate: <XCircle weight="Filled" className="size-full" />,
 };
 
-export function PageSettingsMenu({ page }: PageSettingsMenuProps) {
+export function PageSettingsMenu({ page, onChanged }: PageSettingsMenuProps) {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const [view, setView] = useState<SettingsView>("menu");
@@ -80,36 +82,35 @@ export function PageSettingsMenu({ page }: PageSettingsMenuProps) {
 					data-success={isHandleSuccess ? "true" : undefined}
 				>
 					<section className="t-page" data-page-id="1">
-						<Button
-							type="button"
-							variant="ghost"
-							className="w-full flex-col items-start justify-center rounded-lg font-normal h-15 gap-0"
-							onClick={() => setView("handle")}
-						>
-							<span>Change handle</span>
-							<span className="text-muted-foreground/80">/{page.handle}</span>
-						</Button>
-						<Button
-							type="button"
-							variant="ghost"
-							className="w-full justify-start rounded-lg font-normal h-13"
-							onClick={async () => {
-								const { error } = await authClient.signOut();
-								if (error) return;
+						<SharedLayoutBg className="px-5">
+							<button
+								type="button"
+								className="w-full flex flex-col items-start justify-center rounded-lg font-normal h-15 gap-0"
+								onClick={() => setView("handle")}
+							>
+								<span>Change handle</span>
+								<span className="text-muted-foreground/80">/{page.handle}</span>
+							</button>
+							<button
+								type="button"
+								className="flex items-center w-full justify-start rounded-lg font-normal h-15"
+								onClick={async () => {
+									const { error } = await authClient.signOut();
+									if (error) return;
 
-								await clearSessionQuery(queryClient);
-								queryClient.resetQueries({
-									queryKey: MY_PAGE_QUERY_KEY,
-									exact: true,
-								});
-								setOpen(false);
-							}}
-						>
-							Log out
-						</Button>
-						{/*<Button
+									await clearSessionQuery(queryClient);
+									queryClient.resetQueries({
+										queryKey: MY_PAGE_QUERY_KEY,
+										exact: true,
+									});
+									setOpen(false);
+								}}
+							>
+								Log out
+							</button>
+						</SharedLayoutBg>
+						{/*<button
 							type="button"
-							variant="ghost"
 							className="w-full justify-start rounded-lg font-normal h-13"
 							onClick={() => setView("delete")}
 						>
@@ -132,13 +133,7 @@ export function PageSettingsMenu({ page }: PageSettingsMenuProps) {
 									setIsHandleSuccess(false);
 									setView("menu");
 								}}
-								onChanged={(handle) => {
-									void navigate({
-										to: "/$handle",
-										params: { handle },
-										replace: true,
-									});
-								}}
+								onChanged={onChanged}
 								onSuccessChange={setIsHandleSuccess}
 							/>
 						)}
@@ -213,7 +208,7 @@ function ChangeHandleView({
 }: {
 	page: PageResponse;
 	onBack: () => void;
-	onChanged: (handle: string) => void;
+	onChanged: (page: PageResponse) => void;
 	onSuccessChange: (isSuccess: boolean) => void;
 }) {
 	const queryClient = useQueryClient();
@@ -297,7 +292,7 @@ function ChangeHandleView({
 			queryClient.setQueryData<MyPageResponse>(MY_PAGE_QUERY_KEY, {
 				page: result.page,
 			});
-			onChanged(result.page.handle);
+			onChanged(result.page);
 			setIsSuccess(true);
 			// The success state owns the temporary confirmation UI.
 		} catch {
@@ -428,32 +423,33 @@ function SuccessHandleView({ handle }: { handle: string }) {
 				<span className="font-medium text-base">Successfully changed!</span>
 			</div>
 
-      <div className="w-full space-y-2">
-        <div className="flex items-center justify-center bg-secondary/80 h-11 p-2 text-center w-full rounded-md">
-				<span className="text-muted-foreground/80">{env.VITE_APP_DOMAIN}/</span>
-				<span>{handle}</span>
-			</div>
-			<Button
-				type="button"
-				variant="secondary"
-				className="t-copy-button w-full rounded-lg h-12"
-				data-state={copyState}
-				onClick={() => void copyLink()}
-			>
-				<span className="t-copy-feedback" aria-live="polite">
-					<span className="t-copy-icon" aria-hidden="true">
-						<Check weight="Filled" className="size-4" />
+			<div className="w-full space-y-2">
+				<div className="flex items-center justify-center bg-secondary/80 h-11 p-2 text-center w-full rounded-md">
+					<span className="text-muted-foreground/80">
+						{env.VITE_APP_DOMAIN}/
 					</span>
-					<span className="t-copy-labels">
-						<span className="t-copy-label t-copy-label-idle">Copy Link</span>
-						<span className="t-copy-label t-copy-label-copied">
-							{copyState === "error" ? "Copy failed" : "Copied"}
+					<span>{handle}</span>
+				</div>
+				<Button
+					type="button"
+					variant="secondary"
+					className="t-copy-button w-full rounded-lg h-12"
+					data-state={copyState}
+					onClick={() => void copyLink()}
+				>
+					<span className="t-copy-feedback" aria-live="polite">
+						<span className="t-copy-icon" aria-hidden="true">
+							<Check weight="Filled" className="size-4" />
+						</span>
+						<span className="t-copy-labels">
+							<span className="t-copy-label t-copy-label-idle">Copy Link</span>
+							<span className="t-copy-label t-copy-label-copied">
+								{copyState === "error" ? "Copy failed" : "Copied"}
+							</span>
 						</span>
 					</span>
-				</span>
-			</Button>
+				</Button>
 			</div>
-			
 		</div>
 	);
 }

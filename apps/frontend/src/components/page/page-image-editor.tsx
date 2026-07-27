@@ -1,3 +1,4 @@
+import { TrashIcon } from "lucide-react";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { Upload3 } from "reicon-react";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,6 @@ import {
 	getProfileImageUrl,
 	uploadPageImage,
 } from "@/lib/api/profile-image-api";
-import { TrashIcon } from "lucide-react";
 
 type PageImageEditorProps = {
 	initialImage: string | null;
@@ -83,7 +83,7 @@ export function PageImageEditor({
 		</div>
 	) : null;
 	const imageClassName =
-		"flex size-28 items-center justify-center overflow-hidden rounded-full bg-secondary/80 text-sm font-medium text-muted-foreground/60 sm:size-32 xl:size-46";
+		"flex size-28 items-center justify-center overflow-hidden rounded-full bg-secondary/80 text-sm font-medium text-muted-foreground/60 sm:size-32 min-[90rem]:size-46";
 
 	return (
 		<div className="flex flex-col items-start gap-3">
@@ -118,7 +118,7 @@ export function PageImageEditor({
 							aria-label="Remove profile image"
 							disabled={isUploading}
 							onClick={handleImageRemove}
-							className="absolute top-0 right-0 inline-flex size-10 items-center justify-center rounded-full bg-background border border-border/60 opacity-0 shadow-md transition-[opacity,transform,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:scale-100 focus-visible:opacity-100 group-hover/image:scale-100 group-hover/image:opacity-100 group-focus-within/image:scale-100 group-focus-within/image:opacity-100 active:scale-95 motion-reduce:transition-none xl:top-2 xl:right-2"
+							className="absolute top-0 right-0 inline-flex size-10 items-center justify-center rounded-full bg-background border border-border/60 opacity-0 shadow-md transition-[opacity,transform,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:scale-100 focus-visible:opacity-100 group-hover/image:scale-100 group-hover/image:opacity-100 group-focus-within/image:scale-100 group-focus-within/image:opacity-100 active:scale-95 motion-reduce:transition-none min-[90rem]:top-2 min-[90rem]:right-2"
 						>
 							<TrashIcon className="size-5 stroke-3" />
 						</Button>
