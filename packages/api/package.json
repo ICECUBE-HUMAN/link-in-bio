@@ -2,7 +2,10 @@
   "name": "@sinabro/api",
   "private": true,
   "type": "module",
-  "exports": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./grid": "./src/grid.ts"
+  },
   "scripts": {
     "check": "tsc --noEmit",
     "typecheck": "tsc --noEmit"

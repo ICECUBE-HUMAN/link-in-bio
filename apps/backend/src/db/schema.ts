@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import {
 	boolean,
 	index,
+	jsonb,
 	pgTable,
 	text,
 	timestamp,
@@ -178,6 +179,63 @@ export const pages = pgTable(
 	],
 );
 
+export const pageItems = pgTable(
+	"page_items",
+	{
+		id: text("id").primaryKey(),
+		pageId: text("page_id")
+			.notNull()
+			.references(() => pages.id, {
+				onDelete: "cascade",
+			}),
+		type: text("type").notNull(),
+		data: jsonb("data")
+			.$type<Record<string, unknown>>()
+			.notNull(),
+		style: jsonb("style")
+			.$type<Record<string, unknown>>()
+			.notNull(),
+		layouts: jsonb("layouts")
+			.$type<{
+				wide: {
+					x: number;
+					y: number;
+					w: number;
+					h: number;
+				};
+				compact: {
+					x: number;
+					y: number;
+					w: number;
+					h: number;
+				};
+			}>()
+			.notNull(),
+		createdAt: timestamp("created_at")
+			.defaultNow()
+			.notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(
+				() =>
+					/* @__PURE__ */ new Date(),
+			)
+			.notNull(),
+	},
+	(table) => [
+		index("page_items_page_id_idx").on(
+			table.pageId,
+		),
+		index(
+			"page_items_page_created_id_idx",
+		).on(
+			table.pageId,
+			table.createdAt,
+			table.id,
+		),
+	],
+);
+
 export const userRelations = relations(
 	user,
 	({ many }) => ({
@@ -205,10 +263,19 @@ export const accountRelations =
 
 export const pagesRelations = relations(
 	pages,
-	({ one }) => ({
+	({ one, many }) => ({
 		user: one(user, {
 			fields: [pages.userId],
 			references: [user.id],
 		}),
+		items: many(pageItems),
 	}),
 );
+
+export const pageItemsRelations =
+	relations(pageItems, ({ one }) => ({
+		page: one(pages, {
+			fields: [pageItems.pageId],
+			references: [pages.id],
+		}),
+	}));
