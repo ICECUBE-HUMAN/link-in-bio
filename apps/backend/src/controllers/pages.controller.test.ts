@@ -408,6 +408,35 @@ describe("pagesController", () => {
 		});
 	});
 
+	it("checks handles for users who already have a primary page", async () => {
+		const user = {
+			id: "user_1",
+			name: "Kim",
+			email: "kim@example.com",
+			primaryPageId: "page_1",
+		};
+		const { db } = createFakeDb({
+			currentUser: user,
+		});
+		const app = createTestApp({
+			db,
+			user,
+		});
+
+		const response = await app.request(
+			"/pages/check?handle=new-handle",
+		);
+
+		expect(response.status).toBe(200);
+		const body =
+			(await response.json()) as unknown;
+		expect(body).toEqual({
+			handle: "new-handle",
+			available: true,
+			reason: null,
+		});
+	});
+
 	it("reports invalid handles as unavailable with the submitted handle", async () => {
 		const user = {
 			id: "user_1",
@@ -717,12 +746,16 @@ describe("pagesController", () => {
 					"Content-Type":
 						"application/json",
 				},
-				body: JSON.stringify({ image: null }),
+				body: JSON.stringify({
+					image: null,
+				}),
 			},
 		);
 
 		expect(response.status).toBe(200);
-		expect(state.existingPages[0]?.image).toBeNull();
+		expect(
+			state.existingPages[0]?.image,
+		).toBeNull();
 	});
 
 	it("returns 404 when patching /pages/:handle without a page", async () => {

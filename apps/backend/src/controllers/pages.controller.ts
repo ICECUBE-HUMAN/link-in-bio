@@ -135,6 +135,18 @@ const assertEligibleUser = async (
 	return currentUser;
 };
 
+const assertAuthenticatedUser = (
+	c: Context<AppEnv>,
+) => {
+	const sessionUser = c.get("user");
+
+	if (!sessionUser) {
+		throw new UnauthorizedError();
+	}
+
+	return sessionUser;
+};
+
 const createHandleAvailabilityResponse =
 	(
 		response: HandleAvailabilityResponse,
@@ -241,6 +253,8 @@ export const pagesController =
 			}
 
 			const hasAnyField =
+				typeof parsed.output.handle !==
+					"undefined" ||
 				typeof parsed.output.name !==
 					"undefined" ||
 				typeof parsed.output.bio !==
@@ -299,6 +313,13 @@ export const pagesController =
 					const [page] = await tx
 						.update(pages)
 						.set({
+							handle:
+								typeof parsed.output
+									.handle ===
+								"undefined"
+									? existingPage.handle
+									: parsed.output
+											.handle,
 							name:
 								typeof parsed.output
 									.name === "undefined"
@@ -337,6 +358,20 @@ export const pagesController =
 					}
 
 					return page;
+				})
+				.catch((error: unknown) => {
+					if (
+						isUniqueHandleViolation(
+							error,
+						)
+					) {
+						throw new ConflictError(
+							"Handle is already taken.",
+							"HANDLE_TAKEN",
+						);
+					}
+
+					throw error;
 				});
 
 			const response = v.parse(
@@ -351,7 +386,7 @@ export const pagesController =
 			return c.json(response);
 		})
 		.get("/check", async (c) => {
-			await assertEligibleUser(c);
+			assertAuthenticatedUser(c);
 
 			const rawHandle =
 				c.req.query("handle") ?? "";
