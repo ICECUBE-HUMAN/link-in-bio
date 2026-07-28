@@ -62,5 +62,5 @@ export const Route = createFileRoute("/log-in/")({
 function LogInPage() {
 	const search = Route.useSearch();
 
-	return <LogInSection layoutMode="split" redirectTo={search.redirect ?? "/"} />;
+	return <LogInSection redirectTo={search.redirect ?? "/"} />;
 }
