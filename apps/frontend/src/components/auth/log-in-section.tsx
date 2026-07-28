@@ -29,8 +29,8 @@ export default function LogInSection({
 	}
 
 	return (
-		<main className="mx-auto flex min-h-lvh w-full max-w-md items-center overscroll-none px-5 py-24 pt-40">
-  		<section className="w-full max-w-sm space-y-12 relative">
+		<main className="mx-auto flex min-h-lvh w-full max-w-md justify-center items-center overscroll-none px-5">
+  		<section className="w-full max-w-sm flex flex-col gap-10 relative">
   			<header className="flex flex-col gap-1 items-center">
             <h1 className="text-3xl font-semibold">
               Join {env.VITE_APP_TITLE}
