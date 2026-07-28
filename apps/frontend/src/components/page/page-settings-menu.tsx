@@ -9,6 +9,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { ChevronLeftIcon } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Check, CheckCircle, Gear, Loader, XCircle } from "reicon-react";
+import { createUISFX } from "uisfx";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import {
@@ -47,6 +48,11 @@ const handleAvailabilityIcons = {
 };
 
 export function PageSettingsMenu({ page, onChanged }: PageSettingsMenuProps) {
+	const ui = createUISFX({
+		pack: "minimal",
+		volume: 2,
+	});
+
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const [view, setView] = useState<SettingsView>("menu");
@@ -95,6 +101,7 @@ export function PageSettingsMenu({ page, onChanged }: PageSettingsMenuProps) {
 								type="button"
 								className="flex items-center w-full justify-start rounded-lg font-normal h-15"
 								onClick={async () => {
+									ui.play("disconnect");
 									const { error } = await authClient.signOut();
 									if (error) return;
 
@@ -129,6 +136,7 @@ export function PageSettingsMenu({ page, onChanged }: PageSettingsMenuProps) {
 						) : (
 							<ChangeHandleView
 								page={page}
+								ui={ui}
 								onBack={() => {
 									setIsHandleSuccess(false);
 									setView("menu");
@@ -202,11 +210,13 @@ function DeleteAccountView({
 
 function ChangeHandleView({
 	page,
+	ui,
 	onBack,
 	onChanged,
 	onSuccessChange,
 }: {
 	page: PageResponse;
+	ui: ReturnType<typeof createUISFX>;
 	onBack: () => void;
 	onChanged: (page: PageResponse) => void;
 	onSuccessChange: (isSuccess: boolean) => void;
@@ -281,13 +291,20 @@ function ChangeHandleView({
 				available: true,
 				reason: null,
 			});
+			const previousPage = queryClient.getQueryData<PageByHandleResponse>(
+				getPageByHandleQueryOptions(currentHandle).queryKey,
+			);
 			queryClient.removeQueries({
 				queryKey: getPageByHandleQueryOptions(currentHandle).queryKey,
 				exact: true,
 			});
 			queryClient.setQueryData(
 				getPageByHandleQueryOptions(result.page.handle).queryKey,
-				() => ({ page: result.page }) as PageByHandleResponse,
+				() =>
+					({
+						page: result.page,
+						items: previousPage?.items ?? [],
+					}) satisfies PageByHandleResponse,
 			);
 			queryClient.setQueryData<MyPageResponse>(MY_PAGE_QUERY_KEY, {
 				page: result.page,
@@ -303,7 +320,7 @@ function ChangeHandleView({
 	}
 
 	if (isSuccess) {
-		return <SuccessHandleView handle={currentHandle} />;
+		return <SuccessHandleView handle={currentHandle} ui={ui} />;
 	}
 
 	return (
@@ -324,6 +341,9 @@ function ChangeHandleView({
 						id="change-handle"
 						name="handle"
 						onChange={(event) => {
+							ui.play("typing", {
+								volume: 0.5,
+							});
 							setHandle(event.target.value);
 							setAvailability(null);
 							setError(null);
@@ -370,7 +390,13 @@ function ChangeHandleView({
 	);
 }
 
-function SuccessHandleView({ handle }: { handle: string }) {
+function SuccessHandleView({
+	handle,
+	ui,
+}: {
+	handle: string;
+	ui: ReturnType<typeof createUISFX>;
+}) {
 	const checkRef = useRef<HTMLSpanElement>(null);
 	const copyResetRef = useRef<number | null>(null);
 	const [copyState, setCopyState] = useState<"idle" | "copied" | "error">(
@@ -394,6 +420,7 @@ function SuccessHandleView({ handle }: { handle: string }) {
 	}, []);
 
 	async function copyLink() {
+		ui.play("copy");
 		try {
 			await navigator.clipboard.writeText(window.location.href);
 			setCopyState("copied");
