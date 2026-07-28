@@ -5,6 +5,7 @@
 
 @import "@fontsource-variable/inter";
 @import "./fonts.css";
+@import "react-grid-layout/css/styles.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -240,6 +241,26 @@
 	content: attr(data-placeholder);
 	pointer-events: none;
 	color: color-mix(in oklab, var(--muted-foreground) 50%, transparent);
+}
+
+.sinabro-grid-layout {
+	min-height: 1px;
+}
+
+.sinabro-grid-layout .react-grid-item {
+	transition:
+		left 180ms cubic-bezier(0.22, 1, 0.36, 1),
+		top 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sinabro-grid-layout .react-grid-placeholder {
+	border-radius: 1.75rem;
+	background: color-mix(in oklab, var(--primary) 14%, transparent);
+	border: 1px solid color-mix(in oklab, var(--primary) 22%, transparent);
+}
+
+.sinabro-grid-layout .react-grid-item.react-draggable-dragging {
+	z-index: 40;
 }
 
 @utility no-scrollbar {

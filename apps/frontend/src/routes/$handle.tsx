@@ -1,4 +1,4 @@
-import type { PageResponse } from "@sinabro/api";
+import type { PageItemResponse, PageResponse } from "@sinabro/api";
 import { useQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader, Send, StackPerspective } from "reicon-react";
+import { GridSection } from "@/components/grid/grid-section";
 import { EditableParagraph } from "@/components/page/editable-paragraph";
 import { PageImageEditor } from "@/components/page/page-image-editor";
 import { PageSettingsMenu } from "@/components/page/page-settings-menu";
@@ -25,6 +26,8 @@ import {
 	MY_PAGE_QUERY_KEY,
 } from "@/lib/api/pages.functions";
 import { getProfileImageUrl } from "@/lib/api/profile-image-api";
+import { useGridEditorStore } from "@/lib/grid/editor-store";
+import type { Breakpoint } from "@/lib/grid/types";
 import { getSessionQueryOptions } from "@/lib/api/session.functions";
 import { getPageMode } from "@/lib/page/page-mode";
 import { usePageAutoSave } from "@/lib/page/use-page-auto-save";
@@ -32,6 +35,7 @@ import { DEFAULT_APP_LOGO } from "@/lib/seo/metadata";
 
 type HandleLoaderData = {
 	page: PageResponse;
+	items: PageItemResponse[];
 	isCurrentUserPage: boolean;
 };
 
@@ -58,6 +62,7 @@ export const Route = createFileRoute("/$handle")({
 
 		return {
 			page: result.page,
+			items: result.items,
 			isCurrentUserPage: session?.user.id === result.page.userId,
 		};
 	},
@@ -131,9 +136,22 @@ function HandlePageContent({
 	const myPage = myPageResult?.page;
 	const mode = getPageMode(isCurrentUserPage);
 	const [isAsideShown, setIsAsideShown] = useState(false);
+	const [previewBreakpoint, setPreviewBreakpoint] =
+		useState<Breakpoint>("wide");
 	const { draft, status, updateField } = usePageAutoSave({
 		page,
 		handle: page.handle,
+		enabled: mode === "edit",
+	});
+	const {
+		items,
+		status: gridStatus,
+		dispatchCommand,
+		flushPendingChanges,
+	} = useGridEditorStore({
+		initialItems: loaderData.items,
+		handle: page.handle,
+		breakpoint: previewBreakpoint,
 		enabled: mode === "edit",
 	});
 
@@ -182,6 +200,12 @@ function HandlePageContent({
 		const frame = requestAnimationFrame(() => setIsAsideShown(true));
 		return () => cancelAnimationFrame(frame);
 	}, []);
+
+	async function handlePreviewBreakpointChange(nextBreakpoint: Breakpoint) {
+		if (nextBreakpoint === previewBreakpoint) return;
+		await flushPendingChanges();
+		setPreviewBreakpoint(nextBreakpoint);
+	}
 
 	return (
 		<main className="relative box-border min-h-dvh w-full px-[clamp(1rem,2vw,3rem)] min-[90rem]:flex min-[90rem]:h-dvh min-[90rem]:justify-center min-[90rem]:overflow-hidden">
@@ -297,7 +321,7 @@ function HandlePageContent({
 								<TooltipContent>Feedback</TooltipContent>
 							</Tooltip>
 						</div>
-						{status === "saving" && (
+						{(status === "saving" || gridStatus === "saving") && (
 							<Badge
 								variant="secondary"
 								className="flex items-center gap-2 rounded-sm p-3.5 px-2 text-xs text-muted-foreground/80"
@@ -310,8 +334,47 @@ function HandlePageContent({
 						)}
 					</aside>
 				</div>
-				<section className="min-h-[calc(100dvh-3rem)] w-full p-6 min overflow-y-auto pt-0 sm:max-w-[24rem] min-[90rem]:h-full min-[90rem]:min-h-[calc(100dvh-4rem)] min-[90rem]:w-4xl min-[90rem]:max-w-none min-[90rem]:shrink-0 min-[90rem]:pt-16 no-scrollbar">
-					grid later
+				<section className="min-h-[calc(100dvh-3rem)] w-full overflow-y-auto p-6 pt-0 sm:max-w-[24rem] min-[90rem]:h-full min-[90rem]:min-h-[calc(100dvh-4rem)] min-[90rem]:w-4xl min-[90rem]:max-w-none min-[90rem]:shrink-0 min-[90rem]:pt-16 no-scrollbar">
+					<div className="flex flex-col gap-4">
+						{mode === "edit" && items.length > 0 ? (
+							<div className="flex items-center justify-end gap-2">
+								<Button
+									type="button"
+									variant={
+										previewBreakpoint === "wide" ? "secondary" : "ghost"
+									}
+									size="sm"
+									className="rounded-full"
+									onClick={() => void handlePreviewBreakpointChange("wide")}
+								>
+									Wide
+								</Button>
+								<Button
+									type="button"
+									variant={
+										previewBreakpoint === "compact" ? "secondary" : "ghost"
+									}
+									size="sm"
+									className="rounded-full"
+									onClick={() => void handlePreviewBreakpointChange("compact")}
+								>
+									Compact
+								</Button>
+							</div>
+						) : null}
+						{items.length > 0 ? (
+							<GridSection
+								items={items}
+								breakpoint={previewBreakpoint}
+								mode={mode}
+								onCommand={dispatchCommand}
+							/>
+						) : (
+							<div className="flex min-h-56 items-center justify-center rounded-[1.75rem] border border-dashed border-border/70 bg-muted/30 px-6 text-center text-sm text-muted-foreground">
+								No items yet.
+							</div>
+						)}
+					</div>
 				</section>
 			</div>
 		</main>

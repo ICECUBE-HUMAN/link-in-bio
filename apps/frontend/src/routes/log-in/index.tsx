@@ -8,6 +8,8 @@ import { createSeo } from "@/lib/seo/metadata";
 const LOG_IN_DESCRIPTION = "Log in to your account";
 
 export const Route = createFileRoute("/log-in/")({
+	validateSearch: (search: Record<string, unknown>): { redirect?: string } =>
+		(typeof search.redirect === "string" ? { redirect: search.redirect } : {}),
 	beforeLoad: async ({ context }) => {
 		const { data: session } = await context.queryClient.ensureQueryData(
 			getSessionQueryOptions(),
@@ -60,5 +62,5 @@ export const Route = createFileRoute("/log-in/")({
 function LogInPage() {
 	const search = Route.useSearch();
 
-	return <LogInSection layoutMode="split" redirectTo={search.redirect} />;
+	return <LogInSection layoutMode="split" redirectTo={search.redirect ?? "/"} />;
 }
