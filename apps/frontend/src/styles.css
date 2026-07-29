@@ -359,10 +359,12 @@
     --radius-3xl: calc(var(--radius) * 2.2);
 
     --radius-4xl: calc(var(--radius) * 2.6);
+
+    --color-test: var(--test);
 }
 
 :root {
-
+    --test: oklch(0.3151 0.0088 285.88);
     --background: oklch(1 0 0);
 
     --foreground: oklch(0.145 0 0);

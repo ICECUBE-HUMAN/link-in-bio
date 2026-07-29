@@ -34,9 +34,10 @@ export type GridLayoutCommand =
 			type: "apply-preset";
 			itemId: string;
 			preset: PresetName;
-		};
+	  };
 
 export type GridEditorCommand =
+	| { type: "add-item"; itemType: ItemType; url?: string }
 	| GridLayoutCommand
 	| { type: "update-data"; itemId: string; data: PageItemResponse["data"] }
 	| { type: "update-style"; itemId: string; patch: PageItemResponse["style"] }

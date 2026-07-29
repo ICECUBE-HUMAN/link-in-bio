@@ -11,6 +11,7 @@ import * as v from "valibot";
 import { getPageByHandleQueryOptions } from "@/lib/api/pages.functions";
 import { PAGE_AUTOSAVE_DEBOUNCE_MS } from "@/lib/page/use-page-auto-save";
 import { getApiBaseUrl } from "@/lib/site/api-base-url";
+import { createGridItem } from "./item-factory";
 import {
 	applyPresetToLayoutMap,
 	getAllowedPresets,
@@ -331,6 +332,17 @@ export function useGridEditorStore({
 			if (command.type === "manage-link") return;
 
 			const currentItems = draftRef.current;
+			if (command.type === "add-item") {
+				commitItems([
+					...currentItems,
+					createGridItem({
+						items: currentItems,
+						itemType: command.itemType,
+						url: command.url,
+					}),
+				]);
+				return;
+			}
 			const targetItem = currentItems.find((item) => item.id === command.itemId);
 			if (!targetItem) return;
 

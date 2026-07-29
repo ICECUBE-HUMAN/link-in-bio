@@ -12,6 +12,7 @@ import { GridSection } from "@/components/grid/grid-section";
 import { EditableParagraph } from "@/components/page/editable-paragraph";
 import { PageImageEditor } from "@/components/page/page-image-editor";
 import { PageSettingsMenu } from "@/components/page/page-settings-menu";
+import Toolbar from "@/components/page/toolbar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,9 +27,10 @@ import {
 	MY_PAGE_QUERY_KEY,
 } from "@/lib/api/pages.functions";
 import { getProfileImageUrl } from "@/lib/api/profile-image-api";
+import { getSessionQueryOptions } from "@/lib/api/session.functions";
 import { useGridEditorStore } from "@/lib/grid/editor-store";
 import type { Breakpoint } from "@/lib/grid/types";
-import { getSessionQueryOptions } from "@/lib/api/session.functions";
+import { getPageLayoutClasses } from "@/lib/page/page-layout";
 import { getPageMode } from "@/lib/page/page-mode";
 import { usePageAutoSave } from "@/lib/page/use-page-auto-save";
 import { DEFAULT_APP_LOGO } from "@/lib/seo/metadata";
@@ -207,29 +209,38 @@ function HandlePageContent({
 		setPreviewBreakpoint(nextBreakpoint);
 	}
 
+	const layoutClasses = getPageLayoutClasses(previewBreakpoint);
+
 	return (
 		<main className="relative box-border min-h-dvh w-full px-[clamp(1rem,2vw,3rem)] min-[90rem]:flex min-[90rem]:h-dvh min-[90rem]:justify-center min-[90rem]:overflow-hidden">
-			<div className="flex w-full flex-col gap-8 sm:items-center min-[90rem]:h-full min-[90rem]:min-h-0 min-[90rem]:flex-row min-[90rem]:items-start min-[90rem]:justify-around">
-				<div className="flex min-w-0 w-full max-w-[24rem] flex-col min-[90rem]:h-full min-[90rem]:w-md min-[90rem]:max-w-none">
+			<div
+				className={`flex w-full flex-col gap-8 sm:items-center min-[90rem]:h-full min-[90rem]:min-h-0 ${layoutClasses.shell}`}
+			>
+				<div
+					className={`flex min-w-0 w-full max-w-[28rem] flex-col ${layoutClasses.profile}`}
+				>
 					<aside
-						className={`t-stagger flex w-full flex-1 flex-col gap-8 p-6 pt-12 min-[90rem]:pt-16 ${isAsideShown ? "is-shown" : ""}`}
+						className={`t-stagger flex w-full flex-1 flex-col gap-8 p-6 pt-12 ${layoutClasses.profileAside} ${isAsideShown ? "is-shown" : ""}`}
 					>
 						<div className="t-stagger-line t-stagger-line--1">
 							<PageImageEditor
 								initialImage={draft.image}
 								handle={page.handle}
 								mode={mode}
+								breakpoint={previewBreakpoint}
 								onImageChange={(image) => updateField("image", image)}
 							/>
 						</div>
-						<div className="flex min-w-0 flex-col gap-4 min-[90rem]:px-2">
+						<div
+							className={`flex min-w-0 flex-col gap-4 ${layoutClasses.profileDetails}`}
+						>
 							<EditableParagraph
 								value={draft.name}
 								placeholder="Name"
 								mode={mode}
 								onChange={(name) => updateField("name", name)}
 								rows={1}
-								className="t-stagger-line t-stagger-line--2 text-3xl font-bold leading-tight tracking-tight min-[90rem]:text-[40px]"
+								className={`t-stagger-line t-stagger-line--2 text-3xl font-bold leading-tight tracking-tight ${layoutClasses.name}`}
 							/>
 							<EditableParagraph
 								value={draft.bio}
@@ -237,12 +248,12 @@ function HandlePageContent({
 								mode={mode}
 								onChange={(bio) => updateField("bio", bio)}
 								rows={2}
-								className="t-stagger-line t-stagger-line--3 px-0.5 text-base leading-7 text-primary/80 min-[90rem]:text-xl min-[90rem]:leading-8"
+								className={`t-stagger-line t-stagger-line--3 px-0.5 text-base leading-7 text-primary/80 ${layoutClasses.bio}`}
 							/>
 						</div>
 					</aside>
 					<aside
-						className="hidden items-center gap-2 min-[90rem]:fixed min-[90rem]:bottom-10 min-[90rem]:flex min-[90rem]:px-6"
+						className={`hidden items-center gap-2 z-10 ${layoutClasses.controls}`}
 						aria-label="Page controls"
 					>
 						<div className="flex items-center gap-0">
@@ -334,34 +345,10 @@ function HandlePageContent({
 						)}
 					</aside>
 				</div>
-				<section className="min-h-[calc(100dvh-3rem)] w-full overflow-y-auto p-6 pt-0 sm:max-w-[24rem] min-[90rem]:h-full min-[90rem]:min-h-[calc(100dvh-4rem)] min-[90rem]:w-4xl min-[90rem]:max-w-none min-[90rem]:shrink-0 min-[90rem]:pt-16 no-scrollbar">
+				<section
+					className={`min-h-[calc(100dvh-3rem)] w-full overflow-y-auto p-6 pt-0 sm:max-w-[28rem] no-scrollbar ${layoutClasses.content}`}
+				>
 					<div className="flex flex-col gap-4">
-						{mode === "edit" && items.length > 0 ? (
-							<div className="flex items-center justify-end gap-2">
-								<Button
-									type="button"
-									variant={
-										previewBreakpoint === "wide" ? "secondary" : "ghost"
-									}
-									size="sm"
-									className="rounded-full"
-									onClick={() => void handlePreviewBreakpointChange("wide")}
-								>
-									Wide
-								</Button>
-								<Button
-									type="button"
-									variant={
-										previewBreakpoint === "compact" ? "secondary" : "ghost"
-									}
-									size="sm"
-									className="rounded-full"
-									onClick={() => void handlePreviewBreakpointChange("compact")}
-								>
-									Compact
-								</Button>
-							</div>
-						) : null}
 						{items.length > 0 ? (
 							<GridSection
 								items={items}
@@ -377,6 +364,17 @@ function HandlePageContent({
 					</div>
 				</section>
 			</div>
+			{mode === "edit" ? (
+				<Toolbar
+					breakpoint={previewBreakpoint}
+					onItemAdd={(itemType, url) => {
+						dispatchCommand({ type: "add-item", itemType, url });
+					}}
+					onBreakpointChange={(nextBreakpoint) => {
+						void handlePreviewBreakpointChange(nextBreakpoint);
+					}}
+				/>
+			) : null}
 		</main>
 	);
 }
