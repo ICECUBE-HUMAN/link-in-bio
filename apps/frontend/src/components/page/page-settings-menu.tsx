@@ -381,7 +381,7 @@ function ChangeHandleView({
 
 				<Button
 					type="submit"
-					variant={"secondary"}
+					variant={"brand"}
 					size="lg"
 					className={"rounded-md h-12"}
 					disabled={

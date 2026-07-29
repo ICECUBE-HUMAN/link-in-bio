@@ -1,5 +1,8 @@
 import { createAuthClient } from "better-auth/client";
-import { inferAdditionalFields } from "better-auth/client/plugins";
+import {
+	inferAdditionalFields,
+	magicLinkClient,
+} from "better-auth/client/plugins";
 import { getApiBaseUrl } from "@/lib/site/api-base-url";
 
 export const authClient = createAuthClient({
@@ -9,6 +12,7 @@ export const authClient = createAuthClient({
 		credentials: "include",
 	},
 	plugins: [
+		magicLinkClient(),
 		inferAdditionalFields({
 			user: {
 				role: {

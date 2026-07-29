@@ -27,6 +27,7 @@
 		"hono-openapi": "^1.3.0",
 		"pg": "^8.22.0",
 		"postgres": "^3.4.9",
+		"resend": "^6.18.1",
 		"valibot": "^1.4.2"
 	},
 	"devDependencies": {
