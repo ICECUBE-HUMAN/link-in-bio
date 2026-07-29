@@ -136,6 +136,7 @@ export function PageSettingsMenu({ page, onChanged }: PageSettingsMenuProps) {
 						) : (
 							<ChangeHandleView
 								page={page}
+								isActive={view === "handle"}
 								ui={ui}
 								onBack={() => {
 									setIsHandleSuccess(false);
@@ -210,18 +211,21 @@ function DeleteAccountView({
 
 function ChangeHandleView({
 	page,
+	isActive,
 	ui,
 	onBack,
 	onChanged,
 	onSuccessChange,
 }: {
 	page: PageResponse;
+	isActive: boolean;
 	ui: ReturnType<typeof createUISFX>;
 	onBack: () => void;
 	onChanged: (page: PageResponse) => void;
 	onSuccessChange: (isSuccess: boolean) => void;
 }) {
 	const queryClient = useQueryClient();
+	const inputRef = useRef<HTMLInputElement>(null);
 	const [currentHandle, setCurrentHandle] = useState(page.handle);
 	const [handle, setHandle] = useState(page.handle);
 	const [availability, setAvailability] =
@@ -238,6 +242,10 @@ function ChangeHandleView({
 		status.availabilityState === "idle"
 			? null
 			: handleAvailabilityIcons[status.availabilityState];
+
+	useEffect(() => {
+		if (isActive) inputRef.current?.focus();
+	}, [isActive]);
 
 	useEffect(() => {
 		setError(null);
@@ -336,6 +344,7 @@ function ChangeHandleView({
 			<Field className="gap-2">
 				<InputGroup className="h-12 rounded-md">
 					<InputGroupInput
+						ref={inputRef}
 						aria-describedby="handle-status handle-error"
 						aria-invalid={Boolean(status.error || error)}
 						id="change-handle"
@@ -353,7 +362,6 @@ function ChangeHandleView({
 						value={handle}
 						autoComplete="off"
 						className="placeholder:text-base! placeholder:text-muted-foreground/50 placeholder:font-normal pl-0.5! text-base!"
-						autoFocus
 					/>
 					<InputGroupAddon
 						align="inline-start"
