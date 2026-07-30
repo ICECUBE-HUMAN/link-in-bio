@@ -1,15 +1,16 @@
 .sinabro-grid-layout {
-	--grid-item-pop-duration: 280ms;
+	--grid-spring-ease: cubic-bezier(0.34, 1.25, 0.64, 1);
+	--grid-item-pop-duration: 440ms;
 	--grid-item-pop-ease: cubic-bezier(0.34, 1.75, 0.64, 1);
-	--grid-item-pop-distance: 14px;
+	--grid-item-pop-distance: 8px;
 	--grid-item-pop-scale: 0.88;
 	--grid-item-pop-blur: 2px;
-	--grid-position-duration: 260ms;
-	--grid-position-ease: cubic-bezier(0.34, 1.15, 0.64, 1);
-	--grid-drag-follow-duration: 180ms;
+	--grid-position-duration: 360ms;
+	--grid-position-ease: var(--grid-spring-ease);
+	--grid-drag-follow-duration: 100ms;
 	--grid-drag-follow-ease: cubic-bezier(0.22, 1, 0.36, 1);
-	--grid-resize-duration: 300ms;
-	--grid-resize-ease: cubic-bezier(0.22, 1, 0.36, 1);
+	--grid-resize-duration: 320ms;
+	--grid-resize-ease: var(--grid-spring-ease);
 	--grid-drag-lift-duration: 160ms;
 	--grid-drag-lift-ease: cubic-bezier(0.23, 1, 0.32, 1);
 	--grid-drag-rotate-x: 0deg;
@@ -24,11 +25,8 @@
 .sinabro-grid-layout .react-grid-item {
 	transition:
 		transform var(--grid-position-duration) var(--grid-position-ease),
-		left var(--grid-position-duration) var(--grid-position-ease),
-		top var(--grid-position-duration) var(--grid-position-ease),
 		width var(--grid-resize-duration) var(--grid-resize-ease),
 		height var(--grid-resize-duration) var(--grid-resize-ease);
-	will-change: transform, width, height;
 }
 
 .sinabro-grid-layout .react-grid-item.react-draggable-dragging {
@@ -92,7 +90,6 @@
 		opacity var(--grid-item-pop-duration) var(--grid-item-pop-ease),
 		transform var(--grid-item-pop-duration) var(--grid-item-pop-ease),
 		filter var(--grid-item-pop-duration) var(--grid-item-pop-ease);
-	will-change: transform, opacity, filter;
 }
 
 .grid-item-pop-in.is-entering {
@@ -112,7 +109,11 @@
 		transform var(--grid-drag-lift-duration) var(--grid-drag-lift-ease),
 		box-shadow var(--grid-drag-lift-duration) var(--grid-drag-lift-ease),
 		border-color var(--grid-drag-lift-duration) var(--grid-drag-lift-ease);
-	will-change: transform, box-shadow;
+	backface-visibility: hidden;
+}
+
+.grid-item-pop-in.is-entering {
+	will-change: transform, opacity, filter;
 }
 
 /* Section cards stay visually flat until the pointer reaches them. */
@@ -122,14 +123,16 @@
 	box-shadow: none !important;
 }
 
-.sinabro-grid-layout:not(:has(.react-grid-item.react-draggable-dragging))
-	.react-grid-item:not(.react-draggable-dragging)
-	[data-grid-item-type="section"]:hover
-	.grid-item-card {
-	/* Restore the same composed shadow used by shadow-sm + ring-1. */
-	box-shadow:
-		var(--tw-inset-shadow), var(--tw-inset-ring-shadow),
-		var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow) !important;
+@media (hover: hover) and (pointer: fine) {
+	.sinabro-grid-layout:not(:has(.react-grid-item.react-draggable-dragging))
+		.react-grid-item:not(.react-draggable-dragging)
+		[data-grid-item-type="section"]:hover
+		.grid-item-card {
+		/* Restore the same composed shadow used by shadow-sm + ring-1. */
+		box-shadow:
+			var(--tw-inset-shadow), var(--tw-inset-ring-shadow),
+			var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow) !important;
+	}
 }
 
 .react-grid-item.react-draggable-dragging .grid-item-card {
@@ -138,6 +141,7 @@
 	transform: perspective(800px) translateY(-8px) scale(1.035)
 		rotateX(calc(1deg + var(--grid-drag-rotate-x)))
 		rotateZ(calc(0.35deg + var(--grid-drag-rotate-z)));
+	will-change: transform;
 }
 
 /* Drop target: an inset shadow reads as a slot waiting for the dragged block. */
@@ -169,10 +173,7 @@
 			transparent
 		);
 	opacity: 1 !important;
-	transition:
-		transform var(--grid-position-duration) var(--grid-position-ease),
-		left var(--grid-position-duration) var(--grid-position-ease),
-		top var(--grid-position-duration) var(--grid-position-ease) !important;
+	transition: transform var(--grid-position-duration) var(--grid-position-ease) !important;
 	will-change: transform;
 }
 

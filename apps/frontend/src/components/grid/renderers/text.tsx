@@ -14,11 +14,11 @@ const textClampClassByPreset = {
 
 const textSizeClassByPreset = {
 	fullBanner: "text-lg leading-7",
-	halfBanner: "text-base leading-6",
-	squareSmall: "text-sm leading-6",
-	landscape: "text-base leading-6",
-	squareLarge: "text-base leading-7",
-	portrait: "text-sm leading-6",
+	halfBanner: "text-lg leading-6",
+	squareSmall: "text-lg leading-6",
+	landscape: "text-lg leading-6",
+	squareLarge: "text-lg leading-7",
+	portrait: "text-lg leading-6",
 } as const;
 
 export function TextItemRenderer({
@@ -34,6 +34,7 @@ export function TextItemRenderer({
 			<div className="flex min-h-0 flex-1 items-start justify-between gap-3">
 				{isEditing ? (
 					<textarea
+						rows={1}
 						value={item.data.text}
 						onChange={(event) =>
 							onCommand?.({
@@ -43,9 +44,9 @@ export function TextItemRenderer({
 							})
 						}
 						className={cn(
-							"min-h-0 min-w-0 flex-1 resize-none whitespace-pre-wrap bg-transparent text-foreground/90 outline-none",
+							"min-w-0 flex-1 resize-none overflow-x-auto overflow-y-hidden whitespace-nowrap bg-transparent text-foreground/90 outline-none",
 							textSizeClassByPreset[preset],
-							"h-full overflow-y-auto pr-1",
+							"h-7 py-0 leading-7",
 						)}
 					/>
 				) : (

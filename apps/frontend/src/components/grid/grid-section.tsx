@@ -93,6 +93,7 @@ export function GridSection({
 
 	const effectiveBreakpoint = isDesktopLayout ? breakpoint : "compact";
 	const isAnyItemDragging = draggingItemId !== null;
+	const hasItems = items.length > 0;
 	const cols = getColumns(effectiveBreakpoint);
 	const gridWidth = getGridWidth(cols);
 	const handleGridCommand: GridItemCommandHandler = (command) => {
@@ -189,13 +190,13 @@ export function GridSection({
 
 	return (
 		<div
-			className="grid-section-shell flex justify-center min-w-full min-h-dvh max-w-full shrink-0 overflow-visible pb-80"
-			style={{ width: gridWidth }}
+			className="grid-section-shell flex justify-center min-w-full max-w-full shrink-0 overflow-visible pb-80"
+			style={{ width: gridWidth, minHeight: hasItems ? "100dvh" : 0 }}
 		>
 			<GridLayout
 				key={layoutRevision}
 				className={`sinabro-grid-layout min-h-dvh max-w-full overflow-visible${mode === "edit" ? " is-edit-mode" : ""}`}
-				style={{ minHeight: "100dvh", width: gridWidth }}
+				style={{ minHeight: hasItems ? "100dvh" : 0, width: gridWidth }}
 				layout={layout}
 				width={gridWidth}
 				gridConfig={{

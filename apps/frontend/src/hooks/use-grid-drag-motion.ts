@@ -1,11 +1,12 @@
 import {
 	useMotionValue,
 	useMotionValueEvent,
+	useReducedMotion,
 	useSpring,
 	useTransform,
 	useVelocity,
 } from "motion/react";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { EventCallback } from "react-grid-layout";
 
 type PointerPoint = { x: number; y: number };
@@ -26,30 +27,39 @@ function getPointerPoint(event: Event): PointerPoint | null {
 	return touch ? { x: touch.clientX, y: touch.clientY } : null;
 }
 
+function getDragRotationScale(element: HTMLElement | null) {
+	return element?.querySelector('[data-grid-item-type="section"]')
+		? WIDE_ITEM_ROTATION_SCALE
+		: 1;
+}
+
 function setDragRotation(
 	element: HTMLElement | null,
-	axis: "x" | "z",
-	value: string,
+	rotation: { x: string; z: string },
 ) {
 	const card = element?.querySelector<HTMLElement>("[data-grid-item-card]");
 	if (!card) return;
 
-	const isWideItem = Boolean(
-		element?.querySelector('[data-grid-item-type="section"]'),
+	const scale = getDragRotationScale(element);
+	card.style.setProperty(
+		"--grid-drag-rotate-x",
+		`${Number.parseFloat(rotation.x) * scale}deg`,
 	);
-	const nextValue = isWideItem
-		? `${Number.parseFloat(value) * WIDE_ITEM_ROTATION_SCALE}deg`
-		: value;
-	card.style.setProperty(`--grid-drag-rotate-${axis}`, nextValue);
+	card.style.setProperty(
+		"--grid-drag-rotate-z",
+		`${Number.parseFloat(rotation.z) * scale}deg`,
+	);
 }
 
 function resetDragRotation(element: HTMLElement | null) {
-	setDragRotation(element, "x", "0deg");
-	setDragRotation(element, "z", "0deg");
+	setDragRotation(element, { x: "0deg", z: "0deg" });
 }
 
 export function useGridDragMotion() {
+	const shouldReduceMotion = useReducedMotion();
 	const draggingElementRef = useRef<HTMLElement | null>(null);
+	const pendingRotationRef = useRef({ x: "0deg", z: "0deg" });
+	const rotationFrameRef = useRef<number | null>(null);
 	const dragPointerX = useMotionValue(0);
 	const dragPointerY = useMotionValue(0);
 	const dragVelocityX = useVelocity(dragPointerX);
@@ -83,12 +93,32 @@ export function useGridDragMotion() {
 		mass: 0.25,
 	});
 
+	const cancelRotationFrame = () => {
+		if (rotationFrameRef.current === null) return;
+		window.cancelAnimationFrame(rotationFrameRef.current);
+		rotationFrameRef.current = null;
+	};
+
+	const scheduleRotation = (axis: "x" | "z", value: string) => {
+		pendingRotationRef.current[axis] = value;
+		if (rotationFrameRef.current !== null) return;
+
+		rotationFrameRef.current = window.requestAnimationFrame(() => {
+			rotationFrameRef.current = null;
+			setDragRotation(draggingElementRef.current, pendingRotationRef.current);
+		});
+	};
+
 	useMotionValueEvent(smoothDragRotateX, "change", (value) => {
-		setDragRotation(draggingElementRef.current, "x", value);
+		if (shouldReduceMotion) return;
+		scheduleRotation("x", value);
 	});
 	useMotionValueEvent(smoothDragRotateZ, "change", (value) => {
-		setDragRotation(draggingElementRef.current, "z", value);
+		if (shouldReduceMotion) return;
+		scheduleRotation("z", value);
 	});
+
+	useEffect(() => cancelRotationFrame, []);
 
 	const onDragStart: EventCallback = (
 		_currentLayout,
@@ -99,7 +129,10 @@ export function useGridDragMotion() {
 		element,
 	) => {
 		draggingElementRef.current = element;
+		cancelRotationFrame();
+		pendingRotationRef.current = { x: "0deg", z: "0deg" };
 		resetDragRotation(element);
+		if (shouldReduceMotion) return;
 		const point = getPointerPoint(event);
 		if (!point) return;
 		dragPointerX.set(point.x);
@@ -114,6 +147,7 @@ export function useGridDragMotion() {
 		event,
 		element,
 	) => {
+		if (shouldReduceMotion) return;
 		const point = getPointerPoint(event);
 		if (!point) return;
 		draggingElementRef.current = element ?? draggingElementRef.current;
@@ -129,6 +163,7 @@ export function useGridDragMotion() {
 		_event,
 		element,
 	) => {
+		cancelRotationFrame();
 		resetDragRotation(element ?? draggingElementRef.current);
 		draggingElementRef.current = null;
 	};

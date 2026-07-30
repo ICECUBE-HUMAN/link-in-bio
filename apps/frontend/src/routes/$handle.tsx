@@ -448,14 +448,12 @@ function HandlePageContent({
 					className={`t-breakpoint-crossfade grid-content-scroll-shell min-h-[calc(100dvh-3rem)] w-full overflow-visible p-0 pt-0 sm:max-w-[28rem] no-scrollbar min-[90rem]:px-0 min-[90rem]:pb-24 ${layoutClasses.content}`}
 				>
 					<div className="flex flex-col gap-4">
-						{items.length > 0 && (
-							<GridSection
-								items={items}
-								breakpoint={previewBreakpoint}
-								mode={mode}
-								onCommand={dispatchCommand}
-							/>
-						)}
+						<GridSection
+							items={items}
+							breakpoint={previewBreakpoint}
+							mode={mode}
+							onCommand={dispatchCommand}
+						/>
 					</div>
 				</section>
 			</motion.div>
