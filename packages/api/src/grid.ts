@@ -136,6 +136,17 @@ export const pageItemUpsertSchema = v.intersect([
 
 export type PageItemUpsert = v.InferOutput<typeof pageItemUpsertSchema>;
 
+export function hasPageItemContent(item: PageItemUpsert): boolean {
+	switch (item.type) {
+		case "text":
+			return item.data.text.trim().length > 0;
+		case "section":
+			return item.data.title.trim().length > 0;
+		default:
+			return true;
+	}
+}
+
 export const pageItemBatchRequestSchema = v.object({
 	upserts: v.array(pageItemUpsertSchema),
 	deletes: v.array(v.pipe(v.string(), v.minLength(1))),

@@ -8,14 +8,13 @@ import {
 } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Loader, Send, StackPerspective } from "reicon-react";
+import { Send, StackPerspective } from "reicon-react";
 import { GridSection } from "@/components/grid/grid-section";
 import { EditableParagraph } from "@/components/page/editable-paragraph";
 import { PageImageEditor } from "@/components/page/page-image-editor";
 import { PageSettingsMenu } from "@/components/page/page-settings-menu";
 import Toolbar from "@/components/page/toolbar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Tooltip,
@@ -164,7 +163,6 @@ function HandlePageContent({
 		handle: page.handle,
 		breakpoint: previewBreakpoint,
 		enabled: mode === "edit",
-		persistItems: false,
 	});
 
 	useEffect(() => {
@@ -445,17 +443,6 @@ function HandlePageContent({
 							<TooltipContent>Feedback</TooltipContent>
 						</Tooltip>
 					</div>
-					{(status === "saving" || gridStatus === "saving") && (
-						<Badge
-							variant="secondary"
-							className="flex items-center gap-2 rounded-sm p-3.5 px-2 text-xs text-muted-foreground/80"
-						>
-							<span className="flex items-center gap-1.5">
-								<Loader className="size-4 animate-spin" />
-								Saving
-							</span>
-						</Badge>
-					)}
 				</aside>
 
 				<section
@@ -477,6 +464,7 @@ function HandlePageContent({
 			{mode === "edit" ? (
 				<Toolbar
 					breakpoint={previewBreakpoint}
+					isSaving={status === "saving" || gridStatus === "saving"}
 					onItemAdd={(itemType, url) => {
 						dispatchCommand({ type: "add-item", itemType, url });
 					}}

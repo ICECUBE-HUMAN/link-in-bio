@@ -57,12 +57,12 @@ const textClampClassByPreset = {
 } as const;
 
 const textSizeClassByPreset = {
-	fullBanner: "text-xl leading-9",
-	halfBanner: "text-xl leading-9",
-	squareSmall: "text-xl leading-9",
-	landscape: "text-xl leading-9",
-	squareLarge: "text-xl leading-9",
-	portrait: "text-xl leading-9",
+	fullBanner: "text-lg leading-7",
+	halfBanner: "text-lg leading-8.5",
+	squareSmall: "text-lg leading-7",
+	landscape: "text-lg leading-7",
+	squareLarge: "text-lg leading-8",
+	portrait: "text-lg leading-8",
 } as const;
 
 export function TextItemRenderer({

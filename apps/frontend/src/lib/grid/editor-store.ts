@@ -4,7 +4,7 @@ import type {
 	PageItemBatchResponse,
 	PageItemResponse,
 } from "@sinabro/api";
-import { pageItemBatchResponseSchema } from "@sinabro/api";
+import { hasPageItemContent, pageItemBatchResponseSchema } from "@sinabro/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as v from "valibot";
@@ -93,6 +93,7 @@ function createBatch(
 	return {
 		upserts: items
 			.map((item) => toBatchItem(item))
+			.filter(hasPageItemContent)
 			.filter((item) => !sameItem(item, persistedById.get(item.id))),
 		deletes: [...deletedIds].filter((id) => persistedById.has(id)),
 	};
@@ -110,7 +111,11 @@ function mergeItems<T extends { id: string }>(
 	for (const item of incoming) {
 		nextById.set(item.id, item);
 	}
-	return current.map((item) => nextById.get(item.id) ?? item);
+	const currentIds = new Set(current.map((item) => item.id));
+	return [
+		...current.map((item) => nextById.get(item.id) ?? item),
+		...incoming.filter((item) => !currentIds.has(item.id)),
+	];
 }
 
 function mergeAcknowledgedItems(

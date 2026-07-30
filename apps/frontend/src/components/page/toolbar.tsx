@@ -11,11 +11,13 @@ import {
 	GalleryCircle,
 	Globe,
 	LinkCircle3,
+	Loader,
 	Send,
 	TextCircle,
 } from "reicon-react";
 import type { Breakpoint, ItemType } from "@/lib/grid/types";
 import { cn } from "@/lib/utils";
+import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import {
 	InputGroup,
@@ -28,6 +30,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 type ToolbarProps = {
 	breakpoint: Breakpoint;
+	isSaving: boolean;
 	onBreakpointChange: (breakpoint: Breakpoint) => void;
 	onItemAdd: (itemType: ItemType, url?: string) => void;
 };
@@ -42,6 +45,7 @@ function isHttpsUrl(value: string) {
 
 export default function Toolbar({
 	breakpoint,
+	isSaving,
 	onBreakpointChange,
 	onItemAdd,
 }: ToolbarProps) {
@@ -127,6 +131,22 @@ export default function Toolbar({
 							className="flex items-center gap-1"
 						>
 							<div id="toolbar-content" className="flex items-center gap-1">
+								<div className="hidden items-center min-[90rem]:flex">
+									{isSaving ? (
+											<div className="flex justify-center items-center gap-1.5 text-muted-foreground w-28">
+												<Loader className="size-4 animate-spin" />
+												<span className="text-sm shimmer">Saving</span>
+											</div>
+									) : (
+										<Button
+											variant={"brand"}
+											size={"default"}
+											className={"px-8 surface-line w-28"}
+										>
+											Share
+										</Button>
+									)}
+								</div>
 								<div className="flex items-center gap-0 text-muted-foreground">
 									<ToolbarButton
 										label="Link"
@@ -201,11 +221,13 @@ function ToolbarButton({
 	children,
 	className,
 	onClick,
+	variant = "ghost",
 }: {
 	label: string;
 	children: React.ReactNode;
 	className?: string;
 	onClick?: () => void;
+	variant?: "brand" | "ghost";
 }) {
 	return (
 		<Tooltip>
@@ -214,7 +236,7 @@ function ToolbarButton({
 					<Button
 						type="button"
 						size="icon"
-						variant="ghost"
+						variant={variant}
 						className={cn(
 							"rounded-full hover:bg-muted-foreground/40 hover:text-background/90",
 							className,

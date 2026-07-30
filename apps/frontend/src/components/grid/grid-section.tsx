@@ -4,7 +4,13 @@ import {
 	gridMargin,
 	gridRowHeight,
 } from "@sinabro/grid-layout";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+	useSyncExternalStore,
+} from "react";
 import GridLayout, { type EventCallback } from "react-grid-layout";
 import { fastVerticalCompactor } from "react-grid-layout/extras";
 import {
@@ -33,6 +39,22 @@ type GridSectionProps = {
 	onCommand: GridItemCommandHandler;
 };
 
+const desktopMediaQuery = "(min-width: 90rem)";
+
+function subscribeToDesktopLayout(onChange: () => void) {
+	const mediaQuery = window.matchMedia(desktopMediaQuery);
+	mediaQuery.addEventListener("change", onChange);
+	return () => mediaQuery.removeEventListener("change", onChange);
+}
+
+function getDesktopLayoutSnapshot() {
+	return window.matchMedia(desktopMediaQuery).matches;
+}
+
+function getDesktopLayoutServerSnapshot() {
+	return false;
+}
+
 export function GridSection({
 	items,
 	breakpoint,
@@ -53,7 +75,11 @@ export function GridSection({
 	);
 	const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
 	const [layoutRevision, setLayoutRevision] = useState(0);
-	const [isDesktopLayout, setIsDesktopLayout] = useState(false);
+	const isDesktopLayout = useSyncExternalStore(
+		subscribeToDesktopLayout,
+		getDesktopLayoutSnapshot,
+		getDesktopLayoutServerSnapshot,
+	);
 	const dragMotion = useGridDragMotion();
 	const renderedItems = useMemo(
 		() =>
@@ -135,14 +161,6 @@ export function GridSection({
 				window.cancelAnimationFrame(frame);
 			}
 		};
-	}, []);
-
-	useEffect(() => {
-		const mediaQuery = window.matchMedia("(min-width: 90rem)");
-		const handleChange = () => setIsDesktopLayout(mediaQuery.matches);
-		handleChange();
-		mediaQuery.addEventListener("change", handleChange);
-		return () => mediaQuery.removeEventListener("change", handleChange);
 	}, []);
 
 	const effectiveBreakpoint = isDesktopLayout ? breakpoint : "compact";
