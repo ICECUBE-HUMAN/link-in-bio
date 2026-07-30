@@ -102,7 +102,7 @@ export default function Toolbar({
 										type="button"
 										size="icon-sm"
 										aria-label="Add link"
-										className="bg-brand text-primary-foreground active:scale-[0.97]"
+										className="bg-brand text-primary-foreground active:scale-[0.97] hover:bg-brand/80 hover:text-primary-foreground"
 										disabled={!canAddLink}
 										onClick={() => {
 											const url = linkUrl.trim();

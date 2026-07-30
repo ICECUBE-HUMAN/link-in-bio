@@ -25,7 +25,7 @@ export function SectionItemRenderer({
 						})
 					}
 					className={cn(
-						"field-sizing-content h-full w-fit max-w-full min-w-48 rounded-lg border-0 bg-transparent px-2 py-0 text-xl! leading-11 font-semibold shadow-none",
+						"field-sizing-content h-full w-fit max-w-full min-w-48 rounded-lg border-0 bg-transparent px-2 py-0 text-xl! leading-11 font-semibold shadow-none placeholder:text-input",
 						"hover:bg-muted focus-visible:bg-muted focus-visible:ring-0",
 					)}
 				/>
