@@ -263,6 +263,15 @@
 		top 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.sinabro-grid-layout.is-edit-mode .react-grid-item {
+	user-select: none;
+	-webkit-user-drag: none;
+}
+
+.sinabro-grid-layout.is-edit-mode .react-grid-item :is(input, textarea, [contenteditable="true"]) {
+	user-select: text;
+}
+
 .sinabro-grid-layout .react-grid-placeholder {
 	border-radius: var(--radius-2xl) !important;
 	background: color-mix(in oklab, var(--primary) 14%, transparent);

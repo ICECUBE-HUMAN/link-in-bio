@@ -75,14 +75,12 @@ export function GridSection({
 		dragStartLayoutRef.current = toGridLayoutMap(currentLayout);
 	};
 
-	const handleDragStop: EventCallback = (nextLayout, oldItem, newItem) => {
+	const handleDragStop: EventCallback = (nextLayout) => {
 		const dragStartLayout =
 			dragStartLayoutRef.current ?? toGridLayoutMap(layout);
 		const resolved = resolveDraggedLayout({
 			nextLayout,
 			dragStartLayout,
-			oldItem,
-			newItem,
 			cols,
 		});
 		if (resolved.outsideGrid) {
@@ -98,12 +96,12 @@ export function GridSection({
 
 	return (
 		<div
-			className="grid-section-shell mx-auto min-h-dvh shrink-0 overflow-visible"
+			className="grid-section-shell pb-80 mx-auto min-h-dvh shrink-0 overflow-visible"
 			style={{ width: gridWidth }}
 		>
 			<GridLayout
 				key={layoutRevision}
-				className="sinabro-grid-layout min-h-dvh overflow-visible"
+				className={`sinabro-grid-layout min-h-dvh overflow-visible${mode === "edit" ? " is-edit-mode" : ""}`}
 				style={{ minHeight: "100dvh", width: gridWidth }}
 				layout={layout}
 				width={gridWidth}

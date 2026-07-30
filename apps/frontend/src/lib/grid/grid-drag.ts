@@ -1,4 +1,3 @@
-import { resolveAxisAwareSwap } from "@/lib/grid/layout-engine";
 import type { ItemLayout, LayoutMap } from "@/lib/grid/types";
 
 export type GridPosition = ItemLayout & { i: string };
@@ -18,36 +17,16 @@ export function isOutsideGrid(layout: LayoutMap, cols: number): boolean {
 export function resolveDraggedLayout({
 	nextLayout,
 	dragStartLayout,
-	oldItem,
-	newItem,
 	cols,
 }: {
 	nextLayout: readonly GridPosition[];
 	dragStartLayout: LayoutMap;
-	oldItem: GridPosition | null | undefined;
-	newItem: GridPosition | null | undefined;
 	cols: number;
 }): { layout: LayoutMap; outsideGrid: boolean } {
 	const nextLayoutMap = toLayoutMap(nextLayout);
 	const outsideGrid = isOutsideGrid(nextLayoutMap, cols);
-	if (outsideGrid || !oldItem || !newItem) {
-		return {
-			layout: outsideGrid ? dragStartLayout : nextLayoutMap,
-			outsideGrid,
-		};
-	}
-
 	return {
-		layout: resolveAxisAwareSwap(
-			dragStartLayout,
-			newItem.i,
-			{ x: newItem.x, y: newItem.y, w: newItem.w, h: newItem.h },
-			{
-				x: newItem.x - oldItem.x,
-				y: newItem.y - oldItem.y,
-			},
-			cols,
-		),
-		outsideGrid: false,
+		layout: outsideGrid ? dragStartLayout : nextLayoutMap,
+		outsideGrid,
 	};
 }
