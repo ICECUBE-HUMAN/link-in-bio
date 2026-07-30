@@ -30,7 +30,7 @@ type GridItemShellProps = {
 	item: GridItem;
 	layout: ItemLayout;
 	isEntering?: boolean;
-	isDragging?: boolean;
+	isAnyItemDragging?: boolean;
 	capabilities: ItemCapabilities;
 	onCommand?: GridItemCommandHandler;
 	children?: ReactNode;
@@ -48,14 +48,14 @@ export function GridItemShell({
 	item,
 	layout,
 	isEntering = false,
-	isDragging = false,
+	isAnyItemDragging = false,
 	capabilities,
 	onCommand,
 	children,
 }: GridItemShellProps) {
 	const hasContent = children !== null && children !== undefined;
 	const hasControls =
-		capabilities.controls.length > 0 && onCommand && !isDragging;
+		capabilities.controls.length > 0 && onCommand && !isAnyItemDragging;
 	const ControlsView = getItemViewRegistration(item).controls;
 	const shellRef = useRef<HTMLDivElement>(null);
 	const hideControlsTimer = useRef<number | null>(null);
@@ -120,7 +120,7 @@ export function GridItemShell({
 	}, [controlsOpen, updateControlsPosition]);
 
 	useEffect(() => {
-		if (isDragging) {
+		if (isAnyItemDragging) {
 			if (hideControlsTimer.current !== null) {
 				window.clearTimeout(hideControlsTimer.current);
 				hideControlsTimer.current = null;
@@ -137,7 +137,7 @@ export function GridItemShell({
 			setControlsOpen(true);
 		});
 		return () => window.cancelAnimationFrame(frame);
-	}, [isDragging, updateControlsPosition]);
+	}, [isAnyItemDragging, updateControlsPosition]);
 
 	return (
 		<div
@@ -154,6 +154,7 @@ export function GridItemShell({
 				"transition-[z-index] hover:z-50 focus-within:z-50",
 			)}
 			onPointerEnter={() => {
+				if (isAnyItemDragging) return;
 				pointerInsideRef.current = true;
 				showControls();
 			}}

@@ -12,6 +12,7 @@ import {
 	GridItemShell,
 } from "@/components/grid/grid-item-shell";
 import { ItemRenderer } from "@/components/grid/item-renderer";
+import { useGridDragMotion } from "@/hooks/use-grid-drag-motion";
 import {
 	resolveDraggedLayout,
 	toLayoutMap as toGridLayoutMap,
@@ -31,48 +32,6 @@ type GridSectionProps = {
 	onCommand: GridItemCommandHandler;
 };
 
-type PointerPoint = {
-	x: number;
-	y: number;
-};
-
-type DragVelocityState = PointerPoint & {
-	time: number;
-};
-
-const MAX_DRAG_VELOCITY = 1400;
-const VELOCITY_TO_ROTATION = 0.018;
-
-function getPointerPoint(event: Event): PointerPoint | null {
-	if ("clientX" in event && "clientY" in event) {
-		const { clientX, clientY } = event as MouseEvent;
-		if (typeof clientX === "number" && typeof clientY === "number") {
-			return { x: clientX, y: clientY };
-		}
-	}
-
-	const touch = (event as TouchEvent).touches?.[0];
-	return touch ? { x: touch.clientX, y: touch.clientY } : null;
-}
-
-function setDragVelocity(element: HTMLElement | null, x: number, y: number) {
-	const card = element?.querySelector<HTMLElement>("[data-grid-item-card]");
-	if (!card) return;
-
-	card.style.setProperty(
-		"--grid-drag-rotate-x",
-		`${y * -VELOCITY_TO_ROTATION}deg`,
-	);
-	card.style.setProperty(
-		"--grid-drag-rotate-z",
-		`${x * VELOCITY_TO_ROTATION}deg`,
-	);
-}
-
-function resetDragVelocity(element: HTMLElement | null) {
-	setDragVelocity(element, 0, 0);
-}
-
 export function GridSection({
 	items,
 	breakpoint,
@@ -88,8 +47,7 @@ export function GridSection({
 	const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
 	const [layoutRevision, setLayoutRevision] = useState(0);
 	const [isDesktopLayout, setIsDesktopLayout] = useState(false);
-	const dragVelocityStateRef = useRef<DragVelocityState | null>(null);
-	const draggingElementRef = useRef<HTMLElement | null>(null);
+	const dragMotion = useGridDragMotion();
 
 	useEffect(() => {
 		const currentItemIds = new Set(items.map((item) => item.id));
@@ -134,6 +92,7 @@ export function GridSection({
 	}, []);
 
 	const effectiveBreakpoint = isDesktopLayout ? breakpoint : "compact";
+	const isAnyItemDragging = draggingItemId !== null;
 	const cols = getColumns(effectiveBreakpoint);
 	const gridWidth = getGridWidth(cols);
 	const handleGridCommand: GridItemCommandHandler = (command) => {
@@ -163,14 +122,16 @@ export function GridSection({
 		event,
 		element,
 	) => {
+		dragMotion.onDragStart(
+			currentLayout,
+			oldItem,
+			_newItem,
+			_placeholder,
+			event,
+			element,
+		);
 		dragStartLayoutRef.current = toGridLayoutMap(currentLayout);
 		setDraggingItemId(oldItem?.i ?? null);
-		draggingElementRef.current = element;
-		const point = getPointerPoint(event);
-		dragVelocityStateRef.current = point
-			? { ...point, time: performance.now() }
-			: null;
-		resetDragVelocity(element);
 	};
 
 	const handleDrag: EventCallback = (
@@ -181,31 +142,13 @@ export function GridSection({
 		event,
 		element,
 	) => {
-		const point = getPointerPoint(event);
-		if (!point) return;
-
-		const now = performance.now();
-		const previous = dragVelocityStateRef.current;
-		if (!previous) {
-			dragVelocityStateRef.current = { ...point, time: now };
-			return;
-		}
-
-		const elapsed = Math.max(now - previous.time, 8);
-		const velocityX = Math.max(
-			-MAX_DRAG_VELOCITY,
-			Math.min(MAX_DRAG_VELOCITY, ((point.x - previous.x) / elapsed) * 1000),
-		);
-		const velocityY = Math.max(
-			-MAX_DRAG_VELOCITY,
-			Math.min(MAX_DRAG_VELOCITY, ((point.y - previous.y) / elapsed) * 1000),
-		);
-
-		dragVelocityStateRef.current = { ...point, time: now };
-		setDragVelocity(
-			element ?? draggingElementRef.current,
-			velocityX,
-			velocityY,
+		dragMotion.onDrag(
+			_currentLayout,
+			_oldItem,
+			_newItem,
+			_placeholder,
+			event,
+			element,
 		);
 	};
 
@@ -217,6 +160,14 @@ export function GridSection({
 		_event,
 		element,
 	) => {
+		dragMotion.onDragStop(
+			nextLayout,
+			_oldItem,
+			_newItem,
+			_placeholder,
+			_event,
+			element,
+		);
 		const dragStartLayout =
 			dragStartLayoutRef.current ?? toGridLayoutMap(layout);
 		const resolved = resolveDraggedLayout({
@@ -227,9 +178,6 @@ export function GridSection({
 		if (resolved.outsideGrid) {
 			setLayoutRevision((revision) => revision + 1);
 		}
-		resetDragVelocity(element ?? draggingElementRef.current);
-		draggingElementRef.current = null;
-		dragVelocityStateRef.current = null;
 		dragStartLayoutRef.current = null;
 		setDraggingItemId(null);
 		onCommand({
@@ -283,7 +231,7 @@ export function GridSection({
 								item={item}
 								layout={itemLayout}
 								isEntering={enteringItemIds.has(item.id)}
-								isDragging={draggingItemId === item.id}
+								isAnyItemDragging={isAnyItemDragging}
 								capabilities={capabilities}
 								onCommand={handleGridCommand}
 							>

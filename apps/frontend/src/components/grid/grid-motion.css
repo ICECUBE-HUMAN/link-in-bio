@@ -7,7 +7,7 @@
 	--grid-position-duration: 260ms;
 	--grid-position-ease: cubic-bezier(0.34, 1.15, 0.64, 1);
 	--grid-drag-follow-duration: 180ms;
-	--grid-drag-follow-ease: cubic-bezier(0.34, 1.36, 0.64, 1);
+	--grid-drag-follow-ease: cubic-bezier(0.22, 1, 0.36, 1);
 	--grid-resize-duration: 300ms;
 	--grid-resize-ease: cubic-bezier(0.22, 1, 0.36, 1);
 	--grid-drag-lift-duration: 160ms;
@@ -113,6 +113,23 @@
 		box-shadow var(--grid-drag-lift-duration) var(--grid-drag-lift-ease),
 		border-color var(--grid-drag-lift-duration) var(--grid-drag-lift-ease);
 	will-change: transform, box-shadow;
+}
+
+/* Section cards stay visually flat until the pointer reaches them. */
+.sinabro-grid-layout .react-grid-item:not(.react-draggable-dragging)
+	[data-grid-item-type="section"]
+	.grid-item-card {
+	box-shadow: none !important;
+}
+
+.sinabro-grid-layout:not(:has(.react-grid-item.react-draggable-dragging))
+	.react-grid-item:not(.react-draggable-dragging)
+	[data-grid-item-type="section"]:hover
+	.grid-item-card {
+	/* Restore the same composed shadow used by shadow-sm + ring-1. */
+	box-shadow:
+		var(--tw-inset-shadow), var(--tw-inset-ring-shadow),
+		var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow) !important;
 }
 
 .react-grid-item.react-draggable-dragging .grid-item-card {
