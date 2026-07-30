@@ -30,8 +30,7 @@ const PAGE_LAYOUT_CLASSES: Record<Breakpoint, PageLayoutClasses> = {
 		imageRemove: "min-[90rem]:top-2 min-[90rem]:right-2",
 	},
 	compact: {
-		shell:
-			"min-[90rem]:items-center min-[90rem]:justify-start min-[90rem]:overflow-y-auto",
+		shell: "min-[90rem]:items-center min-[90rem]:justify-start",
 		profile: "min-[90rem]:max-w-lg",
 		content:
 			"min-[90rem]:h-auto min-[90rem]:min-h-0 min-[90rem]:max-w-lg min-[90rem]:shrink-0 min-[90rem]:pt-0",

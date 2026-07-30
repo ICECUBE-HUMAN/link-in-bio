@@ -37,6 +37,8 @@
 	--page-exit-enabled: 1;
 	--page-slide-ease: cubic-bezier(0.22, 1, 0.36, 1);
 	--page-fade-ease: cubic-bezier(0.22, 1, 0.36, 1);
+	--breakpoint-fade-dur: 350ms;
+	--breakpoint-frame-dur: 350ms;
 	--check-opacity-dur: 500ms;
 	--check-rotate-dur: 500ms;
 	--check-rotate-from: 80deg;
@@ -318,8 +320,34 @@
 	filter: blur(0);
 }
 
+.t-breakpoint-crossfade {
+	opacity: 1;
+	filter: blur(0);
+	transition:
+		opacity var(--breakpoint-fade-dur) var(--page-fade-ease),
+		filter var(--breakpoint-fade-dur) var(--page-fade-ease);
+	will-change: opacity, filter;
+}
+
+.t-breakpoint-crossfade[data-breakpoint-transition="exit"],
+.t-breakpoint-crossfade[data-breakpoint-transition="frame"],
+.t-breakpoint-crossfade[data-breakpoint-transition="enter"] {
+	opacity: 0;
+	filter: blur(var(--page-blur));
+}
+
+.t-breakpoint-frame {
+	transition:
+		width var(--breakpoint-frame-dur) var(--page-fade-ease),
+		height var(--breakpoint-frame-dur) var(--page-fade-ease),
+		border-radius var(--breakpoint-frame-dur) var(--page-fade-ease),
+		background-color var(--breakpoint-frame-dur) var(--page-fade-ease);
+}
+
 @media (prefers-reduced-motion: reduce) {
-	.t-stagger-line {
+	.t-stagger-line,
+	.t-breakpoint-crossfade,
+	.t-breakpoint-frame {
 		transition: none !important;
 	}
 }

@@ -6,7 +6,8 @@ import {
 	notFound,
 	redirect,
 } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 import { Loader, Send, StackPerspective } from "reicon-react";
 import { GridSection } from "@/components/grid/grid-section";
 import { EditableParagraph } from "@/components/page/editable-paragraph";
@@ -140,6 +141,13 @@ function HandlePageContent({
 	const [isAsideShown, setIsAsideShown] = useState(false);
 	const [previewBreakpoint, setPreviewBreakpoint] =
 		useState<Breakpoint>("wide");
+	const [breakpointTransition, setBreakpointTransition] = useState<
+		"idle" | "exit" | "frame" | "enter"
+	>("idle");
+	const pendingBreakpoint = useRef<Breakpoint | null>(null);
+	const isBreakpointTransitioning = useRef(false);
+	const breakpointTransitionTimer = useRef<number | null>(null);
+	const shouldReduceMotion = useReducedMotion();
 	const { draft, status, updateField } = usePageAutoSave({
 		page,
 		handle: page.handle,
@@ -204,31 +212,120 @@ function HandlePageContent({
 		return () => cancelAnimationFrame(frame);
 	}, []);
 
+	useEffect(() => {
+		return () => {
+			if (breakpointTransitionTimer.current !== null) {
+				window.clearTimeout(breakpointTransitionTimer.current);
+			}
+		};
+	}, []);
+
 	async function handlePreviewBreakpointChange(nextBreakpoint: Breakpoint) {
-		if (nextBreakpoint === previewBreakpoint) return;
-		await flushPendingChanges();
-		setPreviewBreakpoint(nextBreakpoint);
+		if (
+			nextBreakpoint === previewBreakpoint ||
+			breakpointTransition !== "idle" ||
+			isBreakpointTransitioning.current
+		)
+			return;
+
+		if (shouldReduceMotion) {
+			await flushPendingChanges();
+			setPreviewBreakpoint(nextBreakpoint);
+			return;
+		}
+
+		isBreakpointTransitioning.current = true;
+		pendingBreakpoint.current = nextBreakpoint;
+
+		try {
+			await flushPendingChanges();
+			setBreakpointTransition("exit");
+
+			const fadeValue = getComputedStyle(document.documentElement)
+				.getPropertyValue("--breakpoint-fade-dur")
+				.trim();
+			const fadeDuration = fadeValue.endsWith("ms")
+				? Number.parseFloat(fadeValue)
+				: fadeValue.endsWith("s")
+					? Number.parseFloat(fadeValue) * 1000
+					: Number.parseFloat(fadeValue);
+			const transitionDuration = Number.isFinite(fadeDuration)
+				? fadeDuration + 50
+				: 550;
+			const frameValue = getComputedStyle(document.documentElement)
+				.getPropertyValue("--breakpoint-frame-dur")
+				.trim();
+			const frameDuration = frameValue.endsWith("ms")
+				? Number.parseFloat(frameValue)
+				: frameValue.endsWith("s")
+					? Number.parseFloat(frameValue) * 1000
+					: Number.parseFloat(frameValue);
+			const frameTransitionDuration = Number.isFinite(frameDuration)
+				? frameDuration + 50
+				: 400;
+
+			breakpointTransitionTimer.current = window.setTimeout(() => {
+				const breakpoint = pendingBreakpoint.current;
+				if (!breakpoint) return;
+
+				pendingBreakpoint.current = null;
+				setPreviewBreakpoint(breakpoint);
+				setBreakpointTransition("frame");
+				breakpointTransitionTimer.current = window.setTimeout(() => {
+					setBreakpointTransition("enter");
+					breakpointTransitionTimer.current = window.setTimeout(() => {
+						breakpointTransitionTimer.current = null;
+						isBreakpointTransitioning.current = false;
+						setBreakpointTransition("idle");
+					}, transitionDuration);
+				}, frameTransitionDuration);
+			}, transitionDuration);
+		} catch (error) {
+			if (breakpointTransitionTimer.current !== null) {
+				window.clearTimeout(breakpointTransitionTimer.current);
+				breakpointTransitionTimer.current = null;
+			}
+			pendingBreakpoint.current = null;
+			isBreakpointTransitioning.current = false;
+			setBreakpointTransition("idle");
+			throw error;
+		}
 	}
 
 	const layoutClasses = getPageLayoutClasses(previewBreakpoint);
+	const isCompactPreview = previewBreakpoint === "compact";
+	const isFrameResizing = breakpointTransition === "frame";
+	const showCompactCanvas = isCompactPreview || isFrameResizing;
+	const frameLayoutTransition = shouldReduceMotion
+		? { duration: 0 }
+		: {
+				duration: 0.35,
+				ease: [0.22, 1, 0.36, 1] as const,
+			};
 
 	return (
-		<main className="relative box-border min-h-dvh w-full px-[clamp(1rem,2vw,3rem)] min-[90rem]:flex min-[90rem]:h-dvh min-[90rem]:justify-center min-[90rem]:overflow-auto">
-			<div
-				className={`flex w-full flex-col items-center gap-8 min-[90rem]:h-full min-[90rem]:min-h-0 ${layoutClasses.shell}`}
+		<main
+			className={`relative box-border min-h-dvh w-full overscroll-none no-scrollbar ${isCompactPreview ? "overflow-y-hidden" : "overflow-y-auto"} ${showCompactCanvas ? "bg-secondary" : "bg-background"} min-[90rem]:flex min-[90rem]:h-dvh min-[90rem]:items-center min-[90rem]:justify-center`}
+		>
+			<motion.div
+				layout="size"
+				transition={{ layout: frameLayoutTransition }}
+				className={`t-breakpoint-frame overscroll-none flex w-full flex-col items-center gap-8 ${isCompactPreview ? "min-[90rem]:h-[calc(100dvh-8rem)] min-[90rem]:overflow-y-auto no-scrollbar" : "min-[90rem]:h-full overflow-visible"} min-[90rem]:min-h-0 min-[90rem]:max-w-none ${layoutClasses.shell} ${showCompactCanvas ? "bg-background min-[90rem]:rounded-[3.5rem] min-[90rem]:py-4 shadow-float-lg" : "min-[90rem]:bg-transparent min-[90rem]:rounded-none"} ${isCompactPreview ? "min-[90rem]:w-120 min-[90rem]:max-w-[calc(100vw-2rem)] " : ""}`}
 			>
 				<div
-					className={`flex min-w-0 w-full max-w-[28rem] flex-col ${layoutClasses.profile}`}
+					className={`flex min-w-0 w-full max-w-md flex-col ${layoutClasses.profile}`}
 				>
 					<aside
-						className={`t-stagger flex w-full flex-1 flex-col gap-8 p-6 pt-12 ${layoutClasses.profileAside} ${isAsideShown ? "is-shown" : ""}`}
+						id="page-profile"
+						data-breakpoint-transition={breakpointTransition}
+						className={`t-breakpoint-crossfade t-stagger flex w-full flex-1 flex-col gap-8 p-6 px-12 pt-12 ${layoutClasses.profileAside} ${isAsideShown ? "is-shown" : ""}`}
 					>
 						<div className="t-stagger-line t-stagger-line--1">
 							<PageImageEditor
 								initialImage={draft.image}
 								handle={page.handle}
 								mode={mode}
-								breakpoint={previewBreakpoint}
+								breakpoint={previewBreakpoint as Breakpoint}
 								onImageChange={(image) => updateField("image", image)}
 							/>
 						</div>
@@ -253,101 +350,102 @@ function HandlePageContent({
 							/>
 						</div>
 					</aside>
-					<aside
-						className={`hidden items-center gap-2 z-10 ${layoutClasses.controls}`}
-						aria-label="Page controls"
-					>
-						<div className="flex items-center gap-0">
-							{isCurrentUserPage ? (
-								<Tooltip>
-									<TooltipTrigger render={<span className="inline-flex" />}>
-										<PageSettingsMenu page={page} onChanged={onPageChange} />
-									</TooltipTrigger>
-									<TooltipContent>Settings</TooltipContent>
-								</Tooltip>
-							) : isSignedIn && myPage ? (
-								<Button
-									render={
-										<Link to="/$handle" params={{ handle: myPage.handle }} />
-									}
-									variant="ghost"
-									nativeButton={false}
-									size="sm"
-									className="text-muted-foreground/80 rounded-md gap-1.5"
-								>
-									<Avatar size="xs">
-										<AvatarImage
-											src={getProfileImageUrl(myPage.image) ?? undefined}
-											alt=""
-										/>
-										<AvatarFallback />
-									</Avatar>
-									<span>My page</span>
-								</Button>
-							) : isSignedIn ? null : (
-								<Button
-									render={
-										<Link
-											to="/log-in"
-											search={{ redirect: `/${page.handle}` }}
-										/>
-									}
-									variant="ghost"
-									nativeButton={false}
-									size="sm"
-									className="text-muted-foreground/80 rounded-md"
-								>
-									Log in
-								</Button>
-							)}
-							<Tooltip>
-								<TooltipTrigger
-									render={
-										<Button
-											render={<Link to="/explore" />}
-											variant="ghost"
-											nativeButton={false}
-											size="icon-sm"
-											aria-label="Explore"
-											className="text-muted-foreground/80 rounded-md"
-										/>
-									}
-								>
-									<StackPerspective weight="Filled" />
-								</TooltipTrigger>
-								<TooltipContent>Explore</TooltipContent>
-							</Tooltip>
-							<Tooltip>
-								<TooltipTrigger
-									render={
-										<Button
-											variant="ghost"
-											size="icon-sm"
-											aria-label="Feedback"
-											className="text-muted-foreground/80 rounded-md"
-										/>
-									}
-								>
-									<Send weight="Filled" />
-								</TooltipTrigger>
-								<TooltipContent>Feedback</TooltipContent>
-							</Tooltip>
-						</div>
-						{(status === "saving" || gridStatus === "saving") && (
-							<Badge
-								variant="secondary"
-								className="flex items-center gap-2 rounded-sm p-3.5 px-2 text-xs text-muted-foreground/80"
-							>
-								<span className="flex items-center gap-1.5">
-									<Loader className="size-4 animate-spin" />
-									Saving
-								</span>
-							</Badge>
-						)}
-					</aside>
 				</div>
+
+				<aside
+					className={`hidden items-center gap-2 z-10 ${layoutClasses.controls}`}
+					aria-label="Page controls"
+				>
+					<div className="flex items-center gap-0">
+						{isCurrentUserPage ? (
+							<Tooltip>
+								<TooltipTrigger render={<span className="inline-flex" />}>
+									<PageSettingsMenu page={page} onChanged={onPageChange} />
+								</TooltipTrigger>
+								<TooltipContent>Settings</TooltipContent>
+							</Tooltip>
+						) : isSignedIn && myPage ? (
+							<Button
+								render={
+									<Link to="/$handle" params={{ handle: myPage.handle }} />
+								}
+								variant="ghost"
+								nativeButton={false}
+								size="sm"
+								className="text-muted-foreground/80 rounded-md gap-1.5"
+							>
+								<Avatar size="xs">
+									<AvatarImage
+										src={getProfileImageUrl(myPage.image) ?? undefined}
+										alt=""
+									/>
+									<AvatarFallback />
+								</Avatar>
+								<span>My page</span>
+							</Button>
+						) : isSignedIn ? null : (
+							<Button
+								render={
+									<Link to="/log-in" search={{ redirect: `/${page.handle}` }} />
+								}
+								variant="ghost"
+								nativeButton={false}
+								size="sm"
+								className="text-muted-foreground/80 rounded-md"
+							>
+								Log in
+							</Button>
+						)}
+						<Tooltip>
+							<TooltipTrigger
+								render={
+									<Button
+										render={<Link to="/explore" />}
+										variant="ghost"
+										nativeButton={false}
+										size="icon-sm"
+										aria-label="Explore"
+										className="text-muted-foreground/80 rounded-md"
+									/>
+								}
+							>
+								<StackPerspective weight="Filled" />
+							</TooltipTrigger>
+							<TooltipContent>Explore</TooltipContent>
+						</Tooltip>
+						<Tooltip>
+							<TooltipTrigger
+								render={
+									<Button
+										variant="ghost"
+										size="icon-sm"
+										aria-label="Feedback"
+										className="text-muted-foreground/80 rounded-md"
+									/>
+								}
+							>
+								<Send weight="Filled" />
+							</TooltipTrigger>
+							<TooltipContent>Feedback</TooltipContent>
+						</Tooltip>
+					</div>
+					{(status === "saving" || gridStatus === "saving") && (
+						<Badge
+							variant="secondary"
+							className="flex items-center gap-2 rounded-sm p-3.5 px-2 text-xs text-muted-foreground/80"
+						>
+							<span className="flex items-center gap-1.5">
+								<Loader className="size-4 animate-spin" />
+								Saving
+							</span>
+						</Badge>
+					)}
+				</aside>
+
 				<section
-					className={`grid-content-scroll-shell min-h-[calc(100dvh-3rem)] w-full overflow-visible p-0 pt-0 sm:max-w-[28rem] no-scrollbar min-[90rem]:px-0 min-[90rem]:pb-24 ${layoutClasses.content}`}
+					id="page-grid"
+					data-breakpoint-transition={breakpointTransition}
+					className={`t-breakpoint-crossfade grid-content-scroll-shell min-h-[calc(100dvh-3rem)] w-full overflow-visible p-0 pt-0 sm:max-w-[28rem] no-scrollbar min-[90rem]:px-0 min-[90rem]:pb-24 ${layoutClasses.content}`}
 				>
 					<div className="flex flex-col gap-4">
 						{items.length > 0 && (
@@ -360,7 +458,8 @@ function HandlePageContent({
 						)}
 					</div>
 				</section>
-			</div>
+			</motion.div>
+
 			{mode === "edit" ? (
 				<Toolbar
 					breakpoint={previewBreakpoint}

@@ -96,12 +96,12 @@ export function GridSection({
 
 	return (
 		<div
-			className="grid-section-shell pb-80 mx-auto min-h-dvh shrink-0 overflow-visible"
+			className="grid-section-shell flex justify-center min-w-full min-h-dvh max-w-full shrink-0 overflow-visible pb-80"
 			style={{ width: gridWidth }}
 		>
 			<GridLayout
 				key={layoutRevision}
-				className={`sinabro-grid-layout min-h-dvh overflow-visible${mode === "edit" ? " is-edit-mode" : ""}`}
+				className={`sinabro-grid-layout min-h-dvh max-w-full overflow-visible${mode === "edit" ? " is-edit-mode" : ""}`}
 				style={{ minHeight: "100dvh", width: gridWidth }}
 				layout={layout}
 				width={gridWidth}
