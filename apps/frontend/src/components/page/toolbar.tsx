@@ -135,7 +135,7 @@ export default function Toolbar({
 										<LinkCircle3 weight="Outline" className="size-5" />
 									</ToolbarButton>
 									<ToolbarButton
-										label="Document"
+										label="Section Title"
 										onClick={() => onItemAdd("section")}
 									>
 										<Document2 weight="Outline" className="size-5" />
