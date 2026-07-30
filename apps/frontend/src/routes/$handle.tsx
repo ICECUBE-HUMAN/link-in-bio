@@ -321,12 +321,12 @@ function HandlePageContent({
 	return (
 		<main
 			ref={pageScrollRef}
-			className={`page-scroll-container relative box-border min-h-dvh w-full overscroll-none no-scrollbar ${isCompactPreview ? "overflow-y-hidden" : "overflow-y-auto"} ${showCompactCanvas ? "bg-secondary" : "bg-background"} min-[90rem]:flex min-[90rem]:h-dvh min-[90rem]:items-center min-[90rem]:justify-center`}
+			className={`page-scroll-container relative box-border min-h-dvh w-full overscroll-none no-scrollbar ${isCompactPreview ? "overflow-y-hidden" : "overflow-y-auto"} ${showCompactCanvas ? "bg-secondary" : "bg-background"} min-[90rem]:flex min-[90rem]:h-dvh ${isCompactPreview ? "min-[90rem]:items-center" : "min-[90rem]:items-start"} min-[90rem]:justify-center`}
 		>
 			<motion.div
 				layout="size"
 				transition={{ layout: frameLayoutTransition }}
-				className={`t-breakpoint-frame overscroll-none flex w-full flex-col items-center gap-8 ${isCompactPreview ? "min-[90rem]:h-[calc(100dvh-8rem)] min-[90rem]:overflow-y-auto no-scrollbar" : "min-[90rem]:h-full overflow-visible"} min-[90rem]:min-h-0 min-[90rem]:max-w-none ${layoutClasses.shell} ${showCompactCanvas ? "bg-background min-[90rem]:rounded-[3.5rem] min-[90rem]:py-4 shadow-float-lg" : "min-[90rem]:bg-transparent min-[90rem]:rounded-none"} ${isCompactPreview ? "min-[90rem]:w-120 min-[90rem]:max-w-[calc(100vw-2rem)] " : ""}`}
+				className={`t-breakpoint-frame overscroll-none flex w-full flex-col items-center gap-8 ${isCompactPreview ? "min-[90rem]:h-[calc(100dvh-8rem)] min-[90rem]:min-h-0 min-[90rem]:overflow-y-auto no-scrollbar" : "min-[90rem]:h-auto min-[90rem]:min-h-dvh overflow-visible"} min-[90rem]:max-w-none ${layoutClasses.shell} ${showCompactCanvas ? "bg-background min-[90rem]:rounded-[3.5rem] min-[90rem]:py-4 shadow-float-lg" : "min-[90rem]:bg-transparent min-[90rem]:rounded-none"} ${isCompactPreview ? "min-[90rem]:w-120 min-[90rem]:max-w-[calc(100vw-2rem)] " : ""}`}
 			>
 				<div
 					className={`flex min-w-0 w-full max-w-md flex-col ${layoutClasses.profile}`}
@@ -334,7 +334,7 @@ function HandlePageContent({
 					<aside
 						id="page-profile"
 						data-breakpoint-transition={breakpointTransition}
-						className={`t-breakpoint-crossfade t-stagger flex w-full flex-1 flex-col gap-8 p-6 px-12 pt-12 ${layoutClasses.profileAside} ${isAsideShown ? "is-shown" : ""}`}
+						className={`t-breakpoint-crossfade t-stagger flex min-h-0 w-full flex-1 flex-col gap-8 p-6 px-12 pt-12 ${layoutClasses.profileAside} ${isAsideShown ? "is-shown" : ""}`}
 					>
 						<div className="t-stagger-line t-stagger-line--1">
 							<PageImageEditor
