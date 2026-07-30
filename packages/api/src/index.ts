@@ -90,7 +90,15 @@ export const createPageRequestSchema = v.object({
 		),
 	),
 	image: optionalTextSchema,
-	role: optionalTextSchema,
+	role: v.optional(
+		v.nullable(
+			v.pipe(
+				v.string(),
+				v.trim(),
+				v.maxLength(80, "Role must be at most 80 characters."),
+			),
+		),
+	),
 });
 
 export type CreatePageRequest = v.InferOutput<typeof createPageRequestSchema>;

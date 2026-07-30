@@ -620,7 +620,7 @@ describe("pagesController", () => {
 					name: "My Page",
 					bio: "Hello",
 					image: "ignored-image",
-					role: "ignored-role",
+					role: "Engineer",
 				}),
 			},
 		);
@@ -636,7 +636,7 @@ describe("pagesController", () => {
 			name: "My Page",
 			bio: "Hello",
 			image: null,
-			role: null,
+			role: "Engineer",
 		});
 		expect(
 			state.insertedPages,

@@ -245,7 +245,7 @@ export const createPage = async ({
 						name: input.name,
 						bio: input.bio ?? null,
 						image: null,
-						role: null,
+						role: input.role ?? null,
 					})
 					.returning();
 				const [updatedUser] = await tx

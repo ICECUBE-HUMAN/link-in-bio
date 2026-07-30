@@ -5,6 +5,7 @@ import Confetti from "react-confetti";
 import { Check, CheckCircle, Loader, XCircle } from "reicon-react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError } from "@/components/ui/field";
+import { Badge } from "@/components/ui/badge";
 import {
 	InputGroup,
 	InputGroupAddon,
@@ -24,7 +25,18 @@ import { createWebPageJsonLd } from "@/lib/seo/json-ld";
 import { createSeo } from "@/lib/seo/metadata";
 import { Link } from "@tanstack/react-router";
 
-const NEW_PAGE_DESCRIPTION = "Create your Sinabro page.";
+const NEW_PAGE_DESCRIPTION = "Create your page.";
+
+const ROLE_OPTIONS = [
+	{ value: "engineer", label: "Engineer" },
+	{ value: "designer", label: "Designer" },
+	{ value: "writer", label: "Writer" },
+	{ value: "developer", label: "Developer" },
+	{ value: "product-manager", label: "Product Manager" },
+	{ value: "founder", label: "Founder" },
+	{ value: "student", label: "Student" },
+	{ value: "creator", label: "Creator" },
+] as const;
 
 export const Route = createFileRoute("/new")({
 	beforeLoad: async ({ context }) => {
@@ -51,7 +63,7 @@ export const Route = createFileRoute("/new")({
 	},
 	head: () =>
 		createSeo({
-			title: "New page",
+			title: "Create your page",
 			description: NEW_PAGE_DESCRIPTION,
 			canonicalPath: "/new",
 			jsonLd: createWebPageJsonLd({
@@ -84,6 +96,8 @@ function SuccessCheck({ visible }: { visible: boolean }) {
 function NewPage() {
 	const { queryClient } = Route.useRouteContext();
 	const [handle, setHandle] = useState("");
+	const [role, setRole] = useState<string | null>(null);
+	const [isRoleStep, setIsRoleStep] = useState(false);
 	const [createdHandle, setCreatedHandle] = useState<string | null>(null);
 	const [showConfetti, setShowConfetti] = useState(false);
 	const [viewport, setViewport] = useState({ width: 0, height: 0 });
@@ -196,12 +210,8 @@ function NewPage() {
 		};
 	}, [handle]);
 
-	const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
-		event.preventDefault();
-
-		if (!handleStatus.canCreatePage || isCreatingPage) {
-			return;
-		}
+	const createPageWithRole = async (selectedRole: string | null) => {
+		if (isCreatingPage) return;
 
 		setIsCreatingPage(true);
 		setSubmitError(null);
@@ -211,17 +221,33 @@ function NewPage() {
 				data: {
 					handle: handleStatus.normalizedHandle,
 					name: null,
+					role: selectedRole,
 				},
 			});
 
 			invalidateSessionQuery(queryClient);
-
 			setCreatedHandle(response.page.handle);
 		} catch {
 			setSubmitError("Could not create your page. Try again.");
 		} finally {
 			setIsCreatingPage(false);
 		}
+	};
+
+	const onHandleSubmit = (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+
+		if (!handleStatus.canCreatePage || isCreatingPage) {
+			return;
+		}
+
+		setSubmitError(null);
+		setIsRoleStep(true);
+	};
+
+	const onRoleSubmit = (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		void createPageWithRole(role);
 	};
 
 	return (
@@ -245,16 +271,16 @@ function NewPage() {
 			<section className="w-full max-w-sm">
 				<div
 					className="t-page-slide t-login-page-slide"
-					data-page={createdHandle ? "2" : "1"}
+					data-page={createdHandle ? "3" : isRoleStep ? "2" : "1"}
 				>
 					<form
 						className="t-page flex flex-col gap-8"
 						data-page-id="1"
-						onSubmit={onSubmit}
+						onSubmit={onHandleSubmit}
 					>
 						<div className="flex flex-col items-center gap-1">
 							<h1 className="text-2xl font-semibold text-balance">
-								Claim your handle
+								First, Claim your handle
 							</h1>
 							<h2 className="text-base text-primary">
 								Choose a unique handle for your public page.
@@ -322,9 +348,83 @@ function NewPage() {
 						</div>
 					</form>
 
+					<form
+						className="t-page flex flex-col gap-8"
+						data-page-id="2"
+						onSubmit={onRoleSubmit}
+					>
+						<div className="flex flex-col items-center gap-1 text-center">
+							<h1 className="text-2xl font-semibold">What do you do?</h1>
+							<h2 className="text-base text-primary text-balance">
+								Choose a role to personalize your page.
+							</h2>
+						</div>
+
+						<div className="flex flex-col gap-5">
+							<div
+								className="flex flex-wrap justify-center gap-2"
+								role="group"
+								aria-label="Roles"
+							>
+								{ROLE_OPTIONS.map((option) => {
+									const isSelected = role === option.value;
+
+									return (
+										<button
+											type="button"
+											key={option.value}
+											aria-pressed={isSelected}
+											onClick={() => setRole(option.value)}
+											className="rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+										>
+											<Badge
+												variant={isSelected ? "default" : "outline"}
+												className="py-4 px-3 text-sm shadow-xs"
+											>
+												{option.label}
+											</Badge>
+										</button>
+									);
+								})}
+							</div>
+
+							{submitError ? (
+								<FieldError className="text-center text-xs">
+									{submitError}
+								</FieldError>
+							) : null}
+
+              <div className="flex flex-row-reverse gap-1">
+                <Button
+								type="submit"
+								variant="default"
+								size="lg"
+								className="h-12 rounded-lg text-base font-medium flex-2"
+								disabled={isCreatingPage}
+							>
+								{isCreatingPage ? (
+									<Loader className="animate-spin" />
+								) : (
+									"Continue"
+								)}
+							</Button>
+							<Button
+								type="button"
+								variant="secondary"
+								className="h-12 text-muted-foreground rounded-lg text-base flex-1"
+								disabled={isCreatingPage}
+								onClick={() => void createPageWithRole(null)}
+							>
+								Skip
+							</Button>
+							</div>
+							
+						</div>
+					</form>
+
 					<div
 						className="t-page flex flex-col items-center gap-8"
-						data-page-id="2"
+						data-page-id="3"
 						aria-live="polite"
 					>
 						<div className="flex flex-col items-center gap-2">
@@ -337,15 +437,15 @@ function NewPage() {
 							</div>
 						</div>
 						<div className="flex w-full flex-col gap-1.5">
-              <div className="rounded-lg bg-secondary h-12 px-3 pr-1.5 text-base max-w-full flex justify-between items-center">
-                <div>
-                  <span className="text-muted-foreground font-medium">
-  									{env.VITE_APP_DOMAIN}/
-  								</span>
-  								<span className="text-primary font-medium">
-  									{createdHandle}
-  								</span>
-                </div>
+							<div className="rounded-lg bg-secondary h-12 px-3 pr-1.5 text-base max-w-full flex justify-between items-center">
+								<div>
+									<span className="text-muted-foreground font-medium">
+										{env.VITE_APP_DOMAIN}/
+									</span>
+									<span className="text-primary font-medium">
+										{createdHandle}
+									</span>
+								</div>
 								<Button
 									type="button"
 									variant="outline"
@@ -369,15 +469,17 @@ function NewPage() {
 								</Button>
 							</div>
 
-              <Button
-                nativeButton={false}
+							<Button
+								nativeButton={false}
 								variant={"brand"}
 								size={"lg"}
-                className={"h-12 rounded-lg text-base"}
-                render={<Link to="/$handle" params={{ handle: createdHandle! }}>
-                  Go to profile
-                </Link>}
-                />
+								className={"h-12 rounded-lg text-base"}
+								render={
+									<Link to="/$handle" params={{ handle: createdHandle! }}>
+										Go to profile
+									</Link>
+								}
+							/>
 						</div>
 					</div>
 				</div>
