@@ -30,6 +30,8 @@ type GridItemShellProps = {
 	item: GridItem;
 	layout: ItemLayout;
 	isEntering?: boolean;
+	isInitialEntering?: boolean;
+	enteringIndex?: number;
 	isAnyItemDragging?: boolean;
 	capabilities: ItemCapabilities;
 	onCommand?: GridItemCommandHandler;
@@ -48,6 +50,8 @@ export function GridItemShell({
 	item,
 	layout,
 	isEntering = false,
+	isInitialEntering = false,
+	enteringIndex = 0,
 	isAnyItemDragging = false,
 	capabilities,
 	onCommand,
@@ -69,6 +73,9 @@ export function GridItemShell({
 	const style = {
 		"--grid-item-layout-w": String(layout.w),
 		"--grid-item-layout-h": String(layout.h),
+		"--grid-item-enter-delay": isEntering
+			? `${Math.min(enteringIndex * 40, 280)}ms`
+			: "0ms",
 	} as CSSProperties;
 
 	useEffect(() => {
@@ -151,6 +158,7 @@ export function GridItemShell({
 				"group/grid-item relative size-full overflow-visible rounded-2xl",
 				"grid-item-pop-in",
 				isEntering && "is-entering",
+				isInitialEntering && "grid-item-initial-enter",
 				"transition-[z-index] hover:z-50 focus-within:z-50",
 			)}
 			onPointerEnter={() => {

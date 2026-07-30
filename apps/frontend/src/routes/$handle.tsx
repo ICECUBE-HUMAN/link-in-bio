@@ -7,7 +7,7 @@ import {
 	redirect,
 } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Loader, Send, StackPerspective } from "reicon-react";
 import { GridSection } from "@/components/grid/grid-section";
 import { EditableParagraph } from "@/components/page/editable-paragraph";
@@ -147,6 +147,7 @@ function HandlePageContent({
 	const pendingBreakpoint = useRef<Breakpoint | null>(null);
 	const isBreakpointTransitioning = useRef(false);
 	const breakpointTransitionTimer = useRef<number | null>(null);
+	const pageScrollRef = useRef<HTMLElement | null>(null);
 	const shouldReduceMotion = useReducedMotion();
 	const { draft, status, updateField } = usePageAutoSave({
 		page,
@@ -219,6 +220,20 @@ function HandlePageContent({
 			}
 		};
 	}, []);
+
+	useLayoutEffect(() => {
+		if (page.handle.length === 0) return;
+		const scrollContainer = pageScrollRef.current;
+		if (!scrollContainer) return;
+
+		scrollContainer.scrollTop = 0;
+		scrollContainer.scrollLeft = 0;
+		const frame = window.requestAnimationFrame(() => {
+			scrollContainer.scrollTo({ top: 0, left: 0, behavior: "auto" });
+		});
+
+		return () => window.cancelAnimationFrame(frame);
+	}, [page.handle]);
 
 	async function handlePreviewBreakpointChange(nextBreakpoint: Breakpoint) {
 		if (
@@ -305,7 +320,8 @@ function HandlePageContent({
 
 	return (
 		<main
-			className={`relative box-border min-h-dvh w-full overscroll-none no-scrollbar ${isCompactPreview ? "overflow-y-hidden" : "overflow-y-auto"} ${showCompactCanvas ? "bg-secondary" : "bg-background"} min-[90rem]:flex min-[90rem]:h-dvh min-[90rem]:items-center min-[90rem]:justify-center`}
+			ref={pageScrollRef}
+			className={`page-scroll-container relative box-border min-h-dvh w-full overscroll-none no-scrollbar ${isCompactPreview ? "overflow-y-hidden" : "overflow-y-auto"} ${showCompactCanvas ? "bg-secondary" : "bg-background"} min-[90rem]:flex min-[90rem]:h-dvh min-[90rem]:items-center min-[90rem]:justify-center`}
 		>
 			<motion.div
 				layout="size"

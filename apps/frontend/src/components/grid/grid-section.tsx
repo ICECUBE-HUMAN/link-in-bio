@@ -13,6 +13,7 @@ import {
 } from "@/components/grid/grid-item-shell";
 import { ItemRenderer } from "@/components/grid/item-renderer";
 import { useGridDragMotion } from "@/hooks/use-grid-drag-motion";
+import { createGridDemoItems } from "@/lib/grid/grid-demo-data";
 import {
 	resolveDraggedLayout,
 	toLayoutMap as toGridLayoutMap,
@@ -39,8 +40,14 @@ export function GridSection({
 	onCommand,
 }: GridSectionProps) {
 	const dragStartLayoutRef = useRef<LayoutMap | null>(null);
-	const knownItemIdsRef = useRef(new Set(items.map((item) => item.id)));
+	const knownItemIdsRef = useRef<Set<string>>(new Set());
+	const hasInitializedItemsRef = useRef(false);
+	const initialAnimationScheduledRef = useRef(false);
 	const enteringItemFramesRef = useRef(new Map<string, number>());
+	const [demoItemCount, setDemoItemCount] = useState(0);
+	const [initialEnteringItemIds, setInitialEnteringItemIds] = useState<
+		ReadonlySet<string>
+	>(() => new Set(items.map((item) => item.id)));
 	const [enteringItemIds, setEnteringItemIds] = useState<ReadonlySet<string>>(
 		new Set(),
 	);
@@ -48,14 +55,37 @@ export function GridSection({
 	const [layoutRevision, setLayoutRevision] = useState(0);
 	const [isDesktopLayout, setIsDesktopLayout] = useState(false);
 	const dragMotion = useGridDragMotion();
+	const renderedItems = useMemo(
+		() =>
+			demoItemCount > 0
+				? [...items, ...createGridDemoItems(items, demoItemCount)]
+				: items,
+		[demoItemCount, items],
+	);
+	const initialEnteringIndexById = useMemo(
+		() => new Map([...initialEnteringItemIds].map((id, index) => [id, index])),
+		[initialEnteringItemIds],
+	);
 
 	useEffect(() => {
-		const currentItemIds = new Set(items.map((item) => item.id));
-		const newItemIds = items
-			.filter((item) => !knownItemIdsRef.current.has(item.id))
-			.map((item) => item.id);
+		if (!import.meta.env.DEV) return;
+		const value = new URLSearchParams(window.location.search).get("grid-demo");
+		const count = Number.parseInt(value ?? "", 10);
+		if (Number.isFinite(count))
+			setDemoItemCount(Math.min(Math.max(count, 0), 48));
+	}, []);
+
+	useEffect(() => {
+		const currentItemIds = new Set(renderedItems.map((item) => item.id));
+		const isInitialRender = !hasInitializedItemsRef.current;
+		const newItemIds = isInitialRender
+			? []
+			: renderedItems
+					.filter((item) => !knownItemIdsRef.current.has(item.id))
+					.map((item) => item.id);
 
 		knownItemIdsRef.current = currentItemIds;
+		hasInitializedItemsRef.current = true;
 		if (newItemIds.length === 0) return;
 
 		setEnteringItemIds((current) => new Set([...current, ...newItemIds]));
@@ -73,7 +103,31 @@ export function GridSection({
 			});
 			enteringItemFramesRef.current.set(itemId, firstFrame);
 		}
-	}, [items]);
+	}, [renderedItems]);
+
+	useEffect(() => {
+		if (
+			initialAnimationScheduledRef.current ||
+			initialEnteringItemIds.size === 0
+		)
+			return;
+		initialAnimationScheduledRef.current = true;
+
+		for (const itemId of initialEnteringItemIds) {
+			const firstFrame = window.requestAnimationFrame(() => {
+				const secondFrame = window.requestAnimationFrame(() => {
+					setInitialEnteringItemIds((current) => {
+						const next = new Set(current);
+						next.delete(itemId);
+						return next;
+					});
+					enteringItemFramesRef.current.delete(itemId);
+				});
+				enteringItemFramesRef.current.set(itemId, secondFrame);
+			});
+			enteringItemFramesRef.current.set(itemId, firstFrame);
+		}
+	}, [initialEnteringItemIds]);
 
 	useEffect(() => {
 		return () => {
@@ -93,7 +147,7 @@ export function GridSection({
 
 	const effectiveBreakpoint = isDesktopLayout ? breakpoint : "compact";
 	const isAnyItemDragging = draggingItemId !== null;
-	const hasItems = items.length > 0;
+	const hasItems = renderedItems.length > 0;
 	const cols = getColumns(effectiveBreakpoint);
 	const gridWidth = getGridWidth(cols);
 	const handleGridCommand: GridItemCommandHandler = (command) => {
@@ -106,13 +160,13 @@ export function GridSection({
 
 	const layout = useMemo(
 		() =>
-			items.map((item) => ({
+			renderedItems.map((item) => ({
 				i: item.id,
 				...item.layouts[effectiveBreakpoint],
 				isResizable: false,
 				resizeHandles: [],
 			})),
-		[effectiveBreakpoint, items],
+		[effectiveBreakpoint, renderedItems],
 	);
 
 	const handleDragStart: EventCallback = (
@@ -219,8 +273,12 @@ export function GridSection({
 				onDrag={handleDrag}
 				onDragStop={handleDragStop}
 			>
-				{items.map((item) => {
+				{renderedItems.map((item) => {
 					const itemLayout = item.layouts[effectiveBreakpoint];
+					const initialEnteringIndex =
+						initialEnteringIndexById.get(item.id) ?? -1;
+					const isInitialEntering = initialEnteringItemIds.has(item.id);
+					const isEntering = isInitialEntering || enteringItemIds.has(item.id);
 					const capabilities = getItemCapabilities(item, {
 						breakpoint: effectiveBreakpoint,
 						mode,
@@ -231,7 +289,9 @@ export function GridSection({
 							<GridItemShell
 								item={item}
 								layout={itemLayout}
-								isEntering={enteringItemIds.has(item.id)}
+								isEntering={isEntering}
+								isInitialEntering={isInitialEntering}
+								enteringIndex={Math.max(initialEnteringIndex, 0)}
 								isAnyItemDragging={isAnyItemDragging}
 								capabilities={capabilities}
 								onCommand={handleGridCommand}

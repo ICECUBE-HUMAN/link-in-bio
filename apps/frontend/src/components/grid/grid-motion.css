@@ -5,6 +5,10 @@
 	--grid-item-pop-distance: 8px;
 	--grid-item-pop-scale: 0.88;
 	--grid-item-pop-blur: 2px;
+	--grid-item-initial-duration: 240ms;
+	--grid-item-initial-ease: cubic-bezier(0.23, 1, 0.32, 1);
+	--grid-item-initial-distance: 8px;
+	--grid-item-initial-scale: 0.96;
 	--grid-position-duration: 360ms;
 	--grid-position-ease: var(--grid-spring-ease);
 	--grid-drag-follow-duration: 100ms;
@@ -71,8 +75,7 @@
 }
 
 /* Interactive editors must not become hover targets while their card is dragged. */
-.sinabro-grid-layout.is-edit-mode
-	.react-grid-item.react-draggable-dragging
+.sinabro-grid-layout.is-edit-mode .react-grid-item.react-draggable-dragging
 	[data-grid-item-shell]
 	:is(input, textarea) {
 	pointer-events: none;
@@ -107,6 +110,22 @@
 		scale(var(--grid-item-pop-scale));
 }
 
+/* Initial page entrance stays lighter than the existing new-item pop-in. */
+.grid-item-initial-enter {
+	filter: blur(0);
+	transition:
+		opacity var(--grid-item-initial-duration) var(--grid-item-initial-ease),
+		transform var(--grid-item-initial-duration) var(--grid-item-initial-ease);
+	transition-delay: var(--grid-item-enter-delay, 0ms);
+}
+
+.grid-item-initial-enter.is-entering {
+	filter: none;
+	opacity: 0;
+	transform: translateY(var(--grid-item-initial-distance))
+		scale(var(--grid-item-initial-scale));
+}
+
 /* Drag feedback. RGL's parent keeps the item's grid position; this card appears lifted. */
 .grid-item-card {
 	border: 0 solid transparent;
@@ -120,8 +139,12 @@
 	backface-visibility: hidden;
 }
 
-.grid-item-pop-in.is-entering {
+.grid-item-pop-in.is-entering:not(.grid-item-initial-enter) {
 	will-change: transform, opacity, filter;
+}
+
+.grid-item-initial-enter.is-entering {
+	will-change: transform, opacity;
 }
 
 /* Section cards stay visually flat until the pointer reaches them. */
@@ -187,6 +210,7 @@
 
 @media (prefers-reduced-motion: reduce) {
 	.grid-item-pop-in,
+	.grid-item-initial-enter,
 	.grid-item-card,
 	.sinabro-grid-layout .react-grid-item,
 	.sinabro-grid-layout .react-grid-placeholder {
@@ -194,6 +218,7 @@
 	}
 
 	.grid-item-pop-in,
+	.grid-item-initial-enter,
 	.grid-item-card {
 		filter: none !important;
 		transform: none !important;

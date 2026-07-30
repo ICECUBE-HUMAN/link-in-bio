@@ -8,6 +8,10 @@
 	overflow: visible !important;
 }
 
+.page-scroll-container {
+	overflow-anchor: none;
+}
+
 .sinabro-grid-layout {
 	min-height: 1px;
 }
@@ -17,7 +21,9 @@
 	-webkit-user-drag: none;
 }
 
-.sinabro-grid-layout.is-edit-mode .react-grid-item :is(input, textarea, [contenteditable="true"]) {
+.sinabro-grid-layout.is-edit-mode
+	.react-grid-item
+	:is(input, textarea, [contenteditable="true"]) {
 	user-select: text;
 }
 
