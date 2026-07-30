@@ -6,6 +6,7 @@ import { MediaItemRenderer } from "@/components/grid/renderers/media";
 import { SectionItemRenderer } from "@/components/grid/renderers/section";
 import { TextItemRenderer } from "@/components/grid/renderers/text";
 import { getAllowedPresets } from "@/lib/grid/layout-presets";
+import { inferPresetFromLayout } from "@/lib/grid/layout-engine";
 import type {
 	Breakpoint,
 	GridEditorCommand,
@@ -147,17 +148,21 @@ export function getItemCapabilities(
 	context: ItemCapabilityContext,
 ): ItemCapabilities {
 	const allowedPresets = getAllowedPresets(item.type);
-	const canRender =
-		item.preset !== null && allowedPresets.includes(item.preset);
+	const preset = inferPresetFromLayout(
+		item.type,
+		item.layouts[context.breakpoint],
+		context.breakpoint,
+	);
+	const canRender = preset !== null && allowedPresets.includes(preset);
 	const controls: ItemControlCapability[] = [];
 
 	if (canRender && context.mode === "edit" && allowedPresets.length > 1) {
-		for (const preset of allowedPresets) {
-			if (preset === item.preset) continue;
+		for (const nextPreset of allowedPresets) {
+			if (nextPreset === preset) continue;
 			controls.push({
 				command: "apply-preset",
-				label: getPresetControlLabel(preset),
-				preset,
+				label: getPresetControlLabel(nextPreset),
+				preset: nextPreset,
 			});
 		}
 	}

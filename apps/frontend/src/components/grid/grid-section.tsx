@@ -22,7 +22,7 @@ import {
 	type GridItemCommandHandler,
 	getItemCapabilities,
 } from "@/lib/grid/item-registry";
-import { getColumns } from "@/lib/grid/layout-engine";
+import { getColumns, inferPresetFromLayout } from "@/lib/grid/layout-engine";
 import type { Breakpoint, GridItem, LayoutMap } from "@/lib/grid/types";
 import type { PageMode } from "@/lib/page/page-mode";
 
@@ -275,6 +275,11 @@ export function GridSection({
 			>
 				{renderedItems.map((item) => {
 					const itemLayout = item.layouts[effectiveBreakpoint];
+					const currentPreset = inferPresetFromLayout(
+						item.type,
+						itemLayout,
+						effectiveBreakpoint,
+					);
 					const initialEnteringIndex =
 						initialEnteringIndexById.get(item.id) ?? -1;
 					const isInitialEntering = initialEnteringItemIds.has(item.id);
@@ -296,11 +301,11 @@ export function GridSection({
 								capabilities={capabilities}
 								onCommand={handleGridCommand}
 							>
-								{capabilities.canRender && item.preset !== null ? (
+								{capabilities.canRender && currentPreset !== null ? (
 									<ItemRenderer
 										item={item}
 										breakpoint={effectiveBreakpoint}
-										preset={item.preset}
+										preset={currentPreset}
 										mode={mode}
 										onCommand={handleGridCommand}
 									/>

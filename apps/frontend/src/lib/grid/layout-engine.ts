@@ -55,6 +55,20 @@ export function inferPresetFromLayouts(
 	return null;
 }
 
+export function inferPresetFromLayout(
+	type: ItemType,
+	layout: ItemLayout,
+	breakpoint: Breakpoint,
+): PresetName | null {
+	for (const preset of getAllowedPresets(type)) {
+		if (sameGeometry(layout, getPresetGeometry(preset, breakpoint))) {
+			return preset;
+		}
+	}
+
+	return null;
+}
+
 export function toLayoutMap(
 	items: readonly Pick<GridItem, "id" | "layouts">[],
 	breakpoint: Breakpoint,
