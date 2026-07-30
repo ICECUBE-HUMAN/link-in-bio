@@ -5,6 +5,7 @@ import {
 	getPresetGeometry,
 	placeAtFirstAvailable,
 	resolveAxisAwareSwap,
+	resolveResizeWithVerticalPush,
 	validateLayout,
 	validateLayoutForItem,
 } from "@sinabro/grid-layout";
@@ -25,6 +26,7 @@ export {
 	getPresetGeometry,
 	placeAtFirstAvailable,
 	resolveAxisAwareSwap,
+	resolveResizeWithVerticalPush,
 	validateLayout,
 	validateLayoutForItem,
 };
@@ -123,15 +125,10 @@ export function applyPresetToLayoutMap({
 		breakpoint,
 	);
 
-	return resolveAxisAwareSwap(
+	return resolveResizeWithVerticalPush(
 		layouts,
 		itemId,
 		candidate,
-		{
-			x: 0,
-			y: 0,
-			firstCrossedAxis: "y",
-		},
 		cols,
 	);
 }

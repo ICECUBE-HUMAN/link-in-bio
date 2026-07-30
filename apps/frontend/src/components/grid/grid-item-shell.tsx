@@ -29,6 +29,8 @@ export const GRID_ITEM_DRAG_CANCEL_SELECTOR = [
 type GridItemShellProps = {
 	item: GridItem;
 	layout: ItemLayout;
+	isEntering?: boolean;
+	isDragging?: boolean;
 	capabilities: ItemCapabilities;
 	onCommand?: GridItemCommandHandler;
 	children?: ReactNode;
@@ -45,15 +47,19 @@ function RuntimeFallback({ item }: { item: GridItem }) {
 export function GridItemShell({
 	item,
 	layout,
+	isEntering = false,
+	isDragging = false,
 	capabilities,
 	onCommand,
 	children,
 }: GridItemShellProps) {
 	const hasContent = children !== null && children !== undefined;
-	const hasControls = capabilities.controls.length > 0 && onCommand;
+	const hasControls =
+		capabilities.controls.length > 0 && onCommand && !isDragging;
 	const ControlsView = getItemViewRegistration(item).controls;
 	const shellRef = useRef<HTMLDivElement>(null);
 	const hideControlsTimer = useRef<number | null>(null);
+	const pointerInsideRef = useRef(false);
 	const [controlsPosition, setControlsPosition] = useState<{
 		left: number;
 		top: number;
@@ -113,6 +119,26 @@ export function GridItemShell({
 		};
 	}, [controlsOpen, updateControlsPosition]);
 
+	useEffect(() => {
+		if (isDragging) {
+			if (hideControlsTimer.current !== null) {
+				window.clearTimeout(hideControlsTimer.current);
+				hideControlsTimer.current = null;
+			}
+			setControlsOpen(false);
+			setControlsPosition(null);
+			return;
+		}
+		if (!pointerInsideRef.current) return;
+
+		const frame = window.requestAnimationFrame(() => {
+			if (!pointerInsideRef.current) return;
+			updateControlsPosition();
+			setControlsOpen(true);
+		});
+		return () => window.cancelAnimationFrame(frame);
+	}, [isDragging, updateControlsPosition]);
+
 	return (
 		<div
 			ref={shellRef}
@@ -123,13 +149,24 @@ export function GridItemShell({
 			data-grid-item-drag-cancel-selector={GRID_ITEM_DRAG_CANCEL_SELECTOR}
 			className={cn(
 				"group/grid-item relative size-full overflow-visible rounded-2xl",
+				"grid-item-pop-in",
+				isEntering && "is-entering",
 				"transition-[z-index] hover:z-50 focus-within:z-50",
 			)}
-			onPointerEnter={showControls}
-			onPointerLeave={hideControls}
+			onPointerEnter={() => {
+				pointerInsideRef.current = true;
+				showControls();
+			}}
+			onPointerLeave={() => {
+				pointerInsideRef.current = false;
+				hideControls();
+			}}
 			style={style}
 		>
-			<div className="relative size-full overflow-hidden rounded-2xl border border-border/60 bg-background/95 shadow-sm ring-1 ring-black/5">
+			<div
+				data-grid-item-card="true"
+				className="grid-item-card relative size-full overflow-hidden rounded-2xl bg-background shadow-sm ring-1 ring-black/5"
+			>
 				<div className="relative z-10 size-full min-h-0">
 					{hasContent ? children : <RuntimeFallback item={item} />}
 				</div>

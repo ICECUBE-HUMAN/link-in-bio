@@ -31,6 +31,48 @@ type GridSectionProps = {
 	onCommand: GridItemCommandHandler;
 };
 
+type PointerPoint = {
+	x: number;
+	y: number;
+};
+
+type DragVelocityState = PointerPoint & {
+	time: number;
+};
+
+const MAX_DRAG_VELOCITY = 1400;
+const VELOCITY_TO_ROTATION = 0.018;
+
+function getPointerPoint(event: Event): PointerPoint | null {
+	if ("clientX" in event && "clientY" in event) {
+		const { clientX, clientY } = event as MouseEvent;
+		if (typeof clientX === "number" && typeof clientY === "number") {
+			return { x: clientX, y: clientY };
+		}
+	}
+
+	const touch = (event as TouchEvent).touches?.[0];
+	return touch ? { x: touch.clientX, y: touch.clientY } : null;
+}
+
+function setDragVelocity(element: HTMLElement | null, x: number, y: number) {
+	const card = element?.querySelector<HTMLElement>("[data-grid-item-card]");
+	if (!card) return;
+
+	card.style.setProperty(
+		"--grid-drag-rotate-x",
+		`${y * -VELOCITY_TO_ROTATION}deg`,
+	);
+	card.style.setProperty(
+		"--grid-drag-rotate-z",
+		`${x * VELOCITY_TO_ROTATION}deg`,
+	);
+}
+
+function resetDragVelocity(element: HTMLElement | null) {
+	setDragVelocity(element, 0, 0);
+}
+
 export function GridSection({
 	items,
 	breakpoint,
@@ -38,8 +80,50 @@ export function GridSection({
 	onCommand,
 }: GridSectionProps) {
 	const dragStartLayoutRef = useRef<LayoutMap | null>(null);
+	const knownItemIdsRef = useRef(new Set(items.map((item) => item.id)));
+	const enteringItemFramesRef = useRef(new Map<string, number>());
+	const [enteringItemIds, setEnteringItemIds] = useState<ReadonlySet<string>>(
+		new Set(),
+	);
+	const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
 	const [layoutRevision, setLayoutRevision] = useState(0);
 	const [isDesktopLayout, setIsDesktopLayout] = useState(false);
+	const dragVelocityStateRef = useRef<DragVelocityState | null>(null);
+	const draggingElementRef = useRef<HTMLElement | null>(null);
+
+	useEffect(() => {
+		const currentItemIds = new Set(items.map((item) => item.id));
+		const newItemIds = items
+			.filter((item) => !knownItemIdsRef.current.has(item.id))
+			.map((item) => item.id);
+
+		knownItemIdsRef.current = currentItemIds;
+		if (newItemIds.length === 0) return;
+
+		setEnteringItemIds((current) => new Set([...current, ...newItemIds]));
+		for (const itemId of newItemIds) {
+			const firstFrame = window.requestAnimationFrame(() => {
+				const secondFrame = window.requestAnimationFrame(() => {
+					setEnteringItemIds((current) => {
+						const next = new Set(current);
+						next.delete(itemId);
+						return next;
+					});
+					enteringItemFramesRef.current.delete(itemId);
+				});
+				enteringItemFramesRef.current.set(itemId, secondFrame);
+			});
+			enteringItemFramesRef.current.set(itemId, firstFrame);
+		}
+	}, [items]);
+
+	useEffect(() => {
+		return () => {
+			for (const frame of enteringItemFramesRef.current.values()) {
+				window.cancelAnimationFrame(frame);
+			}
+		};
+	}, []);
 
 	useEffect(() => {
 		const mediaQuery = window.matchMedia("(min-width: 90rem)");
@@ -71,11 +155,68 @@ export function GridSection({
 		[effectiveBreakpoint, items],
 	);
 
-	const handleDragStart: EventCallback = (currentLayout, _oldItem) => {
+	const handleDragStart: EventCallback = (
+		currentLayout,
+		oldItem,
+		_newItem,
+		_placeholder,
+		event,
+		element,
+	) => {
 		dragStartLayoutRef.current = toGridLayoutMap(currentLayout);
+		setDraggingItemId(oldItem?.i ?? null);
+		draggingElementRef.current = element;
+		const point = getPointerPoint(event);
+		dragVelocityStateRef.current = point
+			? { ...point, time: performance.now() }
+			: null;
+		resetDragVelocity(element);
 	};
 
-	const handleDragStop: EventCallback = (nextLayout) => {
+	const handleDrag: EventCallback = (
+		_currentLayout,
+		_oldItem,
+		_newItem,
+		_placeholder,
+		event,
+		element,
+	) => {
+		const point = getPointerPoint(event);
+		if (!point) return;
+
+		const now = performance.now();
+		const previous = dragVelocityStateRef.current;
+		if (!previous) {
+			dragVelocityStateRef.current = { ...point, time: now };
+			return;
+		}
+
+		const elapsed = Math.max(now - previous.time, 8);
+		const velocityX = Math.max(
+			-MAX_DRAG_VELOCITY,
+			Math.min(MAX_DRAG_VELOCITY, ((point.x - previous.x) / elapsed) * 1000),
+		);
+		const velocityY = Math.max(
+			-MAX_DRAG_VELOCITY,
+			Math.min(MAX_DRAG_VELOCITY, ((point.y - previous.y) / elapsed) * 1000),
+		);
+
+		dragVelocityStateRef.current = { ...point, time: now };
+		setDragVelocity(
+			element ?? draggingElementRef.current,
+			velocityX,
+			velocityY,
+		);
+	};
+
+	const handleDragStop: EventCallback = (
+		nextLayout,
+		_oldItem,
+		_newItem,
+		_placeholder,
+		_event,
+		element,
+	) => {
 		const dragStartLayout =
 			dragStartLayoutRef.current ?? toGridLayoutMap(layout);
 		const resolved = resolveDraggedLayout({
@@ -86,7 +227,11 @@ export function GridSection({
 		if (resolved.outsideGrid) {
 			setLayoutRevision((revision) => revision + 1);
 		}
+		resetDragVelocity(element ?? draggingElementRef.current);
+		draggingElementRef.current = null;
+		dragVelocityStateRef.current = null;
 		dragStartLayoutRef.current = null;
+		setDraggingItemId(null);
 		onCommand({
 			type: "replace-layout",
 			breakpoint: effectiveBreakpoint,
@@ -122,6 +267,7 @@ export function GridSection({
 				autoSize
 				compactor={fastVerticalCompactor}
 				onDragStart={handleDragStart}
+				onDrag={handleDrag}
 				onDragStop={handleDragStop}
 			>
 				{items.map((item) => {
@@ -136,6 +282,8 @@ export function GridSection({
 							<GridItemShell
 								item={item}
 								layout={itemLayout}
+								isEntering={enteringItemIds.has(item.id)}
+								isDragging={draggingItemId === item.id}
 								capabilities={capabilities}
 								onCommand={handleGridCommand}
 							>
