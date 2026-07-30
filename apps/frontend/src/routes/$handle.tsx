@@ -155,6 +155,7 @@ function HandlePageContent({
 		handle: page.handle,
 		breakpoint: previewBreakpoint,
 		enabled: mode === "edit",
+		persistItems: false,
 	});
 
 	useEffect(() => {
@@ -212,9 +213,9 @@ function HandlePageContent({
 	const layoutClasses = getPageLayoutClasses(previewBreakpoint);
 
 	return (
-		<main className="relative box-border min-h-dvh w-full px-[clamp(1rem,2vw,3rem)] min-[90rem]:flex min-[90rem]:h-dvh min-[90rem]:justify-center min-[90rem]:overflow-hidden">
+		<main className="relative box-border min-h-dvh w-full px-[clamp(1rem,2vw,3rem)] min-[90rem]:flex min-[90rem]:h-dvh min-[90rem]:justify-center min-[90rem]:overflow-auto">
 			<div
-				className={`flex w-full flex-col gap-8 sm:items-center min-[90rem]:h-full min-[90rem]:min-h-0 ${layoutClasses.shell}`}
+				className={`flex w-full flex-col items-center gap-8 min-[90rem]:h-full min-[90rem]:min-h-0 ${layoutClasses.shell}`}
 			>
 				<div
 					className={`flex min-w-0 w-full max-w-[28rem] flex-col ${layoutClasses.profile}`}
@@ -346,20 +347,16 @@ function HandlePageContent({
 					</aside>
 				</div>
 				<section
-					className={`min-h-[calc(100dvh-3rem)] w-full overflow-y-auto p-6 pt-0 sm:max-w-[28rem] no-scrollbar ${layoutClasses.content}`}
+					className={`grid-content-scroll-shell min-h-[calc(100dvh-3rem)] w-full overflow-visible p-0 pt-0 sm:max-w-[28rem] no-scrollbar min-[90rem]:px-0 min-[90rem]:pb-24 ${layoutClasses.content}`}
 				>
 					<div className="flex flex-col gap-4">
-						{items.length > 0 ? (
+						{items.length > 0 && (
 							<GridSection
 								items={items}
 								breakpoint={previewBreakpoint}
 								mode={mode}
 								onCommand={dispatchCommand}
 							/>
-						) : (
-							<div className="flex min-h-56 items-center justify-center rounded-[1.75rem] border border-dashed border-border/70 bg-muted/30 px-6 text-center text-sm text-muted-foreground">
-								No items yet.
-							</div>
 						)}
 					</div>
 				</section>

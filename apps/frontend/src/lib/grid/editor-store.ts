@@ -20,20 +20,20 @@ import {
 	mergeLayoutMapIntoItems,
 	resolveAxisAwareSwap,
 	toLayoutMap,
+	validateLayout,
 } from "./layout-engine";
 import type { Breakpoint, GridEditorCommand, GridItem } from "./types";
 
 export type GridEditorStatus = "saved" | "dirty" | "saving" | "error";
 
-type SavePendingChangesResult =
-	| { ok: true }
-	| { ok: false; error: Error };
+type SavePendingChangesResult = { ok: true } | { ok: false; error: Error };
 
 type UseGridEditorStoreOptions = {
 	initialItems: readonly PageItemResponse[];
 	handle: string;
 	breakpoint: Breakpoint;
 	enabled?: boolean;
+	persistItems?: boolean;
 };
 
 function toGridItem(item: PageItemResponse): GridItem {
@@ -119,14 +119,16 @@ function mergeAcknowledgedItems(
 	batch: PageItemBatchRequest,
 ): GridItem[] {
 	const sentById = new Map(batch.upserts.map((item) => [item.id, item]));
-	const acknowledgedById = new Map(
-		acknowledged.map((item) => [item.id, item]),
-	);
+	const acknowledgedById = new Map(acknowledged.map((item) => [item.id, item]));
 
 	return draft.map((item) => {
 		const sentItem = sentById.get(item.id);
 		const acknowledgedItem = acknowledgedById.get(item.id);
-		if (!sentItem || !acknowledgedItem || !sameItem(toBatchItem(item), sentItem)) {
+		if (
+			!sentItem ||
+			!acknowledgedItem ||
+			!sameItem(toBatchItem(item), sentItem)
+		) {
 			return item;
 		}
 
@@ -160,9 +162,12 @@ export function useGridEditorStore({
 	handle,
 	breakpoint,
 	enabled = true,
+	persistItems = true,
 }: UseGridEditorStoreOptions) {
 	const queryClient = useQueryClient();
-	const [items, setItems] = useState<GridItem[]>(() => initialItems.map(toGridItem));
+	const [items, setItems] = useState<GridItem[]>(() =>
+		initialItems.map(toGridItem),
+	);
 	const [status, setStatus] = useState<GridEditorStatus>("saved");
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const draftRef = useRef(items);
@@ -172,7 +177,9 @@ export function useGridEditorStore({
 	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const draftVersionRef = useRef(0);
 	const stateVersionRef = useRef(0);
-	const saveInFlightRef = useRef<Promise<SavePendingChangesResult> | null>(null);
+	const saveInFlightRef = useRef<Promise<SavePendingChangesResult> | null>(
+		null,
+	);
 	const scheduleSaveRef = useRef<() => void>(() => {});
 
 	useEffect(() => {
@@ -212,6 +219,11 @@ export function useGridEditorStore({
 	);
 
 	const savePendingChanges = useCallback(() => {
+		if (!persistItems) {
+			pendingRef.current = { upserts: [], deletes: [] };
+			return Promise.resolve<SavePendingChangesResult>({ ok: true });
+		}
+
 		if (saveInFlightRef.current) return saveInFlightRef.current;
 
 		const sentBatch = pendingRef.current;
@@ -280,8 +292,7 @@ export function useGridEditorStore({
 						: new Error("Unknown grid update error");
 				setErrorMessage(saveError.message);
 				setStatus("error");
-				shouldScheduleFollowUp =
-					hasNewerDraft && hasBatchChanges(nextBatch);
+				shouldScheduleFollowUp = hasNewerDraft && hasBatchChanges(nextBatch);
 				return { ok: false, error: saveError };
 			} finally {
 				if (request && saveInFlightRef.current === request) {
@@ -293,7 +304,7 @@ export function useGridEditorStore({
 
 		saveInFlightRef.current = request;
 		return request;
-	}, [handle, syncQueryCache]);
+	}, [handle, persistItems, syncQueryCache]);
 
 	const scheduleSave = useCallback(() => {
 		if (timerRef.current) clearTimeout(timerRef.current);
@@ -309,21 +320,33 @@ export function useGridEditorStore({
 
 	const commitItems = useCallback(
 		(nextItems: GridItem[]) => {
+			if (
+				draftRef.current.length === nextItems.length &&
+				draftRef.current.every((item, index) => item === nextItems[index])
+			) {
+				return;
+			}
 			draftVersionRef.current += 1;
 			draftRef.current = nextItems;
 			setItems(nextItems);
 			syncQueryCache(nextItems);
+			if (!persistItems) {
+				setStatus("saved");
+				setErrorMessage(null);
+				return;
+			}
 			const nextBatch = createBatch(
 				nextItems,
 				persistedRef.current,
 				deletedIdsRef.current,
 			);
 			pendingRef.current = nextBatch;
-			setStatus(hasBatchChanges(nextBatch) ? "dirty" : "saved");
+			const hasChanges = persistItems && hasBatchChanges(nextBatch);
+			setStatus(hasChanges ? "dirty" : "saved");
 			setErrorMessage(null);
-			if (hasBatchChanges(nextBatch)) scheduleSave();
+			if (hasChanges) scheduleSave();
 		},
-		[scheduleSave, syncQueryCache],
+		[persistItems, scheduleSave, syncQueryCache],
 	);
 
 	const dispatchCommand = useCallback(
@@ -343,7 +366,24 @@ export function useGridEditorStore({
 				]);
 				return;
 			}
-			const targetItem = currentItems.find((item) => item.id === command.itemId);
+			if (command.type === "replace-layout") {
+				try {
+					validateLayout(command.layout, getColumns(command.breakpoint));
+				} catch {
+					return;
+				}
+				commitItems(
+					mergeLayoutMapIntoItems(
+						currentItems,
+						command.breakpoint,
+						command.layout,
+					),
+				);
+				return;
+			}
+			const targetItem = currentItems.find(
+				(item) => item.id === command.itemId,
+			);
 			if (!targetItem) return;
 
 			if (command.type === "update-data") {
@@ -353,7 +393,7 @@ export function useGridEditorStore({
 							? ({
 									...item,
 									data: structuredClone(command.data) as typeof item.data,
-							  } as GridItem)
+								} as GridItem)
 							: item,
 					),
 				);
@@ -367,7 +407,7 @@ export function useGridEditorStore({
 							? {
 									...item,
 									style: { ...item.style, ...structuredClone(command.patch) },
-							  }
+								}
 							: item,
 					),
 				);
@@ -399,22 +439,25 @@ export function useGridEditorStore({
 			}
 
 			const nextLayoutMap = applyPresetToLayoutMap({
-				layouts: toLayoutMap(currentItems, breakpoint),
+				layouts: toLayoutMap(currentItems, command.breakpoint ?? breakpoint),
 				itemId: command.itemId,
 				itemType: targetItem.type,
 				preset: command.preset,
-				breakpoint,
+				breakpoint: command.breakpoint ?? breakpoint,
 			});
 
 			commitItems(
-				mergeLayoutMapIntoItems(currentItems, breakpoint, nextLayoutMap).map(
-					(item) =>
-						item.id === command.itemId
-							? {
-									...item,
-									preset: command.preset,
-								}
-							: item,
+				mergeLayoutMapIntoItems(
+					currentItems,
+					command.breakpoint ?? breakpoint,
+					nextLayoutMap,
+				).map((item) =>
+					item.id === command.itemId
+						? {
+								...item,
+								preset: command.preset,
+							}
+						: item,
 				),
 			);
 		},
@@ -422,10 +465,7 @@ export function useGridEditorStore({
 	);
 
 	const flushPendingChanges = useCallback(async () => {
-		while (
-			saveInFlightRef.current ||
-			hasBatchChanges(pendingRef.current)
-		) {
+		while (saveInFlightRef.current || hasBatchChanges(pendingRef.current)) {
 			if (timerRef.current) {
 				clearTimeout(timerRef.current);
 				timerRef.current = null;

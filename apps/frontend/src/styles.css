@@ -7,6 +7,16 @@
 @import "./fonts.css";
 @import "react-grid-layout/css/styles.css";
 
+.sinabro-grid-layout .react-grid-item:has([data-grid-item-shell]:hover),
+.sinabro-grid-layout .react-grid-item:has([data-grid-item-shell]:focus-within) {
+	z-index: 9999 !important;
+}
+
+.grid-section-shell,
+.sinabro-grid-layout {
+	overflow: visible !important;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -254,13 +264,13 @@
 }
 
 .sinabro-grid-layout .react-grid-placeholder {
-	border-radius: 1.75rem;
+	border-radius: var(--radius-2xl) !important;
 	background: color-mix(in oklab, var(--primary) 14%, transparent);
 	border: 1px solid color-mix(in oklab, var(--primary) 22%, transparent);
 }
 
 .sinabro-grid-layout .react-grid-item.react-draggable-dragging {
-	z-index: 40;
+	z-index: 100000 !important;
 }
 
 @utility no-scrollbar {

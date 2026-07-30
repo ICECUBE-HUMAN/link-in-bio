@@ -31,9 +31,15 @@ export type GridLayoutCommand =
 			dragDelta: DragDelta;
 	  }
 	| {
+			type: "replace-layout";
+			breakpoint: Breakpoint;
+			layout: LayoutMap;
+	  }
+	| {
 			type: "apply-preset";
 			itemId: string;
 			preset: PresetName;
+			breakpoint?: Breakpoint;
 	  };
 
 export type GridEditorCommand =
