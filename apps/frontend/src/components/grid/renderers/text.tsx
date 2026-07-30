@@ -69,6 +69,8 @@ export function TextItemRenderer({
 	item,
 	mode,
 	preset,
+	autoFocus = false,
+	onAutoFocus,
 	onCommand,
 }: ItemRendererProps<GridItemByType<"text">>) {
 	const isEditing = mode === "edit";
@@ -102,6 +104,12 @@ export function TextItemRenderer({
 		return () => resizeObserver.disconnect();
 	}, [isEditing, item.data.text, verticalAlign]);
 
+	useLayoutEffect(() => {
+		if (!isEditing || !autoFocus) return;
+		textareaRef.current?.focus();
+		onAutoFocus?.();
+	}, [autoFocus, isEditing, onAutoFocus]);
+
 	return (
 		<div className="flex size-full min-h-0 flex-col gap-3 p-3">
 			<div className="flex min-h-0 flex-1 items-stretch justify-between gap-3">
@@ -114,7 +122,6 @@ export function TextItemRenderer({
 					{isEditing ? (
 						<textarea
 							ref={textareaRef}
-							autoFocus
 							placeholder="Add note..."
 							spellCheck={false}
 							value={item.data.text}

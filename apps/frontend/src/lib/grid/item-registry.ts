@@ -5,8 +5,8 @@ import { MapItemRenderer } from "@/components/grid/renderers/map";
 import { MediaItemRenderer } from "@/components/grid/renderers/media";
 import { SectionItemRenderer } from "@/components/grid/renderers/section";
 import { TextItemRenderer } from "@/components/grid/renderers/text";
-import { getAllowedPresets } from "@/lib/grid/layout-presets";
 import { inferPresetFromLayout } from "@/lib/grid/layout-engine";
+import { getAllowedPresets } from "@/lib/grid/layout-presets";
 import type {
 	Breakpoint,
 	GridEditorCommand,
@@ -68,6 +68,8 @@ export type ItemRendererProps<Item extends GridItem = GridItem> = {
 	breakpoint: Breakpoint;
 	preset: PresetName;
 	mode: PageMode;
+	autoFocus?: boolean;
+	onAutoFocus?: () => void;
 	onCommand?: GridItemCommandHandler;
 };
 

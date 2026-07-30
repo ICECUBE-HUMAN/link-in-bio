@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import type { ItemRendererProps } from "@/lib/grid/item-registry";
 import type { GridItemByType } from "@/lib/grid/types";
@@ -6,15 +7,24 @@ import { cn } from "@/lib/utils";
 export function SectionItemRenderer({
 	item,
 	mode,
+	autoFocus = false,
+	onAutoFocus,
 	onCommand,
 }: ItemRendererProps<GridItemByType<"section">>) {
 	const isEditing = mode === "edit";
+	const inputRef = useRef<HTMLInputElement>(null);
+
+	useLayoutEffect(() => {
+		if (!isEditing || !autoFocus) return;
+		inputRef.current?.focus();
+		onAutoFocus?.();
+	}, [autoFocus, isEditing, onAutoFocus]);
 
 	return (
 		<div className="flex size-full items-center overflow-hidden p-3">
 			{isEditing ? (
 				<Input
-					autoFocus={isEditing}
+					ref={inputRef}
 					value={item.data.title}
 					placeholder="Section title..."
 					onChange={(event) =>

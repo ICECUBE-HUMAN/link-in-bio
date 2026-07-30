@@ -36,6 +36,8 @@ type GridSectionProps = {
 	items: readonly GridItem[];
 	breakpoint: Breakpoint;
 	mode: PageMode;
+	autoFocusItemId?: string | null;
+	onAutoFocus?: (itemId: string) => void;
 	onCommand: GridItemCommandHandler;
 };
 
@@ -59,6 +61,8 @@ export function GridSection({
 	items,
 	breakpoint,
 	mode,
+	autoFocusItemId = null,
+	onAutoFocus,
 	onCommand,
 }: GridSectionProps) {
 	const dragStartLayoutRef = useRef<LayoutMap | null>(null);
@@ -324,6 +328,10 @@ export function GridSection({
 										breakpoint={effectiveBreakpoint}
 										preset={currentPreset}
 										mode={mode}
+										autoFocus={item.id === autoFocusItemId}
+										onAutoFocus={
+											onAutoFocus ? () => onAutoFocus(item.id) : undefined
+										}
 										onCommand={handleGridCommand}
 									/>
 								) : null}

@@ -175,6 +175,7 @@ export function useGridEditorStore({
 	);
 	const [status, setStatus] = useState<GridEditorStatus>("saved");
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const [autoFocusItemId, setAutoFocusItemId] = useState<string | null>(null);
 	const draftRef = useRef(items);
 	const persistedRef = useRef(items);
 	const pendingRef = useRef<PageItemBatchRequest>({ upserts: [], deletes: [] });
@@ -196,6 +197,7 @@ export function useGridEditorStore({
 		pendingRef.current = { upserts: [], deletes: [] };
 		deletedIdsRef.current = new Set();
 		setItems(nextItems);
+		setAutoFocusItemId(null);
 		setStatus("saved");
 		setErrorMessage(null);
 	}, [initialItems]);
@@ -361,14 +363,17 @@ export function useGridEditorStore({
 
 			const currentItems = draftRef.current;
 			if (command.type === "add-item") {
-				commitItems([
-					...currentItems,
-					createGridItem({
-						items: currentItems,
-						itemType: command.itemType,
-						url: command.url,
-					}),
-				]);
+				const newItem = createGridItem({
+					items: currentItems,
+					itemType: command.itemType,
+					url: command.url,
+				});
+				setAutoFocusItemId(
+					command.itemType === "text" || command.itemType === "section"
+						? newItem.id
+						: null,
+				);
+				commitItems([...currentItems, newItem]);
 				return;
 			}
 			if (command.type === "replace-layout") {
@@ -481,8 +486,14 @@ export function useGridEditorStore({
 		}
 	}, [savePendingChanges]);
 
+	const clearAutoFocusItem = useCallback((itemId: string) => {
+		setAutoFocusItemId((current) => (current === itemId ? null : current));
+	}, []);
+
 	return {
 		items,
+		autoFocusItemId,
+		clearAutoFocusItem,
 		status,
 		errorMessage,
 		dispatchCommand,

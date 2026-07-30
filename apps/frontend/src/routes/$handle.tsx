@@ -155,6 +155,8 @@ function HandlePageContent({
 	});
 	const {
 		items,
+		autoFocusItemId,
+		clearAutoFocusItem,
 		status: gridStatus,
 		dispatchCommand,
 		flushPendingChanges,
@@ -455,6 +457,8 @@ function HandlePageContent({
 							items={items}
 							breakpoint={previewBreakpoint}
 							mode={mode}
+							autoFocusItemId={autoFocusItemId}
+							onAutoFocus={clearAutoFocusItem}
 							onCommand={dispatchCommand}
 						/>
 					</div>
