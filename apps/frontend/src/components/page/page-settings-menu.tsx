@@ -338,11 +338,11 @@ function ChangeHandleView({
 		>
 			<div className="flex items-center gap-1">
 				<BackButton onBack={onBack} />
-				<h3 className="font-medium">Change handle</h3>
+				<h3 className="font-medium text-base">Change handle</h3>
 			</div>
 
 			<Field className="gap-2">
-				<InputGroup className="h-12 rounded-md">
+				<InputGroup className="h-11 rounded-lg">
 					<InputGroupInput
 						ref={inputRef}
 						aria-describedby="handle-status handle-error"
@@ -383,7 +383,7 @@ function ChangeHandleView({
 					type="submit"
 					variant={"brand"}
 					size="lg"
-					className={"rounded-md h-12"}
+					className={"rounded-lg h-12 text-base"}
 					disabled={
 						isSaving ||
 						isChecking ||
@@ -391,7 +391,7 @@ function ChangeHandleView({
 						handle.trim().toLowerCase() === currentHandle
 					}
 				>
-					{isSaving ? <Loader className="animate-spin" /> : <>Update handle</>}
+					{isSaving ? <Loader className="animate-spin" /> : "Update handle"}
 				</Button>
 			</Field>
 		</form>
