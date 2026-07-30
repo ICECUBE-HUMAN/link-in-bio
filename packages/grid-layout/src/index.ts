@@ -25,6 +25,16 @@ export const columnsByBreakpoint: Record<Breakpoint, number> = {
 	compact: 2,
 };
 
+export const gridMargin: [number, number] = [36, 36];
+export const gridRowHeight = 68;
+export const gridContainerPadding: [number, number] = [0, 0];
+
+const squareGridSize = gridRowHeight * 2 + gridMargin[1];
+
+export function getGridWidth(cols: number): number {
+	return squareGridSize * cols + gridMargin[0] * (cols - 1);
+}
+
 const allowedPresets: Record<ItemType, readonly PresetName[]> = {
 	section: ["fullBanner"],
 	media: ["squareSmall", "landscape", "squareLarge", "portrait"],
@@ -78,15 +88,7 @@ export function getPresetGeometry(
 }
 
 export function getDefaultPreset(type: ItemType): PresetName {
-	return type === "section"
-		? "fullBanner"
-		: type === "media"
-			? "squareSmall"
-			: type === "map"
-				? "squareLarge"
-				: type === "link"
-					? "squareSmall"
-					: "halfBanner";
+	return type === "section" ? "fullBanner" : "squareSmall";
 }
 
 export function getColumns(breakpoint: Breakpoint): number {

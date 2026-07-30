@@ -6,11 +6,14 @@ import {
 	getProfileImageUrl,
 	uploadPageImage,
 } from "@/lib/api/profile-image-api";
+import type { Breakpoint } from "@/lib/grid/types";
+import { getPageLayoutClasses } from "@/lib/page/page-layout";
 
 type PageImageEditorProps = {
 	initialImage: string | null;
 	handle: string;
 	mode: "view" | "edit";
+	breakpoint: Breakpoint;
 	onImageChange: (image: string | null) => void;
 };
 
@@ -18,6 +21,7 @@ export function PageImageEditor({
 	initialImage,
 	handle,
 	mode,
+	breakpoint,
 	onImageChange,
 }: PageImageEditorProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -82,8 +86,8 @@ export function PageImageEditor({
 			<Upload3 weight="Filled" className="" size={32} />
 		</div>
 	) : null;
-	const imageClassName =
-		"flex size-28 items-center justify-center overflow-hidden rounded-full bg-secondary/80 text-sm font-medium text-muted-foreground/60 sm:size-32 min-[90rem]:size-46";
+	const layoutClasses = getPageLayoutClasses(breakpoint);
+	const imageClassName = `flex size-28 items-center justify-center overflow-hidden rounded-full bg-secondary/80 text-sm font-medium text-muted-foreground/60 ${layoutClasses.image}`;
 
 	return (
 		<div className="flex flex-col items-start gap-3">
@@ -124,7 +128,7 @@ export function PageImageEditor({
 							aria-label="Remove profile image"
 							disabled={isUploading}
 							onClick={handleImageRemove}
-							className="absolute top-0 right-0 inline-flex size-10 items-center justify-center rounded-full bg-background border border-border/60 opacity-0 shadow-md transition-[opacity,transform,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:scale-100 focus-visible:opacity-100 group-hover/image:scale-100 group-hover/image:opacity-100 group-focus-within/image:scale-100 group-focus-within/image:opacity-100 active:scale-95 motion-reduce:transition-none min-[90rem]:top-2 min-[90rem]:right-2"
+							className={`absolute top-0 right-0 inline-flex size-10 items-center justify-center rounded-full border border-border/60 bg-background opacity-0 shadow-md transition-[opacity,transform,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:scale-100 focus-visible:opacity-100 group-hover/image:scale-100 group-hover/image:opacity-100 group-focus-within/image:scale-100 group-focus-within/image:opacity-100 active:scale-95 motion-reduce:transition-none ${layoutClasses.imageRemove}`}
 						>
 							<TrashIcon className="size-5 stroke-3" />
 						</Button>

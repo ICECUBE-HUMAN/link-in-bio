@@ -57,12 +57,12 @@ export function GridItemShell({
 			data-grid-item-preset={item.preset ?? "unsupported"}
 			data-grid-item-drag-cancel-selector={GRID_ITEM_DRAG_CANCEL_SELECTOR}
 			className={cn(
-				"group/grid-item relative size-full overflow-visible rounded-[1.75rem]",
-				"transition-[z-index] hover:z-20 focus-within:z-20",
+				"group/grid-item relative size-full overflow-visible rounded-2xl",
+				"transition-[z-index] hover:z-50 focus-within:z-50",
 			)}
 			style={style}
 		>
-			<div className="relative size-full overflow-hidden rounded-[1.75rem] border border-border/60 bg-background/95 shadow-sm ring-1 ring-black/5">
+			<div className="relative size-full overflow-hidden rounded-2xl border border-border/60 bg-background/95 shadow-sm ring-1 ring-black/5">
 				<div className="relative z-10 size-full min-h-0">
 					{hasContent ? children : <RuntimeFallback item={item} />}
 				</div>
@@ -71,7 +71,7 @@ export function GridItemShell({
 				<div
 					data-grid-item-drag-cancel="true"
 					className={cn(
-						"pointer-events-none absolute left-1/2 top-full z-30 mt-3 -translate-x-1/2",
+						"pointer-events-none absolute left-1/2 top-full z-[99999] mt-3 -translate-x-1/2",
 						"opacity-0 transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]",
 						"group-hover/grid-item:opacity-100 group-focus-within/grid-item:opacity-100 group-active/grid-item:opacity-100",
 					)}

@@ -7,6 +7,16 @@
 @import "./fonts.css";
 @import "react-grid-layout/css/styles.css";
 
+.sinabro-grid-layout .react-grid-item:has([data-grid-item-shell]:hover),
+.sinabro-grid-layout .react-grid-item:has([data-grid-item-shell]:focus-within) {
+	z-index: 9999 !important;
+}
+
+.grid-section-shell,
+.sinabro-grid-layout {
+	overflow: visible !important;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -330,14 +340,23 @@
 		top 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.sinabro-grid-layout.is-edit-mode .react-grid-item {
+	user-select: none;
+	-webkit-user-drag: none;
+}
+
+.sinabro-grid-layout.is-edit-mode .react-grid-item :is(input, textarea, [contenteditable="true"]) {
+	user-select: text;
+}
+
 .sinabro-grid-layout .react-grid-placeholder {
-	border-radius: 1.75rem;
+	border-radius: var(--radius-2xl) !important;
 	background: color-mix(in oklab, var(--primary) 14%, transparent);
 	border: 1px solid color-mix(in oklab, var(--primary) 22%, transparent);
 }
 
 .sinabro-grid-layout .react-grid-item.react-draggable-dragging {
-	z-index: 40;
+	z-index: 100000 !important;
 }
 
 @utility no-scrollbar {
@@ -436,10 +455,13 @@
     --radius-3xl: calc(var(--radius) * 2.2);
 
     --radius-4xl: calc(var(--radius) * 2.6);
+
+    --color-test: var(--test);
 }
 
 :root {
     --brand: oklch(0.6582 0.169 248.81);
+    --test: oklch(0.3151 0.0088 285.88);
     --background: oklch(1 0 0);
 
     --foreground: oklch(0.145 0 0);

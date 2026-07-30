@@ -1,25 +1,28 @@
-import GridLayout, {
-	type EventCallback,
-	noCompactor,
-} from "react-grid-layout";
-import useMeasure from "react-use-measure";
-import { useMemo, useRef } from "react";
+import {
+	getGridWidth,
+	gridContainerPadding,
+	gridMargin,
+	gridRowHeight,
+} from "@sinabro/grid-layout";
+import { useEffect, useMemo, useRef, useState } from "react";
+import GridLayout, { type EventCallback } from "react-grid-layout";
+import { fastVerticalCompactor } from "react-grid-layout/extras";
 import {
 	GRID_ITEM_DRAG_CANCEL_SELECTOR,
 	GridItemShell,
 } from "@/components/grid/grid-item-shell";
 import { ItemRenderer } from "@/components/grid/item-renderer";
 import {
-	getItemCapabilities,
+	resolveDraggedLayout,
+	toLayoutMap as toGridLayoutMap,
+} from "@/lib/grid/grid-drag";
+import {
 	type GridItemCommandHandler,
+	getItemCapabilities,
 } from "@/lib/grid/item-registry";
 import { getColumns } from "@/lib/grid/layout-engine";
-import type { Breakpoint, GridItem } from "@/lib/grid/types";
+import type { Breakpoint, GridItem, LayoutMap } from "@/lib/grid/types";
 import type { PageMode } from "@/lib/page/page-mode";
-
-const GRID_MARGIN: [number, number] = [16, 16];
-const GRID_CONTAINER_PADDING: [number, number] = [0, 0];
-const MIN_WIDE_CELL_WIDTH = 140;
 
 type GridSectionProps = {
 	items: readonly GridItem[];
@@ -28,41 +31,34 @@ type GridSectionProps = {
 	onCommand: GridItemCommandHandler;
 };
 
-function getGridMetrics(width: number, cols: number) {
-	const horizontalGap = GRID_MARGIN[0] * Math.max(0, cols - 1);
-	const horizontalPadding = GRID_CONTAINER_PADDING[0] * 2;
-	const usableWidth = Math.max(0, width - horizontalGap - horizontalPadding);
-	const horizontalCellWidth = cols > 0 ? usableWidth / cols : 0;
-
-	return {
-		usableWidth,
-		horizontalCellWidth,
-		rowHeight: horizontalCellWidth / 2,
-	};
-}
-
-function getPublicBreakpoint(width: number): Breakpoint {
-	const wideMetrics = getGridMetrics(width, getColumns("wide"));
-	return wideMetrics.horizontalCellWidth >= MIN_WIDE_CELL_WIDTH
-		? "wide"
-		: "compact";
-}
-
 export function GridSection({
 	items,
 	breakpoint,
 	mode,
 	onCommand,
 }: GridSectionProps) {
-	const [measureRef, bounds] = useMeasure();
-	const dragAxisRef = useRef<Record<string, "x" | "y" | undefined>>({});
-	const measuredBreakpoint =
-		mode === "edit" || bounds.width <= 0
-			? breakpoint
-			: getPublicBreakpoint(bounds.width);
-	const effectiveBreakpoint = mode === "edit" ? breakpoint : measuredBreakpoint;
+	const dragStartLayoutRef = useRef<LayoutMap | null>(null);
+	const [layoutRevision, setLayoutRevision] = useState(0);
+	const [isDesktopLayout, setIsDesktopLayout] = useState(false);
+
+	useEffect(() => {
+		const mediaQuery = window.matchMedia("(min-width: 90rem)");
+		const handleChange = () => setIsDesktopLayout(mediaQuery.matches);
+		handleChange();
+		mediaQuery.addEventListener("change", handleChange);
+		return () => mediaQuery.removeEventListener("change", handleChange);
+	}, []);
+
+	const effectiveBreakpoint = isDesktopLayout ? breakpoint : "compact";
 	const cols = getColumns(effectiveBreakpoint);
-	const metrics = getGridMetrics(bounds.width, cols);
+	const gridWidth = getGridWidth(cols);
+	const handleGridCommand: GridItemCommandHandler = (command) => {
+		if (command.type === "apply-preset") {
+			onCommand({ ...command, breakpoint: effectiveBreakpoint });
+			return;
+		}
+		onCommand(command);
+	};
 
 	const layout = useMemo(
 		() =>
@@ -75,67 +71,57 @@ export function GridSection({
 		[effectiveBreakpoint, items],
 	);
 
-	const handleDragStart: EventCallback = (_layout, oldItem) => {
-		if (!oldItem) return;
-		dragAxisRef.current[oldItem.i] = undefined;
+	const handleDragStart: EventCallback = (currentLayout, _oldItem) => {
+		dragStartLayoutRef.current = toGridLayoutMap(currentLayout);
 	};
 
-	const handleDrag: EventCallback = (_layout, oldItem, newItem) => {
-		if (!oldItem || !newItem) return;
-		if (dragAxisRef.current[oldItem.i]) return;
-		if (newItem.x !== oldItem.x) {
-			dragAxisRef.current[oldItem.i] = "x";
-			return;
-		}
-		if (newItem.y !== oldItem.y) {
-			dragAxisRef.current[oldItem.i] = "y";
-		}
-	};
-
-	const handleDragStop: EventCallback = (_layout, oldItem, newItem) => {
-		if (!oldItem || !newItem) return;
-		onCommand({
-			type: "move-item",
-			itemId: newItem.i,
-			layout: {
-				x: newItem.x,
-				y: newItem.y,
-				w: newItem.w,
-				h: newItem.h,
-			},
-			dragDelta: {
-				x: newItem.x - oldItem.x,
-				y: newItem.y - oldItem.y,
-				firstCrossedAxis: dragAxisRef.current[newItem.i],
-			},
+	const handleDragStop: EventCallback = (nextLayout) => {
+		const dragStartLayout =
+			dragStartLayoutRef.current ?? toGridLayoutMap(layout);
+		const resolved = resolveDraggedLayout({
+			nextLayout,
+			dragStartLayout,
+			cols,
 		});
-		delete dragAxisRef.current[newItem.i];
+		if (resolved.outsideGrid) {
+			setLayoutRevision((revision) => revision + 1);
+		}
+		dragStartLayoutRef.current = null;
+		onCommand({
+			type: "replace-layout",
+			breakpoint: effectiveBreakpoint,
+			layout: resolved.layout,
+		});
 	};
 
 	return (
-		<div ref={measureRef} className="grid-section-shell w-full">
+		<div
+			className="grid-section-shell pb-80 mx-auto min-h-dvh shrink-0 overflow-visible"
+			style={{ width: gridWidth }}
+		>
 			<GridLayout
-				className="sinabro-grid-layout"
+				key={layoutRevision}
+				className={`sinabro-grid-layout min-h-dvh overflow-visible${mode === "edit" ? " is-edit-mode" : ""}`}
+				style={{ minHeight: "100dvh", width: gridWidth }}
 				layout={layout}
-				width={Math.max(bounds.width, 0)}
+				width={gridWidth}
 				gridConfig={{
 					cols,
-					rowHeight: Math.max(metrics.rowHeight, 1),
-					margin: GRID_MARGIN,
-					containerPadding: GRID_CONTAINER_PADDING,
+					rowHeight: gridRowHeight,
+					margin: gridMargin,
+					containerPadding: gridContainerPadding,
 				}}
 				dragConfig={{
 					enabled: mode === "edit",
-					bounded: mode === "edit",
+					bounded: false,
 					cancel: GRID_ITEM_DRAG_CANCEL_SELECTOR,
 				}}
 				resizeConfig={{
 					enabled: false,
 				}}
 				autoSize
-				compactor={noCompactor}
+				compactor={fastVerticalCompactor}
 				onDragStart={handleDragStart}
-				onDrag={handleDrag}
 				onDragStop={handleDragStop}
 			>
 				{items.map((item) => {
@@ -151,16 +137,16 @@ export function GridSection({
 								item={item}
 								layout={itemLayout}
 								capabilities={capabilities}
-								onCommand={onCommand}
+								onCommand={handleGridCommand}
 							>
 								{capabilities.canRender && item.preset !== null ? (
 									<ItemRenderer
 										item={item}
 										breakpoint={effectiveBreakpoint}
-						preset={item.preset}
-						mode={mode}
-						onCommand={onCommand}
-					/>
+										preset={item.preset}
+										mode={mode}
+										onCommand={handleGridCommand}
+									/>
 								) : null}
 							</GridItemShell>
 						</div>
