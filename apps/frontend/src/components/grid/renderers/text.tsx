@@ -1,7 +1,51 @@
 import { ExternalLink } from "lucide-react";
+import { useLayoutEffect, useRef } from "react";
 import type { ItemRendererProps } from "@/lib/grid/item-registry";
 import type { GridItemByType } from "@/lib/grid/types";
 import { cn } from "@/lib/utils";
+
+type TextAlign = "left" | "center" | "right";
+type VerticalAlign = "top" | "center" | "bottom";
+
+const textAlignValues = ["left", "center", "right"] as const;
+const verticalAlignValues = ["top", "center", "bottom"] as const;
+
+function getTextStyleValue<T extends string>(
+	style: Record<string, string | number | boolean | null>,
+	key: string,
+	values: readonly T[],
+	fallback: T,
+): T {
+	const value = style[key];
+	return typeof value === "string" && values.includes(value as T)
+		? (value as T)
+		: fallback;
+}
+
+const verticalAlignClassByValue: Record<VerticalAlign, string> = {
+	top: "justify-start",
+	center: "justify-center",
+	bottom: "justify-end",
+};
+
+function syncTextareaVerticalAlign(
+	textarea: HTMLTextAreaElement,
+	verticalAlign: VerticalAlign,
+) {
+	const computedStyle = window.getComputedStyle(textarea);
+	const basePadding = Number.parseFloat(computedStyle.paddingBottom);
+
+	textarea.style.paddingTop = `${basePadding}px`;
+	if (verticalAlign === "top") return;
+
+	const contentHeight = textarea.scrollHeight - basePadding * 2;
+	const availableHeight =
+		textarea.clientHeight - basePadding * 2 - contentHeight;
+	const extraPadding =
+		Math.max(0, availableHeight) * (verticalAlign === "center" ? 0.5 : 1);
+
+	textarea.style.paddingTop = `${basePadding + extraPadding}px`;
+}
 
 const textClampClassByPreset = {
 	fullBanner: "line-clamp-1",
@@ -28,44 +72,85 @@ export function TextItemRenderer({
 	onCommand,
 }: ItemRendererProps<GridItemByType<"text">>) {
 	const isEditing = mode === "edit";
+	const textareaRef = useRef<HTMLTextAreaElement>(null);
+	const textAlign = getTextStyleValue<TextAlign>(
+		item.style,
+		"textAlign",
+		textAlignValues,
+		"left",
+	);
+	const verticalAlign = getTextStyleValue<VerticalAlign>(
+		item.style,
+		"verticalAlign",
+		verticalAlignValues,
+		"top",
+	);
+
+	useLayoutEffect(() => {
+		if (!isEditing) return;
+		const textarea = textareaRef.current;
+		if (!textarea) return;
+
+		const updateTextareaPadding = () => {
+			syncTextareaVerticalAlign(textarea, verticalAlign);
+		};
+
+		updateTextareaPadding();
+		const resizeObserver = new ResizeObserver(updateTextareaPadding);
+		resizeObserver.observe(textarea);
+
+		return () => resizeObserver.disconnect();
+	}, [isEditing, item.data.text, verticalAlign]);
 
 	return (
 		<div className="flex size-full min-h-0 flex-col gap-3 p-3">
-			<div className="flex min-h-0 flex-1 items-start justify-between gap-3">
-				{isEditing ? (
-          <textarea
-            autoFocus
-            placeholder="Add note..."
-						spellCheck={false}
-            value={item.data.text}
-            onBlur={(event) => {
-							event.currentTarget.scrollTo({ top: 0, behavior: "smooth" });
-						}}
-						onChange={(event) =>
-							onCommand?.({
-								type: "update-data",
-								itemId: item.id,
-								data: { ...item.data, text: event.target.value },
-							})
-						}
-						className={cn(
-							"min-h-0 min-w-0 flex-1 resize-none whitespace-pre-wrap bg-transparent text-foreground/90 outline-none rounded-lg p-1",
-							textSizeClassByPreset[preset],
-              "h-full overflow-y-auto placeholder:text-input",
-							"hover:bg-muted focus-visible:bg-muted",
-						)}
-					/>
-				) : (
-					<div
-						className={cn(
-							"min-h-0 min-w-0 flex-1 whitespace-pre-line text-ellipsis text-foreground/90",
-							textSizeClassByPreset[preset],
-							textClampClassByPreset[preset],
-						)}
-					>
-						{item.data.text}
-					</div>
-				)}
+			<div className="flex min-h-0 flex-1 items-stretch justify-between gap-3">
+				<div
+					className={cn(
+						"flex min-h-0 min-w-0 flex-1 flex-col",
+						verticalAlignClassByValue[verticalAlign],
+					)}
+				>
+					{isEditing ? (
+						<textarea
+							ref={textareaRef}
+							autoFocus
+							placeholder="Add note..."
+							spellCheck={false}
+							value={item.data.text}
+							onBlur={(event) => {
+								event.currentTarget.scrollTo({ top: 0, behavior: "smooth" });
+							}}
+							onChange={(event) =>
+								onCommand?.({
+									type: "update-data",
+									itemId: item.id,
+									data: {
+										...item.data,
+										text: event.target.value,
+									},
+								})
+							}
+							className={cn(
+								"min-h-0 min-w-0 flex-1 resize-none whitespace-pre-wrap rounded-lg bg-transparent p-1 px-2 text-foreground/90 outline-none",
+								textSizeClassByPreset[preset],
+								"h-full overflow-y-auto placeholder:text-input hover:bg-muted focus-visible:bg-muted",
+							)}
+							style={{ textAlign }}
+						/>
+					) : (
+						<div
+							className={cn(
+								"min-h-0 min-w-0 whitespace-pre-line text-ellipsis text-foreground/90",
+								textSizeClassByPreset[preset],
+								textClampClassByPreset[preset],
+							)}
+							style={{ textAlign }}
+						>
+							{item.data.text}
+						</div>
+					)}
+				</div>
 				{item.data.link ? (
 					<a
 						href={item.data.link}
