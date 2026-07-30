@@ -17,7 +17,6 @@ import {
 } from "reicon-react";
 import type { Breakpoint, ItemType } from "@/lib/grid/types";
 import { cn } from "@/lib/utils";
-import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import {
 	InputGroup,
