@@ -14,6 +14,7 @@ import {
 	Loader,
 	Send,
 	TextCircle,
+	Widget4,
 } from "reicon-react";
 import type { Breakpoint, ItemType } from "@/lib/grid/types";
 import { cn } from "@/lib/utils";
@@ -48,7 +49,7 @@ export default function Toolbar({
 	onBreakpointChange,
 	onItemAdd,
 }: ToolbarProps) {
-	const [isLinkView, setIsLinkView] = useState(false);
+	const [view, setView] = useState<"toolbar" | "link" | "widget">("toolbar");
 	const [linkUrl, setLinkUrl] = useState("");
 	const canAddLink = isHttpsUrl(linkUrl.trim());
 	const shouldReduceMotion = useReducedMotion();
@@ -68,7 +69,7 @@ export default function Toolbar({
 				className="flex items-center overflow-hidden rounded-full bg-test p-1.5"
 			>
 				<AnimatePresence initial={false} mode="popLayout">
-					{isLinkView ? (
+					{view === "link" ? (
 						<motion.div
 							key="link-view"
 							initial={{ opacity: 0, transform: "translateX(8px)" }}
@@ -83,7 +84,7 @@ export default function Toolbar({
 								variant="ghost"
 								aria-label="Back to toolbar"
 								className="rounded-full text-muted-foreground hover:bg-muted-foreground/40 hover:text-background/90 active:scale-[0.97]"
-								onClick={() => setIsLinkView(false)}
+								onClick={() => setView("toolbar")}
 							>
 								<HugeiconsIcon
 									icon={ChevronLeftIcon}
@@ -112,13 +113,40 @@ export default function Toolbar({
 											if (!isHttpsUrl(url)) return;
 											onItemAdd("link", url);
 											setLinkUrl("");
-											setIsLinkView(false);
+											setView("toolbar");
 										}}
 									>
 										<Send weight="Filled" className="size-4" />
 									</InputGroupButton>
 								</InputGroupAddon>
 							</InputGroup>
+						</motion.div>
+					) : view === "widget" ? (
+						<motion.div
+							key="widget-view"
+							initial={{ opacity: 0, transform: "translateX(8px)" }}
+							animate={{ opacity: 1, transform: "translateX(0px)" }}
+							exit={{ opacity: 0, transform: "translateX(-8px)" }}
+							transition={viewTransition}
+							className="flex items-center gap-2 pr-3"
+						>
+							<Button
+								type="button"
+								size="icon"
+								variant="ghost"
+								aria-label="Back to toolbar"
+								className="rounded-full text-muted-foreground hover:bg-muted-foreground/40 hover:text-background/90 active:scale-[0.97]"
+								onClick={() => setView("toolbar")}
+							>
+								<HugeiconsIcon
+									icon={ChevronLeftIcon}
+									strokeWidth={2}
+									className="size-5"
+								/>
+							</Button>
+							<span className="px-2 text-sm text-muted-foreground">
+								more widgets will be added
+							</span>
 						</motion.div>
 					) : (
 						<motion.div
@@ -132,10 +160,10 @@ export default function Toolbar({
 							<div id="toolbar-content" className="flex items-center gap-1">
 								<div className="hidden items-center min-[90rem]:flex">
 									{isSaving ? (
-											<div className="flex justify-center items-center gap-1.5 text-muted-foreground w-28">
-												<Loader className="size-4 animate-spin" />
-												<span className="text-sm shimmer">Saving</span>
-											</div>
+										<div className="flex justify-center items-center gap-1.5 text-muted-foreground w-28">
+											<Loader className="size-4 animate-spin" />
+											<span className="text-sm shimmer">Saving</span>
+										</div>
 									) : (
 										<Button
 											variant={"brand"}
@@ -147,10 +175,7 @@ export default function Toolbar({
 									)}
 								</div>
 								<div className="flex items-center gap-0 text-muted-foreground">
-									<ToolbarButton
-										label="Link"
-										onClick={() => setIsLinkView(true)}
-									>
+									<ToolbarButton label="Link" onClick={() => setView("link")}>
 										<LinkCircle3 weight="Outline" className="size-5" />
 									</ToolbarButton>
 									<ToolbarButton
@@ -170,6 +195,12 @@ export default function Toolbar({
 									</ToolbarButton>
 									<ToolbarButton label="Map" onClick={() => onItemAdd("map")}>
 										<Globe weight="Outline" className="size-5" />
+									</ToolbarButton>
+									<ToolbarButton
+										label="Widget"
+										onClick={() => setView("widget")}
+									>
+										<Widget4 weight="Outline" className="size-5" />
 									</ToolbarButton>
 								</div>
 								<Separator
