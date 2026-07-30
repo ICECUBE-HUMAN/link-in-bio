@@ -149,7 +149,7 @@ export default function Toolbar({
 									>
 										<GalleryCircle weight="Outline" className="size-5" />
 									</ToolbarButton>
-									<ToolbarButton label="Globe" onClick={() => onItemAdd("map")}>
+									<ToolbarButton label="Map" onClick={() => onItemAdd("map")}>
 										<Globe weight="Outline" className="size-5" />
 									</ToolbarButton>
 								</div>
