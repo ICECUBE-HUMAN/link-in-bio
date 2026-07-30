@@ -7,18 +7,18 @@ const textClampClassByPreset = {
 	fullBanner: "line-clamp-1",
 	halfBanner: "line-clamp-2",
 	squareSmall: "line-clamp-5",
-	landscape: "line-clamp-6",
+	landscape: "line-clamp-3",
 	squareLarge: "line-clamp-[10]",
 	portrait: "line-clamp-[12]",
 } as const;
 
 const textSizeClassByPreset = {
-	fullBanner: "text-lg leading-7",
-	halfBanner: "text-lg leading-6",
-	squareSmall: "text-lg leading-6",
-	landscape: "text-lg leading-6",
-	squareLarge: "text-lg leading-7",
-	portrait: "text-lg leading-6",
+	fullBanner: "text-xl leading-9",
+	halfBanner: "text-xl leading-9",
+	squareSmall: "text-xl leading-9",
+	landscape: "text-xl leading-9",
+	squareLarge: "text-xl leading-9",
+	portrait: "text-xl leading-9",
 } as const;
 
 export function TextItemRenderer({
@@ -30,12 +30,17 @@ export function TextItemRenderer({
 	const isEditing = mode === "edit";
 
 	return (
-		<div className="flex size-full min-h-0 flex-col gap-3 p-4">
+		<div className="flex size-full min-h-0 flex-col gap-3 p-3">
 			<div className="flex min-h-0 flex-1 items-start justify-between gap-3">
 				{isEditing ? (
-					<textarea
-						rows={1}
-						value={item.data.text}
+          <textarea
+            autoFocus
+            placeholder="Add note..."
+						spellCheck={false}
+            value={item.data.text}
+            onBlur={(event) => {
+							event.currentTarget.scrollTo({ top: 0, behavior: "smooth" });
+						}}
 						onChange={(event) =>
 							onCommand?.({
 								type: "update-data",
@@ -44,15 +49,16 @@ export function TextItemRenderer({
 							})
 						}
 						className={cn(
-							"min-w-0 flex-1 resize-none overflow-x-auto overflow-y-hidden whitespace-nowrap bg-transparent text-foreground/90 outline-none",
+							"min-h-0 min-w-0 flex-1 resize-none whitespace-pre-wrap bg-transparent text-foreground/90 outline-none rounded-lg p-1",
 							textSizeClassByPreset[preset],
-							"h-7 py-0 leading-7",
+              "h-full overflow-y-auto placeholder:text-input",
+							"hover:bg-muted focus-visible:bg-muted",
 						)}
 					/>
 				) : (
 					<div
 						className={cn(
-							"min-h-0 min-w-0 flex-1 whitespace-pre-wrap text-foreground/90",
+							"min-h-0 min-w-0 flex-1 whitespace-pre-line text-ellipsis text-foreground/90",
 							textSizeClassByPreset[preset],
 							textClampClassByPreset[preset],
 						)}

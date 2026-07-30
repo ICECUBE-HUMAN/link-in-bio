@@ -70,6 +70,14 @@
 	cursor: grabbing;
 }
 
+/* Interactive editors must not become hover targets while their card is dragged. */
+.sinabro-grid-layout.is-edit-mode
+	.react-grid-item.react-draggable-dragging
+	[data-grid-item-shell]
+	:is(input, textarea) {
+	pointer-events: none;
+}
+
 .sinabro-grid-layout.is-edit-mode .react-grid-item.react-draggable-dragging,
 .sinabro-grid-layout.is-edit-mode .react-grid-item.react-draggable-dragging *,
 .sinabro-grid-layout.is-edit-mode
