@@ -9,6 +9,9 @@ import {
 import type { Breakpoint } from "@/lib/grid/types";
 import { getPageLayoutClasses } from "@/lib/page/page-layout";
 
+const DEFAULT_PROFILE_IMAGE =
+	"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect width='1' height='1' fill='oklch(0.97%200%200)'/%3E%3C/svg%3E";
+
 type PageImageEditorProps = {
 	initialImage: string | null;
 	handle: string;
@@ -74,18 +77,19 @@ export function PageImageEditor({
 		onImageChange(null);
 	}
 
-	const imageContent = image ? (
-		<img
-			className="size-full object-cover transition-transform duration-250 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover/image:scale-105 motion-reduce:transition-none"
-			src={image}
-			alt="Profile"
-			loading="eager"
-		/>
-	) : mode === "edit" ? (
-		<div>
-			<Upload3 weight="Filled" className="" size={32} />
-		</div>
-	) : null;
+	const imageContent =
+		image || mode === "view" ? (
+			<img
+				className="size-full object-cover transition-transform duration-250 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover/image:scale-105 motion-reduce:transition-none"
+				src={image ?? DEFAULT_PROFILE_IMAGE}
+				alt="Profile"
+				loading="eager"
+			/>
+		) : mode === "edit" ? (
+			<div>
+				<Upload3 weight="Filled" className="" size={32} />
+			</div>
+		) : null;
 	const layoutClasses = getPageLayoutClasses(breakpoint);
 	const imageClassName = `flex size-28 items-center justify-center overflow-hidden rounded-full bg-secondary/80 text-sm font-medium text-muted-foreground/60 ${layoutClasses.image}`;
 
