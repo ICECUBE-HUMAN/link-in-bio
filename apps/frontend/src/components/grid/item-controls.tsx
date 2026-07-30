@@ -11,7 +11,7 @@ export function ItemControls({
 	}
 
 	return (
-		<div className="flex items-center gap-1 rounded-full border border-border/70 bg-background/95 p-1 shadow-lg backdrop-blur-sm">
+		<div className="flex w-max flex-nowrap items-center gap-1 rounded-full border border-border/70 bg-background/95 p-1 shadow-lg backdrop-blur-sm">
 			{capabilities.controls.map((control) => (
 				<Button
 					key={`${item.id}:${control.command}:${control.preset ?? control.label}`}

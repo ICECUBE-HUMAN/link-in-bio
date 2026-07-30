@@ -363,4 +363,63 @@ describe("pageItemsController", () => {
 			).items,
 		).toHaveLength(2);
 	});
+
+	it("does not persist empty text or section items in a mixed batch", async () => {
+		const { app, items } = createBatchApp();
+		const response = await app.request("/pages/kim/batch", {
+			method: "PATCH",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({
+				upserts: [
+					{
+						id: "empty-text",
+						type: "text",
+						data: { text: "   " },
+						style: {},
+						layouts: {
+							wide: { x: 0, y: 0, w: 2, h: 1 },
+							compact: { x: 0, y: 0, w: 2, h: 1 },
+						},
+					},
+					{
+						id: "empty-section",
+						type: "section",
+						data: { title: "" },
+						style: {},
+						layouts: {
+							wide: { x: 0, y: 0, w: 4, h: 1 },
+							compact: { x: 0, y: 0, w: 2, h: 1 },
+						},
+					},
+					{
+						id: "filled-text",
+						type: "text",
+						data: { text: "Saved text" },
+						style: {},
+						layouts: {
+							wide: { x: 0, y: 1, w: 2, h: 1 },
+							compact: { x: 0, y: 1, w: 2, h: 1 },
+						},
+					},
+					{
+						id: "filled-section",
+						type: "section",
+						data: { title: "Saved section" },
+						style: {},
+						layouts: {
+							wide: { x: 0, y: 0, w: 4, h: 1 },
+							compact: { x: 0, y: 0, w: 2, h: 1 },
+						},
+					},
+				],
+				deletes: [],
+			}),
+		});
+
+		expect(response.status).toBe(200);
+		expect(items.map((item) => item.id)).toEqual([
+			"filled-text",
+			"filled-section",
+		]);
+	});
 });

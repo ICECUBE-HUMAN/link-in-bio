@@ -18,10 +18,10 @@ export default function ErrorState({ error, reset }: ErrorStateProps) {
 		<section className="flex flex-1 items-center justify-center px-6 py-16 font-brand">
 			<Empty>
 				<EmptyHeader className="gap-3">
-					<EmptyTitle className="font-brand font-bold text-2xl leading-tight">
+					<EmptyTitle className="font-brand font-semibold text-2xl leading-tight">
 			      Well... this wasn't supposed to happen.
 					</EmptyTitle>
-					<EmptyDescription className="max-w-sm text-base text-gray-bright">
+					<EmptyDescription className="max-w-sm text-sm text-gray-bright">
 						{error.message || "Please try again."}
 					</EmptyDescription>
 				</EmptyHeader>

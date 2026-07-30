@@ -4,7 +4,7 @@ import type {
 	PageItemBatchResponse,
 	PageItemResponse,
 } from "@sinabro/api";
-import { pageItemBatchResponseSchema } from "@sinabro/api";
+import { hasPageItemContent, pageItemBatchResponseSchema } from "@sinabro/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as v from "valibot";
@@ -93,6 +93,7 @@ function createBatch(
 	return {
 		upserts: items
 			.map((item) => toBatchItem(item))
+			.filter(hasPageItemContent)
 			.filter((item) => !sameItem(item, persistedById.get(item.id))),
 		deletes: [...deletedIds].filter((id) => persistedById.has(id)),
 	};
@@ -110,7 +111,11 @@ function mergeItems<T extends { id: string }>(
 	for (const item of incoming) {
 		nextById.set(item.id, item);
 	}
-	return current.map((item) => nextById.get(item.id) ?? item);
+	const currentIds = new Set(current.map((item) => item.id));
+	return [
+		...current.map((item) => nextById.get(item.id) ?? item),
+		...incoming.filter((item) => !currentIds.has(item.id)),
+	];
 }
 
 function mergeAcknowledgedItems(
@@ -170,6 +175,7 @@ export function useGridEditorStore({
 	);
 	const [status, setStatus] = useState<GridEditorStatus>("saved");
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const [autoFocusItemId, setAutoFocusItemId] = useState<string | null>(null);
 	const draftRef = useRef(items);
 	const persistedRef = useRef(items);
 	const pendingRef = useRef<PageItemBatchRequest>({ upserts: [], deletes: [] });
@@ -191,6 +197,7 @@ export function useGridEditorStore({
 		pendingRef.current = { upserts: [], deletes: [] };
 		deletedIdsRef.current = new Set();
 		setItems(nextItems);
+		setAutoFocusItemId(null);
 		setStatus("saved");
 		setErrorMessage(null);
 	}, [initialItems]);
@@ -356,14 +363,17 @@ export function useGridEditorStore({
 
 			const currentItems = draftRef.current;
 			if (command.type === "add-item") {
-				commitItems([
-					...currentItems,
-					createGridItem({
-						items: currentItems,
-						itemType: command.itemType,
-						url: command.url,
-					}),
-				]);
+				const newItem = createGridItem({
+					items: currentItems,
+					itemType: command.itemType,
+					url: command.url,
+				});
+				setAutoFocusItemId(
+					command.itemType === "text" || command.itemType === "section"
+						? newItem.id
+						: null,
+				);
+				commitItems([...currentItems, newItem]);
 				return;
 			}
 			if (command.type === "replace-layout") {
@@ -476,8 +486,14 @@ export function useGridEditorStore({
 		}
 	}, [savePendingChanges]);
 
+	const clearAutoFocusItem = useCallback((itemId: string) => {
+		setAutoFocusItemId((current) => (current === itemId ? null : current));
+	}, []);
+
 	return {
 		items,
+		autoFocusItemId,
+		clearAutoFocusItem,
 		status,
 		errorMessage,
 		dispatchCommand,

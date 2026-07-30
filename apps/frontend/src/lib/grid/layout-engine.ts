@@ -5,6 +5,7 @@ import {
 	getPresetGeometry,
 	placeAtFirstAvailable,
 	resolveAxisAwareSwap,
+	resolveResizeWithVerticalPush,
 	validateLayout,
 	validateLayoutForItem,
 } from "@sinabro/grid-layout";
@@ -25,6 +26,7 @@ export {
 	getPresetGeometry,
 	placeAtFirstAvailable,
 	resolveAxisAwareSwap,
+	resolveResizeWithVerticalPush,
 	validateLayout,
 	validateLayoutForItem,
 };
@@ -46,6 +48,20 @@ export function inferPresetFromLayouts(
 			sameGeometry(layouts.wide, getPresetGeometry(preset, "wide")) &&
 			sameGeometry(layouts.compact, getPresetGeometry(preset, "compact"))
 		) {
+			return preset;
+		}
+	}
+
+	return null;
+}
+
+export function inferPresetFromLayout(
+	type: ItemType,
+	layout: ItemLayout,
+	breakpoint: Breakpoint,
+): PresetName | null {
+	for (const preset of getAllowedPresets(type)) {
+		if (sameGeometry(layout, getPresetGeometry(preset, breakpoint))) {
 			return preset;
 		}
 	}
@@ -123,15 +139,10 @@ export function applyPresetToLayoutMap({
 		breakpoint,
 	);
 
-	return resolveAxisAwareSwap(
+	return resolveResizeWithVerticalPush(
 		layouts,
 		itemId,
 		candidate,
-		{
-			x: 0,
-			y: 0,
-			firstCrossedAxis: "y",
-		},
 		cols,
 	);
 }

@@ -5,6 +5,7 @@ import {
 	type PageItemBatchRequest,
 	type PageItemResponse,
 	type PageItemUpsert,
+	hasPageItemContent,
 	pageItemBatchResponseSchema,
 	pageItemResponseSchema,
 } from "@sinabro/api";
@@ -194,7 +195,9 @@ export const persistPageItemBatch =
 		>;
 		publicBaseUrl?: string;
 	}) => {
-		assertUniqueBatchIds(batch);
+		const upserts = batch.upserts.filter(hasPageItemContent);
+		const persistableBatch = { ...batch, upserts };
+		assertUniqueBatchIds(persistableBatch);
 		const deletedMediaKeys: string[] =
 			[];
 		const response =
@@ -217,7 +220,7 @@ export const persistPageItemBatch =
 						);
 					const requestedIds = [
 						...new Set(
-							batch.upserts.map(
+							upserts.map(
 								(item) => item.id,
 							),
 						),
@@ -255,7 +258,7 @@ export const persistPageItemBatch =
 						]),
 					);
 
-					for (const item of batch.upserts) {
+					for (const item of upserts) {
 						assertItemPayload(
 							item,
 							userId,
@@ -292,7 +295,7 @@ export const persistPageItemBatch =
 									)
 									.map((item) => {
 										const update =
-											batch.upserts.find(
+											upserts.find(
 												(candidate) =>
 													candidate.id ===
 													item.id,
@@ -311,7 +314,7 @@ export const persistPageItemBatch =
 								string,
 								PageItemUpsert["layouts"]["wide"]
 							>;
-						for (const item of batch.upserts)
+						for (const item of upserts)
 							if (
 								!existingById.has(
 									item.id,
@@ -366,7 +369,7 @@ export const persistPageItemBatch =
 								item.data.objectKey,
 							);
 					}
-					for (const item of batch.upserts) {
+					for (const item of upserts) {
 						const current =
 							existingById.get(item.id);
 						if (
@@ -389,11 +392,11 @@ export const persistPageItemBatch =
 								current.data.objectKey,
 							);
 					}
-					if (batch.upserts.length)
+					if (upserts.length)
 						await tx
 							.insert(pageItems)
 							.values(
-								batch.upserts.map(
+								upserts.map(
 									(item) => ({
 										id: item.id,
 										pageId: page.id,
@@ -419,7 +422,7 @@ export const persistPageItemBatch =
 					const changedIds = [
 						...new Set([
 							...batch.deletes,
-							...batch.upserts.map(
+							...upserts.map(
 								(item) => item.id,
 							),
 						]),

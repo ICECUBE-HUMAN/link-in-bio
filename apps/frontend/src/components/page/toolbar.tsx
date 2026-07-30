@@ -11,8 +11,10 @@ import {
 	GalleryCircle,
 	Globe,
 	LinkCircle3,
+	Loader,
 	Send,
 	TextCircle,
+	Widget4,
 } from "reicon-react";
 import type { Breakpoint, ItemType } from "@/lib/grid/types";
 import { cn } from "@/lib/utils";
@@ -28,6 +30,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 type ToolbarProps = {
 	breakpoint: Breakpoint;
+	isSaving: boolean;
 	onBreakpointChange: (breakpoint: Breakpoint) => void;
 	onItemAdd: (itemType: ItemType, url?: string) => void;
 };
@@ -42,10 +45,11 @@ function isHttpsUrl(value: string) {
 
 export default function Toolbar({
 	breakpoint,
+	isSaving,
 	onBreakpointChange,
 	onItemAdd,
 }: ToolbarProps) {
-	const [isLinkView, setIsLinkView] = useState(false);
+	const [view, setView] = useState<"toolbar" | "link" | "widget">("toolbar");
 	const [linkUrl, setLinkUrl] = useState("");
 	const canAddLink = isHttpsUrl(linkUrl.trim());
 	const shouldReduceMotion = useReducedMotion();
@@ -65,7 +69,7 @@ export default function Toolbar({
 				className="flex items-center overflow-hidden rounded-full bg-test p-1.5"
 			>
 				<AnimatePresence initial={false} mode="popLayout">
-					{isLinkView ? (
+					{view === "link" ? (
 						<motion.div
 							key="link-view"
 							initial={{ opacity: 0, transform: "translateX(8px)" }}
@@ -80,7 +84,7 @@ export default function Toolbar({
 								variant="ghost"
 								aria-label="Back to toolbar"
 								className="rounded-full text-muted-foreground hover:bg-muted-foreground/40 hover:text-background/90 active:scale-[0.97]"
-								onClick={() => setIsLinkView(false)}
+								onClick={() => setView("toolbar")}
 							>
 								<HugeiconsIcon
 									icon={ChevronLeftIcon}
@@ -102,20 +106,47 @@ export default function Toolbar({
 										type="button"
 										size="icon-sm"
 										aria-label="Add link"
-										className="bg-brand text-primary-foreground active:scale-[0.97]"
+										className="bg-brand text-primary-foreground active:scale-[0.97] hover:bg-brand/80 hover:text-primary-foreground"
 										disabled={!canAddLink}
 										onClick={() => {
 											const url = linkUrl.trim();
 											if (!isHttpsUrl(url)) return;
 											onItemAdd("link", url);
 											setLinkUrl("");
-											setIsLinkView(false);
+											setView("toolbar");
 										}}
 									>
 										<Send weight="Filled" className="size-4" />
 									</InputGroupButton>
 								</InputGroupAddon>
 							</InputGroup>
+						</motion.div>
+					) : view === "widget" ? (
+						<motion.div
+							key="widget-view"
+							initial={{ opacity: 0, transform: "translateX(8px)" }}
+							animate={{ opacity: 1, transform: "translateX(0px)" }}
+							exit={{ opacity: 0, transform: "translateX(-8px)" }}
+							transition={viewTransition}
+							className="flex items-center gap-2 pr-3"
+						>
+							<Button
+								type="button"
+								size="icon"
+								variant="ghost"
+								aria-label="Back to toolbar"
+								className="rounded-full text-muted-foreground hover:bg-muted-foreground/40 hover:text-background/90 active:scale-[0.97]"
+								onClick={() => setView("toolbar")}
+							>
+								<HugeiconsIcon
+									icon={ChevronLeftIcon}
+									strokeWidth={2}
+									className="size-5"
+								/>
+							</Button>
+							<span className="px-2 text-sm text-muted-foreground">
+								more widgets will be added
+							</span>
 						</motion.div>
 					) : (
 						<motion.div
@@ -127,11 +158,24 @@ export default function Toolbar({
 							className="flex items-center gap-1"
 						>
 							<div id="toolbar-content" className="flex items-center gap-1">
+								<div className="hidden items-center min-[90rem]:flex">
+									{isSaving ? (
+										<div className="flex justify-center items-center gap-1.5 text-muted-foreground w-28">
+											<Loader className="size-4 animate-spin" />
+											<span className="text-sm shimmer">Saving</span>
+										</div>
+									) : (
+										<Button
+											variant={"brand"}
+											size={"default"}
+											className={"px-8 surface-line w-28"}
+										>
+											Share
+										</Button>
+									)}
+								</div>
 								<div className="flex items-center gap-0 text-muted-foreground">
-									<ToolbarButton
-										label="Link"
-										onClick={() => setIsLinkView(true)}
-									>
+									<ToolbarButton label="Link" onClick={() => setView("link")}>
 										<LinkCircle3 weight="Outline" className="size-5" />
 									</ToolbarButton>
 									<ToolbarButton
@@ -149,8 +193,14 @@ export default function Toolbar({
 									>
 										<GalleryCircle weight="Outline" className="size-5" />
 									</ToolbarButton>
-									<ToolbarButton label="Globe" onClick={() => onItemAdd("map")}>
+									<ToolbarButton label="Map" onClick={() => onItemAdd("map")}>
 										<Globe weight="Outline" className="size-5" />
+									</ToolbarButton>
+									<ToolbarButton
+										label="Widget"
+										onClick={() => setView("widget")}
+									>
+										<Widget4 weight="Outline" className="size-5" />
 									</ToolbarButton>
 								</div>
 								<Separator
@@ -201,11 +251,13 @@ function ToolbarButton({
 	children,
 	className,
 	onClick,
+	variant = "ghost",
 }: {
 	label: string;
 	children: React.ReactNode;
 	className?: string;
 	onClick?: () => void;
+	variant?: "brand" | "ghost";
 }) {
 	return (
 		<Tooltip>
@@ -214,7 +266,7 @@ function ToolbarButton({
 					<Button
 						type="button"
 						size="icon"
-						variant="ghost"
+						variant={variant}
 						className={cn(
 							"rounded-full hover:bg-muted-foreground/40 hover:text-background/90",
 							className,

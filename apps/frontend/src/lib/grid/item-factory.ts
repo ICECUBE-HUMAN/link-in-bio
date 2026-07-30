@@ -56,7 +56,7 @@ export function createGridItem({
 				data: { latitude: 37.5665, longitude: 126.978 },
 			};
 		case "section":
-			return { ...base, type: itemType, data: { title: "Section" } };
+			return { ...base, type: itemType, data: { title: "" } };
 		case "link":
 			return {
 				...base,

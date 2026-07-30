@@ -1,0 +1,32 @@
+.sinabro-grid-layout .react-grid-item:has([data-grid-item-shell]:hover),
+.sinabro-grid-layout .react-grid-item:has([data-grid-item-shell]:focus-within) {
+	z-index: 9999 !important;
+}
+
+.grid-section-shell,
+.sinabro-grid-layout {
+	overflow: visible !important;
+}
+
+.page-scroll-container {
+	overflow-anchor: none;
+}
+
+.sinabro-grid-layout {
+	min-height: 1px;
+}
+
+.sinabro-grid-layout.is-edit-mode .react-grid-item {
+	user-select: none;
+	-webkit-user-drag: none;
+}
+
+.sinabro-grid-layout.is-edit-mode
+	.react-grid-item
+	:is(input, textarea, [contenteditable="true"]) {
+	user-select: text;
+}
+
+.sinabro-grid-layout .react-grid-item.react-draggable-dragging {
+	z-index: 100000 !important;
+}
