@@ -335,9 +335,9 @@ export function LinkItemRenderer({
 				"flex min-h-0 min-w-0 flex-col items-start gap-2",
 				isLandscapePreset(preset) && "items-stretch",
 				isLandscapePreset(preset)
-					? "flex-[4]"
+					? "flex-4"
 					: isTallPreset(preset)
-						? "flex-[3]"
+						? "flex-3"
 						: undefined,
 				(isLandscapePreset(preset) || isTallPreset(preset)) &&
 					"justify-between",
@@ -378,7 +378,7 @@ export function LinkItemRenderer({
 				)}
 				style={cardStyle}
 			>
-				<div className="relative min-h-0 min-w-0 flex-[3] overflow-hidden rounded-lg bg-muted">
+				<div className="relative min-h-0 min-w-0 flex-3 overflow-hidden rounded-lg bg-muted">
 					<LinkPreview
 						imageUrl={imageUrl}
 						url={item.data.url}
@@ -400,7 +400,7 @@ export function LinkItemRenderer({
 				style={cardStyle}
 			>
 				{content}
-				<div className="relative min-h-0 flex-[2] overflow-hidden rounded-lg bg-muted">
+				<div className="relative min-h-0 flex-2 overflow-hidden rounded-lg bg-muted">
 					<LinkPreview
 						imageUrl={imageUrl}
 						url={item.data.url}

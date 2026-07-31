@@ -29,7 +29,9 @@
 		{
 			"binding": "IMAGES",
 			"bucket_name": "test-images",
-			"remote": true,
+			// Keep local development independent from Wrangler's remote dev proxy.
+			// Production still uses the configured R2 bucket when deployed.
+			"remote": false,
 		}
 	],
 	"queues": {
