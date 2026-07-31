@@ -1,4 +1,5 @@
 import { getLinkProviderPresentation } from "@sinabro/api";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { Envelope } from "reicon-react";
 import { Button } from "@/components/ui/button";
@@ -290,25 +291,75 @@ export function LinkItemRenderer({
 		});
 	};
 
-	if (preset === "squareSmall" || isHalfBannerPreset(preset)) {
-		return (
+	const renderPreset = () => {
+		if (preset === "squareSmall" || isHalfBannerPreset(preset)) {
+			return (
+				<div
+					className={cn(
+						"flex size-full min-h-0 gap-1 p-4",
+						isHalfBannerPreset(preset)
+							? "items-center"
+							: "flex-col items-start",
+						cardClassName,
+					)}
+					style={cardStyle}
+				>
+					<LinkBadge faviconUrl={faviconUrl} url={item.data.url} />
+					<div
+						className={cn(
+							"min-h-0 min-w-0",
+							isHalfBannerPreset(preset)
+								? "flex-1"
+								: "flex w-full flex-1 flex-col",
+						)}
+					>
+						<LinkTitle
+							title={title}
+							preset={preset}
+							mode={mode}
+							onCommit={updateTitle}
+						/>
+					</div>
+					{shouldShowLinkAction && (
+						<LinkAction
+							href={item.data.url}
+							{...linkActionProps}
+							className={
+								isHalfBannerPreset(preset) ? "self-stretch h-full" : undefined
+							}
+						/>
+					)}
+				</div>
+			);
+		}
+
+		const content = (
 			<div
 				className={cn(
-					"flex size-full min-h-0 gap-1 p-4",
-					isHalfBannerPreset(preset) ? "items-center" : "flex-col items-start",
+					"flex min-h-0 min-w-0 flex-col items-start gap-2",
+					isLandscapePreset(preset) && "items-stretch",
+					isLandscapePreset(preset)
+						? "flex-4"
+						: isTallPreset(preset)
+							? "flex-3"
+							: undefined,
+					(isLandscapePreset(preset) || isTallPreset(preset)) &&
+						"justify-between",
+					isLandscapePreset(preset) && "h-full",
+					isTallPreset(preset) && "items-stretch",
 					cardClassName,
 				)}
 				style={cardStyle}
 			>
-				<LinkBadge faviconUrl={faviconUrl} url={item.data.url} />
 				<div
 					className={cn(
-						"min-h-0 min-w-0",
-						isHalfBannerPreset(preset)
-							? "flex-1"
-							: "flex w-full flex-1 flex-col",
+						"flex min-h-0 min-w-0 flex-col items-start gap-1",
+						isLandscapePreset(preset) && "w-full",
+						(isLandscapePreset(preset) || isTallPreset(preset)) && "flex-1",
+						isTallPreset(preset) && "items-stretch",
 					)}
 				>
+					<LinkBadge faviconUrl={faviconUrl} url={item.data.url} />
 					<LinkTitle
 						title={title}
 						preset={preset}
@@ -317,99 +368,71 @@ export function LinkItemRenderer({
 					/>
 				</div>
 				{shouldShowLinkAction && (
-					<LinkAction
-						href={item.data.url}
-						{...linkActionProps}
-						className={
-							isHalfBannerPreset(preset) ? "self-stretch h-full" : undefined
-						}
-					/>
+					<LinkAction href={item.data.url} {...linkActionProps} />
 				)}
 			</div>
 		);
-	}
 
-	const content = (
-		<div
-			className={cn(
-				"flex min-h-0 min-w-0 flex-col items-start gap-2",
-				isLandscapePreset(preset) && "items-stretch",
-				isLandscapePreset(preset)
-					? "flex-4"
-					: isTallPreset(preset)
-						? "flex-3"
-						: undefined,
-				(isLandscapePreset(preset) || isTallPreset(preset)) &&
-					"justify-between",
-				isLandscapePreset(preset) && "h-full",
-				isTallPreset(preset) && "items-stretch",
-				cardClassName,
-			)}
-			style={cardStyle}
-		>
-			<div
-				className={cn(
-					"flex min-h-0 min-w-0 flex-col items-start gap-1",
-					isLandscapePreset(preset) && "w-full",
-					(isLandscapePreset(preset) || isTallPreset(preset)) && "flex-1",
-					isTallPreset(preset) && "items-stretch",
-				)}
+		if (isLandscapePreset(preset)) {
+			return (
+				<div
+					className={cn(
+						"flex size-full flex-row-reverse items-stretch gap-3 p-4",
+						cardClassName,
+					)}
+					style={cardStyle}
+				>
+					<div className="relative min-h-0 min-w-0 flex-3 overflow-hidden rounded-lg bg-muted">
+						<LinkPreview
+							imageUrl={imageUrl}
+							url={item.data.url}
+							isLoading={isEnriching}
+						/>
+					</div>
+					{content}
+				</div>
+			);
+		}
+
+		if (isTallPreset(preset)) {
+			return (
+				<div
+					className={cn(
+						"flex size-full min-h-0 flex-col gap-3 p-4",
+						cardClassName,
+					)}
+					style={cardStyle}
+				>
+					{content}
+					<div className="relative min-h-0 flex-2 overflow-hidden rounded-lg bg-muted">
+						<LinkPreview
+							imageUrl={imageUrl}
+							url={item.data.url}
+							isLoading={isEnriching}
+						/>
+					</div>
+				</div>
+			);
+		}
+
+		return null;
+	};
+
+	return (
+		<AnimatePresence initial={false} mode="popLayout">
+			<motion.div
+				key={preset}
+				initial={{ opacity: 0, filter: "blur(2px)" }}
+				animate={{ opacity: 1, filter: "blur(0px)" }}
+				exit={{ opacity: 0, filter: "blur(2px)" }}
+				transition={{
+					duration: 0.18,
+					ease: [0.23, 1, 0.32, 1],
+				}}
+				className="size-full min-h-0 min-w-0"
 			>
-				<LinkBadge faviconUrl={faviconUrl} url={item.data.url} />
-				<LinkTitle
-					title={title}
-					preset={preset}
-					mode={mode}
-					onCommit={updateTitle}
-				/>
-			</div>
-			{shouldShowLinkAction && (
-				<LinkAction href={item.data.url} {...linkActionProps} />
-			)}
-		</div>
+				{renderPreset()}
+			</motion.div>
+		</AnimatePresence>
 	);
-
-	if (isLandscapePreset(preset)) {
-		return (
-			<div
-				className={cn(
-					"flex size-full flex-row-reverse items-stretch gap-3 p-4",
-					cardClassName,
-				)}
-				style={cardStyle}
-			>
-				<div className="relative min-h-0 min-w-0 flex-3 overflow-hidden rounded-lg bg-muted">
-					<LinkPreview
-						imageUrl={imageUrl}
-						url={item.data.url}
-						isLoading={isEnriching}
-					/>
-				</div>
-				{content}
-			</div>
-		);
-	}
-
-	if (isTallPreset(preset)) {
-		return (
-			<div
-				className={cn(
-					"flex size-full min-h-0 flex-col gap-3 p-4",
-					cardClassName,
-				)}
-				style={cardStyle}
-			>
-				{content}
-				<div className="relative min-h-0 flex-2 overflow-hidden rounded-lg bg-muted">
-					<LinkPreview
-						imageUrl={imageUrl}
-						url={item.data.url}
-						isLoading={isEnriching}
-					/>
-				</div>
-			</div>
-		);
-	}
-
-	return null;
 }
