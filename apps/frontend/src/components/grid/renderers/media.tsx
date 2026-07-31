@@ -65,10 +65,10 @@ export function MediaItemRenderer({
 								data: { ...item.data, caption: event.target.value },
 							})
 						}
-						className="pointer-events-auto field-sizing-content h-7.5 w-fit max-w-full min-w-24 truncate rounded-sm border-0 bg-white/100 px-2 py-0 text-xs font-medium text-foreground shadow-none  placeholder:text-gray-bright/60"
+						className="pointer-events-auto field-sizing-content h-7.5 w-fit max-w-full min-w-24 truncate rounded-sm ring ring-border bg-white/100 px-2 py-0 text-xs font-medium text-foreground shadow-xs placeholder:text-gray-bright/60"
 					/>
 				) : (
-					<p className="min-w-0 max-w-full truncate text-xs font-medium">
+					<p className="min-w-0 max-w-full truncate text-xs font-medium ring ring-border bg-white/100">
 						{item.data.caption?.trim()}
 					</p>
 				)}
