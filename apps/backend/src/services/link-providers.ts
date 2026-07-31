@@ -2,9 +2,14 @@ import {
 	linkProviderDefinitions,
 	type PageItemLinkMetadata,
 } from "@sinabro/api";
+import { createChzzkEnricher } from "./chzzk-link-provider";
+import { createDiscordEnricher } from "./discord-link-provider";
+import { createTwitchEnricher } from "./twitch-link-provider";
+import { createYoutubeEnricher } from "./youtube-link-provider";
 
 const LINK_FETCH_TIMEOUT_MS = 2500;
-const MAX_HEAD_BYTES = 512 * 1024;
+const MAX_HEAD_BYTES = 1024 * 1024;
+const MAX_REDIRECTS = 3;
 
 export type LinkProviderContext = {
 	fetch: (
@@ -25,6 +30,9 @@ export type LinkProvider = {
 
 async function readHeadText(
 	response: Response,
+	shouldStop: (
+		text: string,
+	) => boolean = () => false,
 ): Promise<string> {
 	if (!response.body) return "";
 	const reader =
@@ -50,6 +58,10 @@ async function readHeadText(
 			text += decoder.decode(chunk, {
 				stream: true,
 			});
+			if (shouldStop(text)) {
+				await reader.cancel();
+				return text;
+			}
 			if (/<\/head\s*>/i.test(text)) {
 				await reader.cancel();
 				return text;
@@ -59,7 +71,7 @@ async function readHeadText(
 				value.byteLength
 			) {
 				await reader.cancel();
-				return "";
+				return text;
 			}
 		}
 	} finally {
@@ -69,24 +81,93 @@ async function readHeadText(
 	return text + decoder.decode();
 }
 
+function hasCompleteMetadata(
+	html: string,
+	baseUrl: URL,
+): boolean {
+	const title = getTitle(html);
+	const description =
+		getMetaContent(
+			html,
+			"description",
+		) ??
+		getMetaContent(
+			html,
+			"og:description",
+		);
+	const imageUrl = getHttpsImageUrl(
+		getMetaContent(html, "og:image"),
+		baseUrl,
+	);
+	return Boolean(
+		title && description && imageUrl,
+	);
+}
+
 function getAttributeValue(
 	attributes: string,
 	name: string,
 ): string | undefined {
 	const match = attributes.match(
 		new RegExp(
-			`${name}\\s*=\\s*["']([^"']+)["']`,
+			`(?:^|\\s)${name}\\s*=\\s*(?:["']([^"']*)["']|([^\\s"'=<>]+))`,
 			"i",
 		),
 	);
 	return (
-		match?.[1]?.trim() || undefined
+		match?.[1]?.trim() ||
+		match?.[2]?.trim() ||
+		undefined
+	);
+}
+
+function decodeHtmlEntities(
+	value: string,
+): string {
+	return value.replace(
+		/&(?:#x([\da-f]+)|#(\d+)|amp|quot|apos|lt|gt);/gi,
+		(match, hex, decimal) => {
+			if (hex || decimal) {
+				const codePoint =
+					Number.parseInt(
+						hex ?? decimal,
+						hex ? 16 : 10,
+					);
+				return Number.isInteger(
+					codePoint,
+				) &&
+					codePoint >= 0 &&
+					codePoint <= 0x10ffff &&
+					!(
+						codePoint >= 0xd800 &&
+						codePoint <= 0xdfff
+					)
+					? String.fromCodePoint(
+							codePoint,
+						)
+					: match;
+			}
+
+			return (
+				{
+					amp: "&",
+					quot: '"',
+					apos: "'",
+					lt: "<",
+					gt: ">",
+				}[
+					match
+						.slice(1, -1)
+						.toLowerCase()
+				] ?? match
+			);
+		},
 	);
 }
 
 function getMetaContent(
 	html: string,
-	property: string,
+	expectedProperty: string,
 ): string | undefined {
 	const tagPattern =
 		/<meta\b([^>]+)>/gi;
@@ -94,24 +175,29 @@ function getMetaContent(
 		tagPattern,
 	)) {
 		const attributes = match[1] ?? "";
-		const key =
+		const propertyValue =
 			getAttributeValue(
 				attributes,
 				"property",
-			) ??
-			getAttributeValue(
-				attributes,
-				"name",
 			);
+		const name = getAttributeValue(
+			attributes,
+			"name",
+		);
 		if (
-			key?.toLowerCase() !==
-			property.toLowerCase()
+			propertyValue?.toLowerCase() !==
+				expectedProperty.toLowerCase() &&
+			name?.toLowerCase() !==
+				expectedProperty.toLowerCase()
 		)
 			continue;
-		return getAttributeValue(
+		const content = getAttributeValue(
 			attributes,
 			"content",
 		);
+		return content
+			? decodeHtmlEntities(content)
+			: undefined;
 	}
 	return undefined;
 }
@@ -122,9 +208,10 @@ function getTitle(
 	const title = html.match(
 		/<title\b[^>]*>([\s\S]*?)<\/title>/i,
 	)?.[1];
+	if (!title) return undefined;
 	return (
-		title
-			?.replace(/\s+/g, " ")
+		decodeHtmlEntities(title)
+			.replace(/\s+/g, " ")
 			.trim() || undefined
 	);
 }
@@ -160,28 +247,70 @@ async function enrichGenericWeb(
 	);
 
 	try {
-		const response =
-			await context.fetch(url, {
-				redirect: "manual",
-				signal: controller.signal,
-				headers: {
-					accept:
-						"text/html,application/xhtml+xml;q=0.9",
-					"user-agent":
-						"Sinabro Link Metadata/1.0",
+		let requestUrl = url;
+		let response: Response;
+		for (
+			let redirectCount = 0;
+			;
+			redirectCount += 1
+		) {
+			response = await context.fetch(
+				requestUrl,
+				{
+					redirect: "manual",
+					signal: controller.signal,
+					headers: {
+						accept:
+							"text/html,application/xhtml+xml;q=0.9",
+						"user-agent":
+							"Sinabro Link Metadata/1.0",
+					},
 				},
-			});
+			);
+
+			if (
+				![
+					301, 302, 303, 307, 308,
+				].includes(response.status) ||
+				redirectCount >= MAX_REDIRECTS
+			)
+				break;
+
+			const location =
+				response.headers.get(
+					"location",
+				);
+			if (!location) break;
+
+			const redirectedUrl = new URL(
+				location,
+				requestUrl,
+			);
+			if (
+				redirectedUrl.protocol !==
+				"https:"
+			)
+				break;
+			requestUrl = redirectedUrl;
+		}
 		if (
 			!response.ok ||
-			!response.headers
-				.get("content-type")
-				?.includes("text/html")
+			!isHtmlResponse(response)
 		) {
 			return {};
 		}
 
-		const html =
-			await readHeadText(response);
+		const metadataBaseUrl = new URL(
+			response.url || requestUrl.href,
+		);
+		const html = await readHeadText(
+			response,
+			(text) =>
+				hasCompleteMetadata(
+					text,
+					metadataBaseUrl,
+				),
+		);
 		const image = getMetaContent(
 			html,
 			"og:image",
@@ -199,7 +328,7 @@ async function enrichGenericWeb(
 				),
 			imageUrl: getHttpsImageUrl(
 				image,
-				url,
+				metadataBaseUrl,
 			),
 		};
 	} catch {
@@ -207,6 +336,22 @@ async function enrichGenericWeb(
 	} finally {
 		clearTimeout(timeout);
 	}
+}
+
+function isHtmlResponse(
+	response: Response,
+): boolean {
+	const contentType = response.headers
+		.get("content-type")
+		?.toLowerCase();
+	return (
+		contentType?.includes(
+			"text/html",
+		) === true ||
+		contentType?.includes(
+			"application/xhtml+xml",
+		) === true
+	);
 }
 
 const genericWebProvider: LinkProvider =
@@ -217,6 +362,33 @@ const genericWebProvider: LinkProvider =
 			url.protocol === "https:",
 		enrich: enrichGenericWeb,
 	};
+
+const chzzkEnricher =
+	createChzzkEnricher(enrichGenericWeb);
+const discordEnricher =
+	createDiscordEnricher(
+		enrichGenericWeb,
+	);
+const twitchEnricher =
+	createTwitchEnricher(
+		enrichGenericWeb,
+	);
+const youtubeEnricher =
+	createYoutubeEnricher(
+		enrichGenericWeb,
+	);
+
+const providerEnrichers: Readonly<
+	Record<string, LinkProvider["enrich"]>
+> = {
+	mailto: async (url) => ({
+		title: url.pathname,
+	}),
+	chzzk: chzzkEnricher,
+	discord: discordEnricher,
+	twitch: twitchEnricher,
+	youtube: youtubeEnricher,
+};
 
 const sharedProviders: readonly LinkProvider[] =
 	linkProviderDefinitions
@@ -229,11 +401,9 @@ const sharedProviders: readonly LinkProvider[] =
 			priority: definition.priority,
 			match: definition.match,
 			enrich:
-				definition.id === "mailto"
-					? async (url) => ({
-							title: url.pathname,
-						})
-					: enrichGenericWeb,
+				providerEnrichers[
+					definition.id
+				] ?? enrichGenericWeb,
 		}));
 
 export function createLinkProviderRegistry(
@@ -265,5 +435,7 @@ export const linkProviderRegistry =
 export function resolveLinkProvider(
 	url: URL,
 ): LinkProvider {
-	return linkProviderRegistry.resolve(url);
+	return linkProviderRegistry.resolve(
+		url,
+	);
 }
