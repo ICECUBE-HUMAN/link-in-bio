@@ -3,6 +3,14 @@
 	z-index: 9999 !important;
 }
 
+.sinabro-grid-layout .react-grid-item:not(.react-grid-placeholder) {
+	z-index: 1;
+}
+
+.sinabro-grid-layout .react-grid-item.react-grid-placeholder {
+	z-index: 0;
+}
+
 .grid-section-shell,
 .sinabro-grid-layout {
 	overflow: visible !important;
