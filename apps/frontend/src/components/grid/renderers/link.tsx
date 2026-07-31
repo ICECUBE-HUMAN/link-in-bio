@@ -1,5 +1,6 @@
 import { getLinkProviderPresentation } from "@sinabro/api";
 import { useEffect, useState } from "react";
+import { Envelope } from "reicon-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
@@ -63,11 +64,28 @@ function LinkBadge({
 	url: string;
 }) {
 	const fallback = getProviderFallback(url);
+	const isMailto = url.toLowerCase().startsWith("mailto:");
 	const className = cn(
 		"inline-flex size-8 shrink-0 cursor-pointer! items-center justify-center overflow-hidden rounded-full bg-muted transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
 		!faviconUrl && "size-11 rounded-2xl px-2 text-center text-xs font-semibold",
 		!faviconUrl && fallback.className,
+		isMailto && "bg-brand text-primary-foreground",
 	);
+
+	if (isMailto) {
+		return (
+			<a
+				href={url}
+				target="_blank"
+				rel="noreferrer"
+				aria-label={`Open ${fallback.label}`}
+				className={cn(className, "rounded-lg size-8 surface-line p-1")}
+			>
+				<Envelope aria-hidden="true" size={32} weight="Filled" />
+				<span className="sr-only">{fallback.label}</span>
+			</a>
+		);
+	}
 
 	if (faviconUrl) {
 		return (
