@@ -38,7 +38,7 @@ export function MediaItemRenderer({
 					muted
 					loop
 					playsInline
-					className="size-full object-cover"
+					className="pointer-events-none size-full object-cover"
 				/>
 			) : (
 				<img
