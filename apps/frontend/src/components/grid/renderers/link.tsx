@@ -33,6 +33,35 @@ function getProviderFallback(url: string) {
 	};
 }
 
+function formatProviderCount(value: unknown): string | undefined {
+	const count =
+		typeof value === "number"
+			? value
+			: typeof value === "string" && value.trim()
+				? Number(value)
+				: Number.NaN;
+	if (!Number.isFinite(count)) return undefined;
+	return new Intl.NumberFormat("en-US", {
+		notation: "compact",
+		maximumFractionDigits: 1,
+	}).format(count);
+}
+
+function getProviderCount(
+	provider: ReturnType<typeof getLinkProviderPresentation>["id"],
+	providerData: Record<string, unknown> | undefined,
+): string | undefined {
+	const countKey = (
+		{
+			discord: "memberCount",
+			chzzk: "followerCount",
+			youtube: "subscriberCount",
+			twitch: "followerCount",
+		} as Record<string, string>
+	)[provider];
+	return countKey ? formatProviderCount(providerData?.[countKey]) : undefined;
+}
+
 function LinkAction({
 	href,
 	label,
@@ -263,14 +292,25 @@ export function LinkItemRenderer({
 }: ItemRendererProps<GridItemByType<"link">>) {
 	const title = getTitle(item);
 	const faviconUrl = item.data.metadata?.faviconUrl;
-	const imageUrl = item.data.metadata?.imageUrl;
 	const provider = getLinkProviderPresentation(item.data.url).id;
+	const providerData = item.data.metadata?.providerData as
+		| Record<string, unknown>
+		| undefined;
+	const channelImageUrl =
+		provider === "youtube" && typeof providerData?.channelImageUrl === "string"
+			? providerData.channelImageUrl.trim() || undefined
+			: undefined;
+	const imageUrl = channelImageUrl ?? item.data.metadata?.imageUrl;
 	const providerPresentation = getConfiguredLinkProviderPresentation(provider);
 	const shouldShowLinkAction = provider !== "generic-web";
+	const providerCount = getProviderCount(provider, providerData);
+	const baseActionLabel =
+		providerPresentation?.actionLabel ??
+		(provider === "mailto" ? "Send" : "Open");
 	const linkActionProps = {
-		label:
-			providerPresentation?.actionLabel ??
-			(provider === "mailto" ? "Send" : "Open"),
+		label: providerCount
+			? `${baseActionLabel} ${providerCount}`
+			: baseActionLabel,
 		actionBackground: providerPresentation?.actionBackground,
 		actionText: providerPresentation?.actionText,
 		actionVariant: providerPresentation?.actionVariant,
@@ -382,13 +422,15 @@ export function LinkItemRenderer({
 					)}
 					style={cardStyle}
 				>
-					<div className="relative min-h-0 min-w-0 flex-3 overflow-hidden rounded-lg bg-muted">
-						<LinkPreview
-							imageUrl={imageUrl}
-							url={item.data.url}
-							isLoading={isEnriching}
-						/>
-					</div>
+					{imageUrl && (
+						<div className="relative min-h-0 min-w-0 flex-3 overflow-hidden rounded-lg bg-muted">
+							<LinkPreview
+								imageUrl={imageUrl}
+								url={item.data.url}
+								isLoading={isEnriching}
+							/>
+						</div>
+					)}
 					{content}
 				</div>
 			);
@@ -404,13 +446,15 @@ export function LinkItemRenderer({
 					style={cardStyle}
 				>
 					{content}
-					<div className="relative min-h-0 flex-2 overflow-hidden rounded-lg bg-muted">
-						<LinkPreview
-							imageUrl={imageUrl}
-							url={item.data.url}
-							isLoading={isEnriching}
-						/>
-					</div>
+					{imageUrl && (
+						<div className="relative min-h-0 flex-2 overflow-hidden rounded-lg bg-muted">
+							<LinkPreview
+								imageUrl={imageUrl}
+								url={item.data.url}
+								isLoading={isEnriching}
+							/>
+						</div>
+					)}
 				</div>
 			);
 		}

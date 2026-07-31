@@ -19,7 +19,7 @@ export const linkProviderPresentation = {
 		cardBackground: "#fff2f5",
 		actionBackground: "#ff0033",
 		actionText: "#ffffff",
-		actionLabel: "Subscribe",
+		actionLabel: "Watch",
 		actionVariant: "solid",
 	},
 	discord: {
