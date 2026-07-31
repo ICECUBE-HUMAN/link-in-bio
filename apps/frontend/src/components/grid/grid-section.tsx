@@ -36,6 +36,7 @@ type GridSectionProps = {
 	items: readonly GridItem[];
 	breakpoint: Breakpoint;
 	mode: PageMode;
+	enrichingItemIds?: ReadonlySet<string>;
 	autoFocusItemId?: string | null;
 	onAutoFocus?: (itemId: string) => void;
 	onCommand: GridItemCommandHandler;
@@ -61,6 +62,7 @@ export function GridSection({
 	items,
 	breakpoint,
 	mode,
+	enrichingItemIds = new Set(),
 	autoFocusItemId = null,
 	onAutoFocus,
 	onCommand,
@@ -174,10 +176,9 @@ export function GridSection({
 	const gridWidth = getGridWidth(cols);
 	const handleGridCommand: GridItemCommandHandler = (command) => {
 		if (command.type === "apply-preset") {
-			onCommand({ ...command, breakpoint: effectiveBreakpoint });
-			return;
+			return onCommand({ ...command, breakpoint: effectiveBreakpoint });
 		}
-		onCommand(command);
+		return onCommand(command);
 	};
 
 	const layout = useMemo(
@@ -329,6 +330,7 @@ export function GridSection({
 										breakpoint={effectiveBreakpoint}
 										preset={currentPreset}
 										mode={mode}
+										isEnriching={enrichingItemIds.has(item.id)}
 										autoFocus={item.id === autoFocusItemId}
 										onAutoFocus={
 											onAutoFocus ? () => onAutoFocus(item.id) : undefined

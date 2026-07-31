@@ -43,7 +43,9 @@ export type GridItemCommand =
 	  }
 	| GridEditorCommand;
 
-export type GridItemCommandHandler = (command: GridItemCommand) => void;
+export type GridItemCommandHandler = (
+	command: GridItemCommand,
+) => GridItem | undefined;
 
 export type ItemControlCapability = {
 	command: GridItemControlCommand;
@@ -68,6 +70,7 @@ export type ItemRendererProps<Item extends GridItem = GridItem> = {
 	breakpoint: Breakpoint;
 	preset: PresetName;
 	mode: PageMode;
+	isEnriching?: boolean;
 	autoFocus?: boolean;
 	onAutoFocus?: () => void;
 	onCommand?: GridItemCommandHandler;

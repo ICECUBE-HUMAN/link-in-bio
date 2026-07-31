@@ -24,6 +24,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { uploadPageItemMedia } from "@/lib/api/item-media-api";
+import { enrichPageItemMetadata } from "@/lib/api/link-metadata-api";
 import {
 	getMyPage,
 	getPageByHandleQueryOptions,
@@ -43,6 +44,10 @@ type HandleLoaderData = {
 	items: PageItemResponse[];
 	isCurrentUserPage: boolean;
 };
+
+function getFaviconUrl(imageUrl: string) {
+	return `/api/favicon?v=2&image=${encodeURIComponent(imageUrl)}`;
+}
 
 export const Route = createFileRoute("/$handle")({
 	loader: async ({ context, params }): Promise<HandleLoaderData> => {
@@ -76,6 +81,7 @@ export const Route = createFileRoute("/$handle")({
 		const image = loaderData
 			? (getProfileImageUrl(loaderData.page.image) ?? DEFAULT_APP_LOGO)
 			: DEFAULT_APP_LOGO;
+		const favicon = getFaviconUrl(image);
 
 		return {
 			meta: [
@@ -88,7 +94,7 @@ export const Route = createFileRoute("/$handle")({
 			links: [
 				{
 					rel: "icon",
-					href: image,
+					href: favicon,
 					"data-page-favicon": "true",
 				},
 			],
@@ -150,6 +156,10 @@ function HandlePageContent({
 	const isBreakpointTransitioning = useRef(false);
 	const breakpointTransitionTimer = useRef<number | null>(null);
 	const pageScrollRef = useRef<HTMLElement | null>(null);
+	const [enrichingItemIds, setEnrichingItemIds] = useState<ReadonlySet<string>>(
+		new Set(),
+	);
+	const enrichmentControllersRef = useRef(new Map<string, AbortController>());
 	const shouldReduceMotion = useReducedMotion();
 	const { draft, status, updateField } = usePageAutoSave({
 		page,
@@ -163,6 +173,7 @@ function HandlePageContent({
 		status: gridStatus,
 		dispatchCommand,
 		flushPendingChanges,
+		replaceItemFromServer,
 		addPendingMedia,
 		updateMediaUpload,
 		removeMediaItem,
@@ -175,9 +186,61 @@ function HandlePageContent({
 	});
 
 	useEffect(() => {
+		return () => {
+			for (const controller of enrichmentControllersRef.current.values()) {
+				controller.abort();
+			}
+			enrichmentControllersRef.current.clear();
+		};
+	}, []);
+
+	async function enrichLinkItem(itemId: string, url: string) {
+		const controller = new AbortController();
+		enrichmentControllersRef.current.get(itemId)?.abort();
+		enrichmentControllersRef.current.set(itemId, controller);
+		setEnrichingItemIds((current) => new Set(current).add(itemId));
+
+		try {
+			const savedItems = await flushPendingChanges();
+			const savedItem = savedItems.find((item) => item.id === itemId);
+			if (
+				controller.signal.aborted ||
+				!savedItem ||
+				savedItem.type !== "link" ||
+				savedItem.data.url !== url
+			)
+				return;
+
+			const response = await enrichPageItemMetadata(
+				page.handle,
+				{ itemId, url },
+				controller.signal,
+			);
+			if (!controller.signal.aborted) replaceItemFromServer(response.item);
+		} catch (error) {
+			if (!(error instanceof Error && error.name === "AbortError")) {
+				toast.error(
+					error instanceof Error ? error.message : "Link metadata failed.",
+				);
+			}
+		} finally {
+			if (enrichmentControllersRef.current.get(itemId) === controller) {
+				enrichmentControllersRef.current.delete(itemId);
+				setEnrichingItemIds((current) => {
+					const next = new Set(current);
+					next.delete(itemId);
+					return next;
+				});
+			}
+		}
+	}
+
+	useEffect(() => {
 		document.title = draft.name?.trim() || page.handle;
 
-		const faviconHref = getProfileImageUrl(draft.image) ?? DEFAULT_APP_LOGO;
+		const faviconHref = getFaviconUrl(
+			getProfileImageUrl(draft.image) ?? DEFAULT_APP_LOGO,
+		);
 		const iconLinks = Array.from(
 			document.head.querySelectorAll<HTMLLinkElement>('link[rel~="icon"]'),
 		);
@@ -385,6 +448,7 @@ function HandlePageContent({
 							items={items}
 							breakpoint={previewBreakpoint}
 							mode={mode}
+							enrichingItemIds={enrichingItemIds}
 							autoFocusItemId={autoFocusItemId}
 							onAutoFocus={clearAutoFocusItem}
 							onCommand={dispatchCommand}
@@ -475,7 +539,14 @@ function HandlePageContent({
 					breakpoint={previewBreakpoint}
 					isSaving={status === "saving" || gridStatus === "saving"}
 					onItemAdd={(itemType, url) => {
-						dispatchCommand({ type: "add-item", itemType, url });
+						const newItem = dispatchCommand({
+							type: "add-item",
+							itemType,
+							url,
+						});
+						if (itemType === "link" && newItem?.type === "link" && url) {
+							void enrichLinkItem(newItem.id, url);
+						}
 					}}
 					onMediaSelect={async (file) => {
 						if (file.size > MAX_ITEM_MEDIA_SIZE) return;

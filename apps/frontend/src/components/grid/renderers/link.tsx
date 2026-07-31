@@ -1,4 +1,5 @@
 import { ExternalLink, Link2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { ItemRendererProps } from "@/lib/grid/item-registry";
 import type { GridItemByType, PresetName } from "@/lib/grid/types";
 import { cn } from "@/lib/utils";
@@ -105,11 +106,17 @@ function LinkBadge({
 function LinkPreview({
 	imageUrl,
 	hostname,
+	isLoading,
 }: {
 	imageUrl: string | undefined;
 	hostname: string;
+	isLoading: boolean;
 }) {
 	const fallback = getProviderFallback(hostname);
+
+	if (isLoading && !imageUrl) {
+		return <Skeleton className="size-full rounded-none" />;
+	}
 
 	if (imageUrl) {
 		return <img src={imageUrl} alt="" className="size-full object-cover" />;
@@ -138,6 +145,7 @@ function isCompactPreset(preset: PresetName) {
 export function LinkItemRenderer({
 	item,
 	preset,
+	isEnriching = false,
 }: ItemRendererProps<GridItemByType<"link">>) {
 	const hostname = getHostname(item.data.url);
 	const title = getTitle(item);
@@ -169,7 +177,11 @@ export function LinkItemRenderer({
 	return (
 		<div className="flex size-full min-h-0 flex-col">
 			<div className="relative min-h-0 flex-1 overflow-hidden bg-muted">
-				<LinkPreview imageUrl={imageUrl} hostname={hostname} />
+				<LinkPreview
+					imageUrl={imageUrl}
+					hostname={hostname}
+					isLoading={isEnriching}
+				/>
 				<div className="absolute left-4 top-4 inline-flex h-9 items-center gap-2 rounded-full bg-background/88 px-3 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur-sm">
 					<Link2 className="size-3.5" />
 					<span className="line-clamp-1">{title}</span>

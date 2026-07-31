@@ -147,6 +147,23 @@ export type PageByHandleResponse = v.InferOutput<
 	typeof pageByHandleResponseSchema
 >;
 
+export const pageItemMetadataRequestSchema = v.object({
+	itemId: v.pipe(v.string(), v.minLength(1)),
+	url: grid.pageItemLinkUrlSchema,
+});
+
+export type PageItemMetadataRequest = v.InferOutput<
+	typeof pageItemMetadataRequestSchema
+>;
+
+export const pageItemMetadataResponseSchema = v.object({
+	item: grid.pageItemResponseSchema,
+});
+
+export type PageItemMetadataResponse = v.InferOutput<
+	typeof pageItemMetadataResponseSchema
+>;
+
 export const myPageResponseSchema = v.object({
 	page: v.nullable(pageResponseSchema),
 });
@@ -209,3 +226,4 @@ export type HandleAvailabilityResponse = v.InferOutput<
 >;
 
 export * from "./grid";
+export * from "./link";

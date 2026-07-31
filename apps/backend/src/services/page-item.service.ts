@@ -2,10 +2,10 @@ import type { AppEnv } from "@core/app-factory";
 import type { DatabaseClient } from "@db/index";
 import { pageItems } from "@db/schema";
 import {
+	hasPageItemContent,
 	type PageItemBatchRequest,
 	type PageItemResponse,
 	type PageItemUpsert,
-	hasPageItemContent,
 	pageItemBatchResponseSchema,
 	pageItemResponseSchema,
 } from "@sinabro/api";
@@ -31,6 +31,7 @@ import {
 	validatePageItemData,
 } from "../models/item.model";
 import { getPublicItemMediaUrl } from "./item-media.service";
+import { prepareLinkItem } from "./link-metadata.service";
 import { assertOwnedPage } from "./page.service";
 
 export const listPageItems = async (
@@ -196,9 +197,16 @@ export const persistPageItemBatch =
 		>;
 		publicBaseUrl?: string;
 	}) => {
-		const upserts = batch.upserts.filter(hasPageItemContent);
-		const persistableBatch = { ...batch, upserts };
-		assertUniqueBatchIds(persistableBatch);
+		let upserts = batch.upserts.filter(
+			hasPageItemContent,
+		);
+		const persistableBatch = {
+			...batch,
+			upserts,
+		};
+		assertUniqueBatchIds(
+			persistableBatch,
+		);
 		const deletedMediaKeys: string[] =
 			[];
 		const response =
@@ -257,6 +265,17 @@ export const persistPageItemBatch =
 							item.id,
 							item,
 						]),
+					);
+					upserts = upserts.map(
+						(item) =>
+							item.type === "link"
+								? prepareLinkItem(
+										item,
+										existingById.get(
+											item.id,
+										),
+									)
+								: item,
 					);
 
 					for (const item of upserts) {
@@ -398,17 +417,14 @@ export const persistPageItemBatch =
 						await tx
 							.insert(pageItems)
 							.values(
-								upserts.map(
-									(item) => ({
-										id: item.id,
-										pageId: page.id,
-										type: item.type,
-										data: item.data,
-										style: item.style,
-										layouts:
-											item.layouts,
-									}),
-								),
+								upserts.map((item) => ({
+									id: item.id,
+									pageId: page.id,
+									type: item.type,
+									data: item.data,
+									style: item.style,
+									layouts: item.layouts,
+								})),
 							)
 							.onConflictDoUpdate({
 								target: pageItems.id,

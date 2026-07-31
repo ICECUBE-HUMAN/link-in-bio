@@ -1,6 +1,7 @@
 import type { AppEnv } from "@core/app-factory";
 import {
 	pageItemBatchRequestSchema,
+	pageItemMetadataRequestSchema,
 	pageItemUploadCompleteRequestSchema,
 	pageItemUploadRequestSchema,
 } from "@sinabro/api";
@@ -15,8 +16,12 @@ import {
 	completeItemMediaUpload,
 	createItemMediaUpload,
 } from "../services/item-media.service";
+import { enrichPageItemMetadata } from "../services/link-metadata.service";
 import { assertOwnedPage } from "../services/page.service";
-import { persistPageItemBatch } from "../services/page-item.service";
+import {
+	mapPageItemResponse,
+	persistPageItemBatch,
+} from "../services/page-item.service";
 
 const readJson = async (
 	c: Context<AppEnv>,
@@ -34,16 +39,52 @@ const readJson = async (
 export const pageItemsController =
 	new Hono<AppEnv>()
 		.post(
+			"/:handle/metadata",
+			async (c) => {
+				const user = c.get("user");
+				if (!user)
+					throw new UnauthorizedError();
+				const parsed = v.safeParse(
+					pageItemMetadataRequestSchema,
+					await readJson(c),
+				);
+				if (!parsed.success)
+					throw new UnprocessableEntityError(
+						"Invalid link metadata request.",
+						"INVALID_LINK_METADATA_REQUEST",
+					);
+				const item =
+					await enrichPageItemMetadata({
+						db: c.get("db"),
+						handle:
+							c.req.param("handle"),
+						userId: user.id,
+						itemId:
+							parsed.output.itemId,
+						url: parsed.output.url,
+						fetch: (input, init) =>
+							fetch(input, init),
+					});
+				return c.json({
+					item: mapPageItemResponse(
+						item,
+						c.env?.R2_PUBLIC_URL,
+					),
+				});
+			},
+		)
+		.post(
 			"/:handle/items/upload",
 			async (c) => {
 				const user = c.get("user");
 				if (!user)
 					throw new UnauthorizedError();
-				const page = await assertOwnedPage(
-					c.get("db"),
-					c.req.param("handle"),
-					user.id,
-				);
+				const page =
+					await assertOwnedPage(
+						c.get("db"),
+						c.req.param("handle"),
+						user.id,
+					);
 				const parsed = v.safeParse(
 					pageItemUploadRequestSchema,
 					await readJson(c),
@@ -69,11 +110,12 @@ export const pageItemsController =
 				const user = c.get("user");
 				if (!user)
 					throw new UnauthorizedError();
-				const page = await assertOwnedPage(
-					c.get("db"),
-					c.req.param("handle"),
-					user.id,
-				);
+				const page =
+					await assertOwnedPage(
+						c.get("db"),
+						c.req.param("handle"),
+						user.id,
+					);
 				const parsed = v.safeParse(
 					pageItemUploadCompleteRequestSchema,
 					await readJson(c),

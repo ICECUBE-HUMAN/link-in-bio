@@ -4,7 +4,11 @@ import {
 	Smartphone,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ITEM_MEDIA_ACCEPT, MAX_ITEM_MEDIA_SIZE } from "@sinabro/api";
+import {
+	ITEM_MEDIA_ACCEPT,
+	MAX_ITEM_MEDIA_SIZE,
+	normalizeLinkUrl,
+} from "@sinabro/api";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { type ChangeEvent, useRef, useState } from "react";
 import {
@@ -38,11 +42,11 @@ type ToolbarProps = {
 	onMediaSelect: (file: File) => void | Promise<void>;
 };
 
-function isHttpsUrl(value: string) {
+function normalizeLinkInput(value: string) {
 	try {
-		return new URL(value).protocol === "https:";
+		return normalizeLinkUrl(value);
 	} catch {
-		return false;
+		return null;
 	}
 }
 
@@ -56,7 +60,7 @@ export default function Toolbar({
 	const mediaInputRef = useRef<HTMLInputElement>(null);
 	const [view, setView] = useState<"toolbar" | "link" | "widget">("toolbar");
 	const [linkUrl, setLinkUrl] = useState("");
-	const canAddLink = isHttpsUrl(linkUrl.trim());
+	const canAddLink = normalizeLinkInput(linkUrl) !== null;
 	const shouldReduceMotion = useReducedMotion();
 
 	const viewTransition = shouldReduceMotion
@@ -65,6 +69,15 @@ export default function Toolbar({
 				duration: 0.2,
 				ease: [0.23, 1, 0.32, 1] as const,
 			};
+
+	function submitLink(value: string) {
+		const normalizedUrl = normalizeLinkInput(value);
+		if (!normalizedUrl) return false;
+		onItemAdd("link", normalizedUrl);
+		setLinkUrl("");
+		setView("toolbar");
+		return true;
+	}
 
 	function handleMediaChange(event: ChangeEvent<HTMLInputElement>) {
 		const file = event.target.files?.[0];
@@ -125,6 +138,16 @@ export default function Toolbar({
 									aria-label="Link URL"
 									value={linkUrl}
 									onChange={(event) => setLinkUrl(event.target.value)}
+									onKeyDown={(event) => {
+										if (event.key === "Enter") {
+											event.preventDefault();
+											submitLink(linkUrl);
+										}
+									}}
+									onPaste={(event) => {
+										const pasted = event.clipboardData.getData("text");
+										if (submitLink(pasted)) event.preventDefault();
+									}}
 									autoFocus
 									autoComplete="off"
 								/>
@@ -136,11 +159,7 @@ export default function Toolbar({
 										className="bg-brand text-primary-foreground active:scale-[0.97] hover:bg-brand/80 hover:text-primary-foreground"
 										disabled={!canAddLink}
 										onClick={() => {
-											const url = linkUrl.trim();
-											if (!isHttpsUrl(url)) return;
-											onItemAdd("link", url);
-											setLinkUrl("");
-											setView("toolbar");
+											submitLink(linkUrl);
 										}}
 									>
 										<Send weight="Filled" className="size-4" />

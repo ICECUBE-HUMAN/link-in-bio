@@ -361,8 +361,8 @@ export function useGridEditorStore({
 
 	const dispatchCommand = useCallback(
 		(command: GridEditorCommand | { type: "manage-link"; itemId: string }) => {
-			if (!enabled) return;
-			if (command.type === "manage-link") return;
+			if (!enabled) return undefined;
+			if (command.type === "manage-link") return undefined;
 
 			const currentItems = draftRef.current;
 			if (command.type === "add-item") {
@@ -377,13 +377,13 @@ export function useGridEditorStore({
 						: null,
 				);
 				commitItems([...currentItems, newItem]);
-				return;
+				return newItem;
 			}
 			if (command.type === "replace-layout") {
 				try {
 					validateLayout(command.layout, getColumns(command.breakpoint));
 				} catch {
-					return;
+					return undefined;
 				}
 				commitItems(
 					mergeLayoutMapIntoItems(
@@ -392,12 +392,12 @@ export function useGridEditorStore({
 						command.layout,
 					),
 				);
-				return;
+				return undefined;
 			}
 			const targetItem = currentItems.find(
 				(item) => item.id === command.itemId,
 			);
-			if (!targetItem) return;
+			if (!targetItem) return undefined;
 
 			if (command.type === "update-data") {
 				commitItems(
@@ -410,7 +410,7 @@ export function useGridEditorStore({
 							: item,
 					),
 				);
-				return;
+				return undefined;
 			}
 
 			if (command.type === "update-style") {
@@ -424,13 +424,13 @@ export function useGridEditorStore({
 							: item,
 					),
 				);
-				return;
+				return undefined;
 			}
 
 			if (command.type === "delete-item") {
 				deletedIdsRef.current.add(command.itemId);
 				commitItems(currentItems.filter((item) => item.id !== command.itemId));
-				return;
+				return undefined;
 			}
 
 			if (command.type === "move-item") {
@@ -444,11 +444,11 @@ export function useGridEditorStore({
 				commitItems(
 					mergeLayoutMapIntoItems(currentItems, breakpoint, nextLayoutMap),
 				);
-				return;
+				return undefined;
 			}
 
 			if (!getAllowedPresets(targetItem.type).includes(command.preset)) {
-				return;
+				return undefined;
 			}
 
 			const nextLayoutMap = applyPresetToLayoutMap({
@@ -545,7 +545,35 @@ export function useGridEditorStore({
 			const result = await savePendingChanges();
 			if (!result.ok) throw result.error;
 		}
+		return draftRef.current;
 	}, [savePendingChanges]);
+
+	const replaceItemFromServer = useCallback(
+		(incoming: PageItemResponse) => {
+			const currentItems = draftRef.current;
+			const current = currentItems.find((item) => item.id === incoming.id);
+			if (!current) return;
+			const nextItem = {
+				...current,
+				...toGridItem(incoming),
+				style: current.style,
+				layouts: current.layouts,
+			};
+			const nextItems = currentItems.map((item) =>
+				item.id === incoming.id ? nextItem : item,
+			);
+			draftRef.current = nextItems;
+			persistedRef.current = mergeItems(persistedRef.current, [nextItem]);
+			pendingRef.current = createBatch(
+				nextItems,
+				persistedRef.current,
+				deletedIdsRef.current,
+			);
+			setItems(nextItems);
+			syncQueryCache(nextItems);
+		},
+		[syncQueryCache],
+	);
 
 	const clearAutoFocusItem = useCallback((itemId: string) => {
 		setAutoFocusItemId((current) => (current === itemId ? null : current));
@@ -559,6 +587,7 @@ export function useGridEditorStore({
 		errorMessage,
 		dispatchCommand,
 		flushPendingChanges,
+		replaceItemFromServer,
 		addPendingMedia,
 		updateMediaUpload,
 		removeMediaItem,

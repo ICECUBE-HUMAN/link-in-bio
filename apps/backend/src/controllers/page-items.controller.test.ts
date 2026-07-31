@@ -5,6 +5,7 @@ import {
 } from "bun:test";
 import { pageItemsController } from "@controllers/page-items.controller";
 import type { AppEnv } from "@core/app-factory";
+import type { pageItems } from "@db/schema";
 import { errorHandler } from "@middlewares/error-handler.middleware";
 import { Hono } from "hono";
 
@@ -106,6 +107,80 @@ function createBatchApp() {
 			),
 		items,
 	};
+}
+
+function createMetadataApp(
+	url = "mailto:hello@example.com",
+) {
+	const item: typeof pageItems.$inferSelect =
+		{
+			id: "link_1",
+			pageId: page.id,
+			type: "link",
+			data: {
+				url,
+				metadata: {
+					title: url.replace(
+						"mailto:",
+						"",
+					),
+				},
+			},
+			style: {},
+			layouts: {
+				wide: {
+					x: 0,
+					y: 0,
+					w: 2,
+					h: 2,
+				},
+				compact: {
+					x: 0,
+					y: 0,
+					w: 2,
+					h: 2,
+				},
+			},
+			createdAt: new Date(
+				"2026-07-27T00:00:00.000Z",
+			),
+			updatedAt: new Date(
+				"2026-07-27T00:00:00.000Z",
+			),
+		};
+	const db = {
+		query: {
+			pages: {
+				findFirst: async () => page,
+			},
+			pageItems: {
+				findFirst: async () => item,
+			},
+		},
+		update: () => ({
+			set: (
+				values: Record<string, unknown>,
+			) => ({
+				where: async () => {
+					Object.assign(item, values);
+				},
+			}),
+		}),
+	};
+	const app = new Hono<AppEnv>();
+	app.use("*", async (c, next) => {
+		c.set("user", {
+			id: "user_1",
+		} as never);
+		c.set("db", db as never);
+		await next();
+	});
+	return app
+		.onError(errorHandler)
+		.route(
+			"/pages",
+			pageItemsController,
+		);
 }
 
 describe("pageItemsController", () => {
@@ -363,60 +438,220 @@ describe("pageItemsController", () => {
 		).toHaveLength(2);
 	});
 
-	it("does not persist empty text or section items in a mixed batch", async () => {
-		const { app, items } = createBatchApp();
-		const response = await app.request("/pages/kim/batch", {
-			method: "PATCH",
-			headers: { "content-type": "application/json" },
-			body: JSON.stringify({
-				upserts: [
-					{
-						id: "empty-text",
-						type: "text",
-						data: { text: "   " },
-						style: {},
-						layouts: {
-							wide: { x: 0, y: 0, w: 2, h: 1 },
-							compact: { x: 0, y: 0, w: 2, h: 1 },
+	it("stores deterministic initial metadata for link items", async () => {
+		const { app, items } =
+			createBatchApp();
+		const response = await app.request(
+			"/pages/kim/batch",
+			{
+				method: "PATCH",
+				headers: {
+					"content-type":
+						"application/json",
+				},
+				body: JSON.stringify({
+					upserts: [
+						{
+							id: "link_1",
+							type: "link",
+							data: {
+								url: "https://example.com/about",
+							},
+							style: {},
+							layouts: {
+								wide: {
+									x: 0,
+									y: 0,
+									w: 2,
+									h: 2,
+								},
+								compact: {
+									x: 0,
+									y: 0,
+									w: 2,
+									h: 2,
+								},
+							},
 						},
-					},
-					{
-						id: "empty-section",
-						type: "section",
-						data: { title: "" },
-						style: {},
-						layouts: {
-							wide: { x: 0, y: 0, w: 4, h: 1 },
-							compact: { x: 0, y: 0, w: 2, h: 1 },
-						},
-					},
-					{
-						id: "filled-text",
-						type: "text",
-						data: { text: "Saved text" },
-						style: {},
-						layouts: {
-							wide: { x: 0, y: 1, w: 2, h: 1 },
-							compact: { x: 0, y: 1, w: 2, h: 1 },
-						},
-					},
-					{
-						id: "filled-section",
-						type: "section",
-						data: { title: "Saved section" },
-						style: {},
-						layouts: {
-							wide: { x: 0, y: 0, w: 4, h: 1 },
-							compact: { x: 0, y: 0, w: 2, h: 1 },
-						},
-					},
-				],
-				deletes: [],
-			}),
-		});
+					],
+					deletes: [],
+				}),
+			},
+		);
 
 		expect(response.status).toBe(200);
-		expect(items.map((item) => item.id)).toEqual([
+		expect(
+			items[0]?.data,
+		).toMatchObject({
+			url: "https://example.com/about",
+			metadata: {
+				title: "example.com/about",
+				faviconUrl:
+					"https://icons.duckduckgo.com/ip3/example.com.ico",
+			},
+		});
+	});
+
+	it("enriches a saved link through the metadata endpoint", async () => {
+		const response =
+			await createMetadataApp().request(
+				"/pages/kim/metadata",
+				{
+					method: "POST",
+					headers: {
+						"content-type":
+							"application/json",
+					},
+					body: JSON.stringify({
+						itemId: "link_1",
+						url: "mailto:hello@example.com",
+					}),
+				},
+			);
+
+		expect(response.status).toBe(200);
+		expect(
+			await response.json(),
+		).toMatchObject({
+			item: {
+				id: "link_1",
+				data: {
+					url: "mailto:hello@example.com",
+					metadata: {
+						title: "hello@example.com",
+					},
+				},
+			},
+		});
+	});
+
+	it("rejects metadata for a link whose URL changed", async () => {
+		const response =
+			await createMetadataApp().request(
+				"/pages/kim/metadata",
+				{
+					method: "POST",
+					headers: {
+						"content-type":
+							"application/json",
+					},
+					body: JSON.stringify({
+						itemId: "link_1",
+						url: "mailto:other@example.com",
+					}),
+				},
+			);
+
+		expect(response.status).toBe(422);
+	});
+
+	it("does not persist empty text or section items in a mixed batch", async () => {
+		const { app, items } =
+			createBatchApp();
+		const response = await app.request(
+			"/pages/kim/batch",
+			{
+				method: "PATCH",
+				headers: {
+					"content-type":
+						"application/json",
+				},
+				body: JSON.stringify({
+					upserts: [
+						{
+							id: "empty-text",
+							type: "text",
+							data: { text: "   " },
+							style: {},
+							layouts: {
+								wide: {
+									x: 0,
+									y: 0,
+									w: 2,
+									h: 1,
+								},
+								compact: {
+									x: 0,
+									y: 0,
+									w: 2,
+									h: 1,
+								},
+							},
+						},
+						{
+							id: "empty-section",
+							type: "section",
+							data: { title: "" },
+							style: {},
+							layouts: {
+								wide: {
+									x: 0,
+									y: 0,
+									w: 4,
+									h: 1,
+								},
+								compact: {
+									x: 0,
+									y: 0,
+									w: 2,
+									h: 1,
+								},
+							},
+						},
+						{
+							id: "filled-text",
+							type: "text",
+							data: {
+								text: "Saved text",
+							},
+							style: {},
+							layouts: {
+								wide: {
+									x: 0,
+									y: 1,
+									w: 2,
+									h: 1,
+								},
+								compact: {
+									x: 0,
+									y: 1,
+									w: 2,
+									h: 1,
+								},
+							},
+						},
+						{
+							id: "filled-section",
+							type: "section",
+							data: {
+								title: "Saved section",
+							},
+							style: {},
+							layouts: {
+								wide: {
+									x: 0,
+									y: 0,
+									w: 4,
+									h: 1,
+								},
+								compact: {
+									x: 0,
+									y: 0,
+									w: 2,
+									h: 1,
+								},
+							},
+						},
+					],
+					deletes: [],
+				}),
+			},
+		);
+
+		expect(response.status).toBe(200);
+		expect(
+			items.map((item) => item.id),
+		).toEqual([
 			"filled-text",
 			"filled-section",
 		]);

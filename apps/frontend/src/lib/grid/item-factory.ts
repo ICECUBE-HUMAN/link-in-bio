@@ -1,3 +1,4 @@
+import { createInitialLinkMetadata } from "@sinabro/api";
 import {
 	getColumns,
 	getDefaultPreset,
@@ -67,7 +68,10 @@ export function createGridItem({
 			return {
 				...base,
 				type: itemType,
-				data: { url: url ?? "https://example.com" },
+				data: {
+					url: url ?? "https://example.com",
+					metadata: createInitialLinkMetadata(url ?? "https://example.com"),
+				},
 			};
 	}
 }

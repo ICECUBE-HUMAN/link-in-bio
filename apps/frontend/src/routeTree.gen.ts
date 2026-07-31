@@ -14,6 +14,7 @@ import { Route as HandleRouteImport } from './routes/$handle'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as NewRouteImport } from './routes/new'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ApiFaviconRouteImport } from './routes/api/favicon'
 import { Route as DemoIndexRouteImport } from './routes/demo/index'
 import { Route as ExploreIndexRouteImport } from './routes/explore/index'
 import { Route as LogInIndexRouteImport } from './routes/log-in/index'
@@ -47,6 +48,11 @@ const NewRoute = NewRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiFaviconRoute = ApiFaviconRouteImport.update({
+  id: '/api/favicon',
+  path: '/api/favicon',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoIndexRoute = DemoIndexRouteImport.update({
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/llms.txt': typeof LlmsDottxtRoute
   '/new': typeof NewRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/favicon': typeof ApiFaviconRoute
   '/demo/': typeof DemoIndexRoute
   '/explore/': typeof ExploreIndexRoute
   '/log-in/': typeof LogInIndexRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/llms.txt': typeof LlmsDottxtRoute
   '/new': typeof NewRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/favicon': typeof ApiFaviconRoute
   '/demo': typeof DemoIndexRoute
   '/explore': typeof ExploreIndexRoute
   '/log-in': typeof LogInIndexRoute
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/llms.txt': typeof LlmsDottxtRoute
   '/new': typeof NewRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/favicon': typeof ApiFaviconRoute
   '/demo/': typeof DemoIndexRoute
   '/explore/': typeof ExploreIndexRoute
   '/log-in/': typeof LogInIndexRoute
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/llms.txt'
     | '/new'
     | '/sitemap.xml'
+    | '/api/favicon'
     | '/demo/'
     | '/explore/'
     | '/log-in/'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/llms.txt'
     | '/new'
     | '/sitemap.xml'
+    | '/api/favicon'
     | '/demo'
     | '/explore'
     | '/log-in'
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/llms.txt'
     | '/new'
     | '/sitemap.xml'
+    | '/api/favicon'
     | '/demo/'
     | '/explore/'
     | '/log-in/'
@@ -205,6 +217,7 @@ export interface RootRouteChildren {
   LlmsDottxtRoute: typeof LlmsDottxtRoute
   NewRoute: typeof NewRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiFaviconRoute: typeof ApiFaviconRoute
   DemoIndexRoute: typeof DemoIndexRoute
   ExploreIndexRoute: typeof ExploreIndexRoute
   LogInIndexRoute: typeof LogInIndexRoute
@@ -247,6 +260,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/favicon': {
+      id: '/api/favicon'
+      path: '/api/favicon'
+      fullPath: '/api/favicon'
+      preLoaderRoute: typeof ApiFaviconRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/': {
@@ -365,6 +385,7 @@ const rootRouteChildren: RootRouteChildren = {
   LlmsDottxtRoute: LlmsDottxtRoute,
   NewRoute: NewRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiFaviconRoute: ApiFaviconRoute,
   DemoIndexRoute: DemoIndexRoute,
   ExploreIndexRoute: ExploreIndexRoute,
   LogInIndexRoute: LogInIndexRoute,

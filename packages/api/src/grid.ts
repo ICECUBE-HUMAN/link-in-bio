@@ -42,6 +42,21 @@ const httpsUrlSchema = v.pipe(
 	v.check((value) => value.startsWith("https://"), "HTTPS URL required."),
 );
 
+const mailtoUrlSchema = v.pipe(
+	v.string(),
+	v.trim(),
+	v.check((value) => {
+		try {
+			const url = new URL(value);
+			return url.protocol === "mailto:" && url.pathname.includes("@");
+		} catch {
+			return false;
+		}
+	}, "Valid mailto URL required."),
+);
+
+export const pageItemLinkUrlSchema = v.union([httpsUrlSchema, mailtoUrlSchema]);
+
 export const pageItemTextDataSchema = v.object({
 	text: v.pipe(v.string(), v.trim()),
 	link: v.optional(httpsUrlSchema),
@@ -76,10 +91,21 @@ export const pageItemLinkMetadataSchema = v.object({
 	description: v.optional(v.string()),
 	faviconUrl: v.optional(httpsUrlSchema),
 	imageUrl: v.optional(httpsUrlSchema),
+	provider: v.optional(v.string()),
+	providerData: v.optional(
+		v.record(
+			v.string(),
+			v.union([v.string(), v.number(), v.boolean(), v.null()]),
+		),
+	),
 });
 
+export type PageItemLinkMetadata = v.InferOutput<
+	typeof pageItemLinkMetadataSchema
+>;
+
 export const pageItemLinkDataSchema = v.object({
-	url: httpsUrlSchema,
+	url: pageItemLinkUrlSchema,
 	metadata: v.optional(pageItemLinkMetadataSchema),
 });
 
