@@ -8,9 +8,7 @@ import {
 } from "@/lib/api/profile-image-api";
 import type { Breakpoint } from "@/lib/grid/types";
 import { getPageLayoutClasses } from "@/lib/page/page-layout";
-
-const DEFAULT_PROFILE_IMAGE =
-	"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect width='1' height='1' fill='oklch(0.97%200%200)'/%3E%3C/svg%3E";
+import { DEFAULT_IMAGE_DATA_URL } from "@/lib/shared/default-image";
 
 type PageImageEditorProps = {
 	initialImage: string | null;
@@ -81,7 +79,7 @@ export function PageImageEditor({
 		image || mode === "view" ? (
 			<img
 				className="size-full object-cover transition-transform duration-250 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover/image:scale-105 motion-reduce:transition-none"
-				src={image ?? DEFAULT_PROFILE_IMAGE}
+				src={image ?? DEFAULT_IMAGE_DATA_URL}
 				alt="Profile"
 				loading="eager"
 			/>

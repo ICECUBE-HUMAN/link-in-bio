@@ -161,6 +161,7 @@ export function GridSection({
 
 	useEffect(() => {
 		return () => {
+			initialAnimationScheduledRef.current = false;
 			for (const frame of enteringItemFramesRef.current.values()) {
 				window.cancelAnimationFrame(frame);
 			}

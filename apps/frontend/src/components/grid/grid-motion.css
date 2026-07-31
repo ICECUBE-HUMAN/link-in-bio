@@ -175,6 +175,12 @@
 	will-change: transform;
 }
 
+.react-grid-item.react-draggable-dragging
+	[data-grid-item-type="media"]
+	.grid-item-card {
+	box-shadow: var(--shadow-brand-small) !important;
+}
+
 /* Drop target: an inset shadow reads as a slot waiting for the dragged block. */
 .sinabro-grid-layout .react-grid-placeholder {
 	background: color-mix(
@@ -221,6 +227,13 @@
 	.grid-item-initial-enter,
 	.grid-item-card {
 		filter: none !important;
+		transform: none !important;
+	}
+
+	.grid-item-pop-in.is-entering,
+	.grid-item-initial-enter.is-entering {
+		filter: none !important;
+		opacity: 1 !important;
 		transform: none !important;
 	}
 }

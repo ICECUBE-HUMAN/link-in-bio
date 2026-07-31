@@ -1,14 +1,11 @@
+import { CircleArrowRightUp } from "reicon-react";
 import { Input } from "@/components/ui/input";
 import type { ItemRendererProps } from "@/lib/grid/item-registry";
 import type { GridItemByType } from "@/lib/grid/types";
+import { DEFAULT_IMAGE_DATA_URL } from "@/lib/shared/default-image";
 import { cn } from "@/lib/utils";
-import { CircleArrowRightUp } from "reicon-react";
 
-function MediaAction({
-	href,
-}: {
-	href: string | undefined;
-}) {
+function MediaAction({ href }: { href: string | undefined }) {
 	if (!href) {
 		return null;
 	}
@@ -20,7 +17,7 @@ function MediaAction({
 			rel="noreferrer"
 			className="cursor-pointer! inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-white/60 text-xs font-medium text-white transition-colors hover:bg-white"
 		>
-		  <CircleArrowRightUp size={28} weight="Filled" className="text-black!"/>
+			<CircleArrowRightUp size={28} weight="Filled" className="text-black!" />
 		</a>
 	);
 }
@@ -31,31 +28,24 @@ export function MediaItemRenderer({
 	onCommand,
 }: ItemRendererProps<GridItemByType<"media">>) {
 	const isVideo = item.data.mimeType.startsWith("video/");
-	const hasMedia = Boolean(item.data.mediaUrl);
 
 	return (
 		<div className="relative size-full overflow-hidden rounded-[inherit] bg-muted surface-line">
-			{hasMedia ? (
-				isVideo ? (
-					<video
-						src={item.data.mediaUrl}
-						autoPlay
-						muted
-						loop
-						playsInline
-						className="size-full object-cover"
-					/>
-				) : (
-					<img
-						src={item.data.mediaUrl}
-						alt={item.data.caption ?? "Media item"}
-						className="size-full object-cover"
-					/>
-				)
+			{isVideo ? (
+				<video
+					src={item.data.mediaUrl ?? DEFAULT_IMAGE_DATA_URL}
+					autoPlay
+					muted
+					loop
+					playsInline
+					className="size-full object-cover"
+				/>
 			) : (
-				<div className="flex size-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
-					Media preview unavailable
-				</div>
+				<img
+					src={item.data.mediaUrl ?? DEFAULT_IMAGE_DATA_URL}
+					alt={item.data.caption ?? "Media item"}
+					className="size-full object-cover"
+				/>
 			)}
 			<div
 				className={cn(
