@@ -375,85 +375,6 @@ function HandlePageContent({
 					</aside>
 				</div>
 
-				<aside
-					className={`hidden items-center gap-2 z-10 ${layoutClasses.controls}`}
-					aria-label="Page controls"
-				>
-					<div className="flex items-center gap-0">
-						{isCurrentUserPage ? (
-							<Tooltip>
-								<TooltipTrigger render={<span className="inline-flex" />}>
-									<PageSettingsMenu page={page} onChanged={onPageChange} />
-								</TooltipTrigger>
-								<TooltipContent>Settings</TooltipContent>
-							</Tooltip>
-						) : isSignedIn && myPage ? (
-							<Button
-								render={
-									<Link to="/$handle" params={{ handle: myPage.handle }} />
-								}
-								variant="ghost"
-								nativeButton={false}
-								size="sm"
-								className="text-muted-foreground/80 rounded-md gap-1.5"
-							>
-								<Avatar size="xs">
-									<AvatarImage
-										src={getProfileImageUrl(myPage.image) ?? undefined}
-										alt=""
-									/>
-									<AvatarFallback />
-								</Avatar>
-								<span>My page</span>
-							</Button>
-						) : isSignedIn ? null : (
-							<Button
-								render={
-									<Link to="/log-in" search={{ redirect: `/${page.handle}` }} />
-								}
-								variant="ghost"
-								nativeButton={false}
-								size="sm"
-								className="text-muted-foreground/80 rounded-md"
-							>
-								Log in
-							</Button>
-						)}
-						<Tooltip>
-							<TooltipTrigger
-								render={
-									<Button
-										render={<Link to="/explore" />}
-										variant="ghost"
-										nativeButton={false}
-										size="icon-sm"
-										aria-label="Explore"
-										className="text-muted-foreground/80 rounded-md"
-									/>
-								}
-							>
-								<StackPerspective weight="Filled" />
-							</TooltipTrigger>
-							<TooltipContent>Explore</TooltipContent>
-						</Tooltip>
-						<Tooltip>
-							<TooltipTrigger
-								render={
-									<Button
-										variant="ghost"
-										size="icon-sm"
-										aria-label="Feedback"
-										className="text-muted-foreground/80 rounded-md"
-									/>
-								}
-							>
-								<Send weight="Filled" />
-							</TooltipTrigger>
-							<TooltipContent>Feedback</TooltipContent>
-						</Tooltip>
-					</div>
-				</aside>
-
 				<section
 					id="page-grid"
 					data-breakpoint-transition={breakpointTransition}
@@ -471,6 +392,83 @@ function HandlePageContent({
 					</div>
 				</section>
 			</motion.div>
+
+			<aside
+				className={`hidden items-center gap-2 z-10 ${layoutClasses.controls}`}
+				aria-label="Page controls"
+			>
+				<div className="flex items-center gap-0">
+					{isCurrentUserPage ? (
+						<Tooltip>
+							<TooltipTrigger render={<span className="inline-flex" />}>
+								<PageSettingsMenu page={page} onChanged={onPageChange} />
+							</TooltipTrigger>
+							<TooltipContent>Settings</TooltipContent>
+						</Tooltip>
+					) : isSignedIn && myPage ? (
+						<Button
+							render={<Link to="/$handle" params={{ handle: myPage.handle }} />}
+							variant="ghost"
+							nativeButton={false}
+							size="sm"
+							className="text-muted-foreground/80 rounded-md gap-1.5"
+						>
+							<Avatar size="xs">
+								<AvatarImage
+									src={getProfileImageUrl(myPage.image) ?? undefined}
+									alt=""
+								/>
+								<AvatarFallback />
+							</Avatar>
+							<span>My page</span>
+						</Button>
+					) : isSignedIn ? null : (
+						<Button
+							render={
+								<Link to="/log-in" search={{ redirect: `/${page.handle}` }} />
+							}
+							variant="ghost"
+							nativeButton={false}
+							size="sm"
+							className="text-muted-foreground/80 rounded-md"
+						>
+							Log in
+						</Button>
+					)}
+					<Tooltip>
+						<TooltipTrigger
+							render={
+								<Button
+									render={<Link to="/explore" />}
+									variant="ghost"
+									nativeButton={false}
+									size="icon-sm"
+									aria-label="Explore"
+									className="text-muted-foreground/80 rounded-md"
+								/>
+							}
+						>
+							<StackPerspective weight="Filled" />
+						</TooltipTrigger>
+						<TooltipContent>Explore</TooltipContent>
+					</Tooltip>
+					<Tooltip>
+						<TooltipTrigger
+							render={
+								<Button
+									variant="ghost"
+									size="icon-sm"
+									aria-label="Feedback"
+									className="text-muted-foreground/80 rounded-md"
+								/>
+							}
+						>
+							<Send weight="Filled" />
+						</TooltipTrigger>
+						<TooltipContent>Feedback</TooltipContent>
+					</Tooltip>
+				</div>
+			</aside>
 
 			{mode === "edit" ? (
 				<Toolbar
