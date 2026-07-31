@@ -5,6 +5,7 @@ import {
 	gridRowHeight,
 } from "@sinabro/grid-layout";
 import {
+	useCallback,
 	useEffect,
 	useMemo,
 	useRef,
@@ -42,6 +43,8 @@ type GridSectionProps = {
 	onCommand: GridItemCommandHandler;
 };
 
+const GRID_ITEM_EXIT_DURATION = 180;
+
 const desktopMediaQuery = "(min-width: 90rem)";
 
 function subscribeToDesktopLayout(onChange: () => void) {
@@ -72,7 +75,14 @@ export function GridSection({
 	const hasInitializedItemsRef = useRef(false);
 	const initialAnimationScheduledRef = useRef(false);
 	const enteringItemFramesRef = useRef(new Map<string, number>());
+	const exitingItemTimersRef = useRef(new Map<string, number>());
+	const previousItemsByIdRef = useRef(
+		new Map(items.map((item) => [item.id, item])),
+	);
 	const [demoItemCount, setDemoItemCount] = useState(0);
+	const [exitingItems, setExitingItems] = useState<
+		ReadonlyMap<string, GridItem>
+	>(new Map());
 	const [initialEnteringItemIds, setInitialEnteringItemIds] = useState<
 		ReadonlySet<string>
 	>(() => new Set(items.map((item) => item.id)));
@@ -94,6 +104,15 @@ export function GridSection({
 				: items,
 		[demoItemCount, items],
 	);
+	const displayItems = useMemo(() => {
+		const renderedItemIds = new Set(renderedItems.map((item) => item.id));
+		return [
+			...renderedItems,
+			...[...exitingItems.entries()]
+				.filter(([itemId]) => !renderedItemIds.has(itemId))
+				.map(([, item]) => item),
+		];
+	}, [exitingItems, renderedItems]);
 	const initialEnteringIndexById = useMemo(
 		() => new Map([...initialEnteringItemIds].map((id, index) => [id, index])),
 		[initialEnteringItemIds],
@@ -137,6 +156,42 @@ export function GridSection({
 		}
 	}, [renderedItems]);
 
+	const startItemExit = useCallback((item: GridItem) => {
+		if (exitingItemTimersRef.current.has(item.id)) return;
+		setExitingItems((current) => {
+			if (current.has(item.id)) return current;
+			return new Map(current).set(item.id, item);
+		});
+		const timer = window.setTimeout(() => {
+			setExitingItems((current) => {
+				const next = new Map(current);
+				next.delete(item.id);
+				return next;
+			});
+			exitingItemTimersRef.current.delete(item.id);
+		}, GRID_ITEM_EXIT_DURATION);
+		exitingItemTimersRef.current.set(item.id, timer);
+	}, []);
+
+	useEffect(() => {
+		const currentItemsById = new Map(items.map((item) => [item.id, item]));
+		for (const [itemId, previousItem] of previousItemsByIdRef.current) {
+			if (!currentItemsById.has(itemId)) startItemExit(previousItem);
+		}
+		for (const itemId of currentItemsById.keys()) {
+			const timer = exitingItemTimersRef.current.get(itemId);
+			if (timer === undefined) continue;
+			window.clearTimeout(timer);
+			exitingItemTimersRef.current.delete(itemId);
+			setExitingItems((current) => {
+				const next = new Map(current);
+				next.delete(itemId);
+				return next;
+			});
+		}
+		previousItemsByIdRef.current = currentItemsById;
+	}, [items, startItemExit]);
+
 	useEffect(() => {
 		if (
 			initialAnimationScheduledRef.current ||
@@ -167,6 +222,9 @@ export function GridSection({
 			for (const frame of enteringItemFramesRef.current.values()) {
 				window.cancelAnimationFrame(frame);
 			}
+			for (const timer of exitingItemTimersRef.current.values()) {
+				window.clearTimeout(timer);
+			}
 		};
 	}, []);
 
@@ -175,6 +233,12 @@ export function GridSection({
 	const cols = getColumns(effectiveBreakpoint);
 	const gridWidth = getGridWidth(cols);
 	const handleGridCommand: GridItemCommandHandler = (command) => {
+		if (command.type === "delete-item") {
+			const item = displayItems.find(
+				(candidate) => candidate.id === command.itemId,
+			);
+			if (item) startItemExit(item);
+		}
 		if (command.type === "apply-preset") {
 			return onCommand({ ...command, breakpoint: effectiveBreakpoint });
 		}
@@ -183,13 +247,13 @@ export function GridSection({
 
 	const layout = useMemo(
 		() =>
-			renderedItems.map((item) => ({
+			displayItems.map((item) => ({
 				i: item.id,
 				...item.layouts[effectiveBreakpoint],
 				isResizable: false,
 				resizeHandles: [],
 			})),
-		[effectiveBreakpoint, renderedItems],
+		[displayItems, effectiveBreakpoint],
 	);
 
 	const handleDragStart: EventCallback = (
@@ -296,7 +360,7 @@ export function GridSection({
 				onDrag={handleDrag}
 				onDragStop={handleDragStop}
 			>
-				{renderedItems.map((item) => {
+				{displayItems.map((item) => {
 					const itemLayout = item.layouts[effectiveBreakpoint];
 					const currentPreset = inferPresetFromLayout(
 						item.type,
@@ -307,6 +371,7 @@ export function GridSection({
 						initialEnteringIndexById.get(item.id) ?? -1;
 					const isInitialEntering = initialEnteringItemIds.has(item.id);
 					const isEntering = isInitialEntering || enteringItemIds.has(item.id);
+					const isExiting = exitingItems.has(item.id);
 					const capabilities = getItemCapabilities(item, {
 						breakpoint: effectiveBreakpoint,
 						mode,
@@ -319,6 +384,7 @@ export function GridSection({
 								layout={itemLayout}
 								isEntering={isEntering}
 								isInitialEntering={isInitialEntering}
+								isExiting={isExiting}
 								enteringIndex={Math.max(initialEnteringIndex, 0)}
 								isAnyItemDragging={isAnyItemDragging}
 								capabilities={capabilities}

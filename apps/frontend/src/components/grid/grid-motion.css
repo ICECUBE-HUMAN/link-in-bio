@@ -5,6 +5,8 @@
 	--grid-item-pop-distance: 8px;
 	--grid-item-pop-scale: 0.88;
 	--grid-item-pop-blur: 2px;
+	--grid-item-exit-duration: 180ms;
+	--grid-item-exit-ease: cubic-bezier(0.23, 1, 0.32, 1);
 	--grid-item-initial-duration: 240ms;
 	--grid-item-initial-ease: cubic-bezier(0.23, 1, 0.32, 1);
 	--grid-item-initial-distance: 8px;
@@ -108,6 +110,19 @@
 	opacity: 0;
 	transform: translateY(var(--grid-item-pop-distance))
 		scale(var(--grid-item-pop-scale));
+}
+
+/* Item exit motion mirrors the enter state and stays on compositor-friendly properties. */
+.grid-item-pop-in.is-exiting {
+	filter: blur(var(--grid-item-pop-blur));
+	opacity: 0;
+	transform: translateY(var(--grid-item-pop-distance))
+		scale(var(--grid-item-pop-scale));
+	transition:
+		opacity var(--grid-item-exit-duration) var(--grid-item-exit-ease),
+		transform var(--grid-item-exit-duration) var(--grid-item-exit-ease),
+		filter var(--grid-item-exit-duration) var(--grid-item-exit-ease);
+	will-change: transform, opacity, filter;
 }
 
 /* Initial page entrance stays lighter than the existing new-item pop-in. */
@@ -217,6 +232,7 @@
 @media (prefers-reduced-motion: reduce) {
 	.grid-item-pop-in,
 	.grid-item-initial-enter,
+	.grid-item-pop-in.is-exiting,
 	.grid-item-card,
 	.sinabro-grid-layout .react-grid-item,
 	.sinabro-grid-layout .react-grid-placeholder {
@@ -234,6 +250,12 @@
 	.grid-item-initial-enter.is-entering {
 		filter: none !important;
 		opacity: 1 !important;
+		transform: none !important;
+	}
+
+	.grid-item-pop-in.is-exiting {
+		filter: none !important;
+		opacity: 0 !important;
 		transform: none !important;
 	}
 }

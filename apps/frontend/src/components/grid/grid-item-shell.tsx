@@ -31,6 +31,7 @@ type GridItemShellProps = {
 	layout: ItemLayout;
 	isEntering?: boolean;
 	isInitialEntering?: boolean;
+	isExiting?: boolean;
 	enteringIndex?: number;
 	isAnyItemDragging?: boolean;
 	capabilities: ItemCapabilities;
@@ -51,6 +52,7 @@ export function GridItemShell({
 	layout,
 	isEntering = false,
 	isInitialEntering = false,
+	isExiting = false,
 	enteringIndex = 0,
 	isAnyItemDragging = false,
 	capabilities,
@@ -59,7 +61,10 @@ export function GridItemShell({
 }: GridItemShellProps) {
 	const hasContent = children !== null && children !== undefined;
 	const hasControls =
-		capabilities.controls.length > 0 && onCommand && !isAnyItemDragging;
+		capabilities.controls.length > 0 &&
+		onCommand &&
+		!isAnyItemDragging &&
+		!isExiting;
 	const ControlsView = getItemViewRegistration(item).controls;
 	const shellRef = useRef<HTMLDivElement>(null);
 	const hideControlsTimer = useRef<number | null>(null);
@@ -159,6 +164,7 @@ export function GridItemShell({
 				"grid-item-pop-in",
 				isEntering && "is-entering",
 				isInitialEntering && "grid-item-initial-enter",
+				isExiting && "is-exiting",
 				"transition-[z-index] hover:z-50 focus-within:z-50",
 			)}
 			onPointerEnter={() => {
