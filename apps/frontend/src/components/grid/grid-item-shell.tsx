@@ -176,7 +176,7 @@ export function GridItemShell({
 				data-grid-item-card="true"
 				className={cn(
 					"grid-item-card relative size-full overflow-hidden bg-background rounded-2xl shadow-sm",
-					item.type === "media" ? "ring-0 border-0 bg-none" : "ring-1 ring-black/5",
+					item.type === "media" ? "ring-0! border-0!" : "ring-1 ring-black/5",
 				)}
 			>
 				<div className="relative z-10 size-full min-h-0 rounded-[inherit]">
