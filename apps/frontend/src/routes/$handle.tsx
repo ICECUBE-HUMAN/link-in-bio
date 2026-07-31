@@ -24,7 +24,6 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { uploadPageItemMedia } from "@/lib/api/item-media-api";
-import { enrichPageItemMetadata } from "@/lib/api/link-metadata-api";
 import {
 	getMyPage,
 	getPageByHandleQueryOptions,
@@ -36,6 +35,8 @@ import { useGridEditorStore } from "@/lib/grid/editor-store";
 import type { Breakpoint } from "@/lib/grid/types";
 import { getPageLayoutClasses } from "@/lib/page/page-layout";
 import { getPageMode } from "@/lib/page/page-mode";
+import { useBreakpointTransition } from "@/lib/page/use-breakpoint-transition";
+import { useLinkMetadataEnrichment } from "@/lib/page/use-link-metadata-enrichment";
 import { usePageAutoSave } from "@/lib/page/use-page-auto-save";
 import { DEFAULT_APP_LOGO } from "@/lib/seo/metadata";
 
@@ -149,17 +150,7 @@ function HandlePageContent({
 	const [isAsideShown, setIsAsideShown] = useState(false);
 	const [previewBreakpoint, setPreviewBreakpoint] =
 		useState<Breakpoint>("wide");
-	const [breakpointTransition, setBreakpointTransition] = useState<
-		"idle" | "exit" | "frame" | "enter"
-	>("idle");
-	const pendingBreakpoint = useRef<Breakpoint | null>(null);
-	const isBreakpointTransitioning = useRef(false);
-	const breakpointTransitionTimer = useRef<number | null>(null);
 	const pageScrollRef = useRef<HTMLElement | null>(null);
-	const [enrichingItemIds, setEnrichingItemIds] = useState<ReadonlySet<string>>(
-		new Set(),
-	);
-	const enrichmentControllersRef = useRef(new Map<string, AbortController>());
 	const shouldReduceMotion = useReducedMotion();
 	const { draft, status, updateField } = usePageAutoSave({
 		page,
@@ -184,56 +175,20 @@ function HandlePageContent({
 		enabled: mode === "edit",
 		persistItems: true,
 	});
-
-	useEffect(() => {
-		return () => {
-			for (const controller of enrichmentControllersRef.current.values()) {
-				controller.abort();
-			}
-			enrichmentControllersRef.current.clear();
-		};
-	}, []);
-
-	async function enrichLinkItem(itemId: string, url: string) {
-		const controller = new AbortController();
-		enrichmentControllersRef.current.get(itemId)?.abort();
-		enrichmentControllersRef.current.set(itemId, controller);
-		setEnrichingItemIds((current) => new Set(current).add(itemId));
-
-		try {
-			const savedItems = await flushPendingChanges();
-			const savedItem = savedItems.find((item) => item.id === itemId);
-			if (
-				controller.signal.aborted ||
-				!savedItem ||
-				savedItem.type !== "link" ||
-				savedItem.data.url !== url
-			)
-				return;
-
-			const response = await enrichPageItemMetadata(
-				page.handle,
-				{ itemId, url },
-				controller.signal,
-			);
-			if (!controller.signal.aborted) replaceItemFromServer(response.item);
-		} catch (error) {
-			if (!(error instanceof Error && error.name === "AbortError")) {
-				toast.error(
-					error instanceof Error ? error.message : "Link metadata failed.",
-				);
-			}
-		} finally {
-			if (enrichmentControllersRef.current.get(itemId) === controller) {
-				enrichmentControllersRef.current.delete(itemId);
-				setEnrichingItemIds((current) => {
-					const next = new Set(current);
-					next.delete(itemId);
-					return next;
-				});
-			}
-		}
-	}
+	const { enrichingItemIds, enrichLinkItem } = useLinkMetadataEnrichment({
+		handle: page.handle,
+		flushPendingChanges,
+		replaceItemFromServer,
+	});
+	const {
+		breakpointTransition,
+		changeBreakpoint: handlePreviewBreakpointChange,
+	} = useBreakpointTransition({
+		previewBreakpoint,
+		setPreviewBreakpoint,
+		shouldReduceMotion,
+		flushPendingChanges,
+	});
 
 	useEffect(() => {
 		document.title = draft.name?.trim() || page.handle;
@@ -283,14 +238,6 @@ function HandlePageContent({
 		return () => cancelAnimationFrame(frame);
 	}, []);
 
-	useEffect(() => {
-		return () => {
-			if (breakpointTransitionTimer.current !== null) {
-				window.clearTimeout(breakpointTransitionTimer.current);
-			}
-		};
-	}, []);
-
 	useLayoutEffect(() => {
 		if (page.handle.length === 0) return;
 		const scrollContainer = pageScrollRef.current;
@@ -304,78 +251,6 @@ function HandlePageContent({
 
 		return () => window.cancelAnimationFrame(frame);
 	}, [page.handle]);
-
-	async function handlePreviewBreakpointChange(nextBreakpoint: Breakpoint) {
-		if (
-			nextBreakpoint === previewBreakpoint ||
-			breakpointTransition !== "idle" ||
-			isBreakpointTransitioning.current
-		)
-			return;
-
-		if (shouldReduceMotion) {
-			await flushPendingChanges();
-			setPreviewBreakpoint(nextBreakpoint);
-			return;
-		}
-
-		isBreakpointTransitioning.current = true;
-		pendingBreakpoint.current = nextBreakpoint;
-
-		try {
-			await flushPendingChanges();
-			setBreakpointTransition("exit");
-
-			const fadeValue = getComputedStyle(document.documentElement)
-				.getPropertyValue("--breakpoint-fade-dur")
-				.trim();
-			const fadeDuration = fadeValue.endsWith("ms")
-				? Number.parseFloat(fadeValue)
-				: fadeValue.endsWith("s")
-					? Number.parseFloat(fadeValue) * 1000
-					: Number.parseFloat(fadeValue);
-			const transitionDuration = Number.isFinite(fadeDuration)
-				? fadeDuration + 50
-				: 550;
-			const frameValue = getComputedStyle(document.documentElement)
-				.getPropertyValue("--breakpoint-frame-dur")
-				.trim();
-			const frameDuration = frameValue.endsWith("ms")
-				? Number.parseFloat(frameValue)
-				: frameValue.endsWith("s")
-					? Number.parseFloat(frameValue) * 1000
-					: Number.parseFloat(frameValue);
-			const frameTransitionDuration = Number.isFinite(frameDuration)
-				? frameDuration + 50
-				: 400;
-
-			breakpointTransitionTimer.current = window.setTimeout(() => {
-				const breakpoint = pendingBreakpoint.current;
-				if (!breakpoint) return;
-
-				pendingBreakpoint.current = null;
-				setPreviewBreakpoint(breakpoint);
-				setBreakpointTransition("frame");
-				breakpointTransitionTimer.current = window.setTimeout(() => {
-					setBreakpointTransition("enter");
-					breakpointTransitionTimer.current = window.setTimeout(() => {
-						breakpointTransitionTimer.current = null;
-						isBreakpointTransitioning.current = false;
-						setBreakpointTransition("idle");
-					}, transitionDuration);
-				}, frameTransitionDuration);
-			}, transitionDuration);
-		} catch (error) {
-			if (breakpointTransitionTimer.current !== null) {
-				window.clearTimeout(breakpointTransitionTimer.current);
-				breakpointTransitionTimer.current = null;
-			}
-			pendingBreakpoint.current = null;
-			isBreakpointTransitioning.current = false;
-			setBreakpointTransition("idle");
-			throw error;
-		}
-	}
 
 	const layoutClasses = getPageLayoutClasses(previewBreakpoint);
 	const isCompactPreview = previewBreakpoint === "compact";
@@ -411,7 +286,7 @@ function HandlePageContent({
 								initialImage={draft.image}
 								handle={page.handle}
 								mode={mode}
-								breakpoint={previewBreakpoint as Breakpoint}
+								breakpoint={previewBreakpoint}
 								onImageChange={(image) => updateField("image", image)}
 							/>
 						</div>

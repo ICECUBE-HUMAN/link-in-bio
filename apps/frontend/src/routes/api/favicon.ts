@@ -1,4 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { env } from "@/env";
+
+const MAX_IMAGE_BYTES = 256 * 1024;
+
+function isAllowedImageUrl(imageUrl: URL, requestUrl: URL) {
+	if (imageUrl.origin === requestUrl.origin) {
+		return imageUrl.pathname === "/favicon.ico";
+	}
+
+	if (!env.VITE_R2_PUBLIC_URL) return false;
+
+	try {
+		return imageUrl.origin === new URL(env.VITE_R2_PUBLIC_URL).origin;
+	} catch {
+		return false;
+	}
+}
 
 function escapeXml(value: string) {
 	return value.replace(
@@ -46,10 +63,32 @@ export const Route = createFileRoute("/api/favicon")({
 				if (imageUrl.protocol !== "http:" && imageUrl.protocol !== "https:") {
 					return new Response("Invalid image.", { status: 400 });
 				}
+				if (!isAllowedImageUrl(imageUrl, requestUrl)) {
+					return new Response("Invalid image.", { status: 400 });
+				}
 
-				const imageResponse = await fetch(imageUrl);
+				let imageResponse: Response;
+				try {
+					imageResponse = await fetch(imageUrl, {
+						signal: AbortSignal.timeout(3000),
+						redirect: "error",
+					});
+				} catch {
+					return new Response("Image unavailable.", { status: 502 });
+				}
 				if (!imageResponse.ok) {
 					return new Response("Image unavailable.", { status: 502 });
+				}
+				const contentLength = Number.parseInt(
+					imageResponse.headers.get("content-length") ?? "",
+					10,
+				);
+				if (
+					!Number.isSafeInteger(contentLength) ||
+					contentLength < 1 ||
+					contentLength > MAX_IMAGE_BYTES
+				) {
+					return new Response("Image is too large.", { status: 413 });
 				}
 
 				const contentType = imageResponse.headers
@@ -60,9 +99,11 @@ export const Route = createFileRoute("/api/favicon")({
 					return new Response("Invalid image.", { status: 400 });
 				}
 
-				const imageData = `data:${contentType};base64,${toBase64(
-					new Uint8Array(await imageResponse.arrayBuffer()),
-				)}`;
+				const imageBytes = new Uint8Array(await imageResponse.arrayBuffer());
+				if (imageBytes.byteLength > MAX_IMAGE_BYTES) {
+					return new Response("Image is too large.", { status: 413 });
+				}
+				const imageData = `data:${contentType};base64,${toBase64(imageBytes)}`;
 				const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
 <defs><clipPath id="circle"><circle cx="32" cy="32" r="32" /></clipPath></defs>
 <image href="${escapeXml(imageData)}" width="64" height="64" preserveAspectRatio="xMidYMid slice" clip-path="url(#circle)" />
