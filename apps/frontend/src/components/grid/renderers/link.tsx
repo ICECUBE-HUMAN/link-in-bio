@@ -6,6 +6,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import type { ItemRendererProps } from "@/lib/grid/item-registry";
 import type { GridItemByType, PresetName } from "@/lib/grid/types";
+import {
+	getConfiguredLinkProviderPresentation,
+	getLinkCardThemeStyle,
+} from "@/lib/link/provider-presentation";
 import type { PageMode } from "@/lib/page/page-mode";
 import { cn } from "@/lib/utils";
 
@@ -19,22 +23,30 @@ function getHostname(url: string): string {
 
 function getProviderFallback(url: string) {
 	const presentation = getLinkProviderPresentation(url);
-	const classNameByTone = {
-		github: "bg-neutral-900 text-white",
-		youtube: "bg-red-500 text-white",
-		instagram:
-			"bg-[linear-gradient(135deg,#f58529,#feda77,#dd2a7b,#8134af,#515bd4)] text-white",
-		x: "bg-black text-white",
-		notion: "bg-white text-black border border-border/70",
-		neutral: "bg-muted text-foreground",
-	} as const;
+	const providerPresentation = getConfiguredLinkProviderPresentation(
+		presentation.id,
+	);
 	return {
 		label: presentation.label,
-		className: classNameByTone[presentation.fallbackTone],
+		...(providerPresentation ?? {}),
 	};
 }
 
-function LinkAction({ href }: { href: string }) {
+function LinkAction({
+	href,
+	label,
+	actionBackground,
+	actionText,
+	actionVariant,
+	className,
+}: {
+	href: string;
+	label: string;
+	actionBackground?: string;
+	actionText?: string;
+	actionVariant?: "solid" | "outline";
+	className?: string;
+}) {
 	return (
 		<Button
 			render={
@@ -42,16 +54,32 @@ function LinkAction({ href }: { href: string }) {
 					href={href}
 					target="_blank"
 					rel="noreferrer"
-					aria-label="Open link"
+					aria-label={label}
 					className="font-light!"
 				>
-					<span>Open</span>
+					<span>{label}</span>
 				</a>
 			}
 			nativeButton={false}
-			variant="secondary"
+			variant={
+				actionVariant === "outline"
+					? "outline"
+					: actionBackground && actionText
+						? "default"
+						: "secondary"
+			}
 			size="sm"
-			className="cursor-pointer! self-start shrink-0 text-sm rounded-md border border-border bg-[#f6f8fa] hover:bg-[#f6f8fa]/80"
+			style={
+				actionBackground && actionText
+					? { backgroundColor: actionBackground, color: actionText }
+					: undefined
+			}
+			className={cn(
+				"cursor-pointer! self-start shrink-0 rounded-md text-sm",
+				!actionBackground &&
+					"border border-border bg-[#f6f8fa] hover:bg-[#f6f8fa]/80",
+				className,
+			)}
 		/>
 	);
 }
@@ -66,9 +94,8 @@ function LinkBadge({
 	const fallback = getProviderFallback(url);
 	const isMailto = url.toLowerCase().startsWith("mailto:");
 	const className = cn(
-		"inline-flex size-8 shrink-0 cursor-pointer! items-center justify-center overflow-hidden rounded-full bg-muted transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+		"inline-flex size-8 shrink-0 cursor-pointer! items-center justify-center overflow-hidden rounded-md bg-muted transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
 		!faviconUrl && "size-11 rounded-2xl px-2 text-center text-xs font-semibold",
-		!faviconUrl && fallback.className,
 		isMailto && "bg-brand text-primary-foreground",
 	);
 
@@ -108,6 +135,9 @@ function LinkBadge({
 			rel="noreferrer"
 			aria-label={`Open ${fallback.label}`}
 			className={className}
+			style={
+				!faviconUrl ? { backgroundColor: fallback.cardBackground } : undefined
+			}
 		>
 			<span className="sr-only">{fallback.label}</span>
 		</a>
@@ -135,10 +165,8 @@ function LinkPreview({
 
 	return (
 		<div
-			className={cn(
-				"flex size-full items-center justify-center px-4 text-center text-lg font-semibold tracking-tight",
-				fallback.className,
-			)}
+			className="flex size-full items-center justify-center px-4 text-center text-lg font-semibold tracking-tight"
+			style={{ backgroundColor: fallback.cardBackground }}
 		>
 			{/*{fallback.label}*/}
 		</div>
@@ -183,6 +211,11 @@ function LinkTitle({
 			aria-label="Link title"
 			rows={1}
 			value={value}
+			style={
+				isHalfBanner || isLandscape
+					? { fieldSizing: "fixed", width: "100%" }
+					: undefined
+			}
 			wrap={isHalfBanner ? "off" : "soft"}
 			onChange={(event) => setValue(event.target.value)}
 			onBlur={(event) => {
@@ -195,7 +228,8 @@ function LinkTitle({
 				if (nextValue) onCommit(nextValue);
 			}}
 			className={cn(
-				"block min-h-0 w-full min-w-24 max-w-full resize-none rounded-sm border-0 bg-transparent px-1 py-0 text-sm font-normal wrap-break-wordtext-foreground outline-none focus-visible:ring-0 focus-visible:bg-input/60 hover:bg-input/60",
+				"link-title-input block min-h-0 w-full min-w-24 max-w-full resize-none rounded-sm border-0 bg-transparent px-1 py-0 text-sm font-normal wrap-break-wordtext-foreground outline-none focus-visible:ring-0",
+				(isHalfBanner || isLandscape) && "field-sizing-fixed",
 				isHalfBanner
 					? "h-8 max-h-8 overflow-hidden whitespace-nowrap leading-8"
 					: "max-h-full overflow-x-hidden overflow-y-auto leading-6",
@@ -230,7 +264,18 @@ export function LinkItemRenderer({
 	const faviconUrl = item.data.metadata?.faviconUrl;
 	const imageUrl = item.data.metadata?.imageUrl;
 	const provider = getLinkProviderPresentation(item.data.url).id;
+	const providerPresentation = getConfiguredLinkProviderPresentation(provider);
 	const shouldShowLinkAction = provider !== "generic-web";
+	const linkActionProps = {
+		label:
+			providerPresentation?.actionLabel ??
+			(provider === "mailto" ? "Send" : "Open"),
+		actionBackground: providerPresentation?.actionBackground,
+		actionText: providerPresentation?.actionText,
+		actionVariant: providerPresentation?.actionVariant,
+	};
+	const cardClassName = providerPresentation && "link-card-themed";
+	const cardStyle = getLinkCardThemeStyle(provider);
 	const updateTitle = (value: string) => {
 		onCommand?.({
 			type: "update-data",
@@ -251,7 +296,9 @@ export function LinkItemRenderer({
 				className={cn(
 					"flex size-full min-h-0 gap-1 p-4",
 					isHalfBannerPreset(preset) ? "items-center" : "flex-col items-start",
+					cardClassName,
 				)}
+				style={cardStyle}
 			>
 				<LinkBadge faviconUrl={faviconUrl} url={item.data.url} />
 				<div
@@ -269,6 +316,15 @@ export function LinkItemRenderer({
 						onCommit={updateTitle}
 					/>
 				</div>
+				{shouldShowLinkAction && (
+					<LinkAction
+						href={item.data.url}
+						{...linkActionProps}
+						className={
+							isHalfBannerPreset(preset) ? "self-stretch h-full" : undefined
+						}
+					/>
+				)}
 			</div>
 		);
 	}
@@ -277,6 +333,7 @@ export function LinkItemRenderer({
 		<div
 			className={cn(
 				"flex min-h-0 min-w-0 flex-col items-start gap-2",
+				isLandscapePreset(preset) && "items-stretch",
 				isLandscapePreset(preset)
 					? "flex-[4]"
 					: isTallPreset(preset)
@@ -286,11 +343,14 @@ export function LinkItemRenderer({
 					"justify-between",
 				isLandscapePreset(preset) && "h-full",
 				isTallPreset(preset) && "items-stretch",
+				cardClassName,
 			)}
+			style={cardStyle}
 		>
 			<div
 				className={cn(
 					"flex min-h-0 min-w-0 flex-col items-start gap-1",
+					isLandscapePreset(preset) && "w-full",
 					(isLandscapePreset(preset) || isTallPreset(preset)) && "flex-1",
 					isTallPreset(preset) && "items-stretch",
 				)}
@@ -303,13 +363,21 @@ export function LinkItemRenderer({
 					onCommit={updateTitle}
 				/>
 			</div>
-			{shouldShowLinkAction && <LinkAction href={item.data.url} />}
+			{shouldShowLinkAction && (
+				<LinkAction href={item.data.url} {...linkActionProps} />
+			)}
 		</div>
 	);
 
 	if (isLandscapePreset(preset)) {
 		return (
-			<div className="flex size-full flex-row-reverse items-stretch gap-3 p-4">
+			<div
+				className={cn(
+					"flex size-full flex-row-reverse items-stretch gap-3 p-4",
+					cardClassName,
+				)}
+				style={cardStyle}
+			>
 				<div className="relative min-h-0 min-w-0 flex-[3] overflow-hidden rounded-lg bg-muted">
 					<LinkPreview
 						imageUrl={imageUrl}
@@ -324,7 +392,13 @@ export function LinkItemRenderer({
 
 	if (isTallPreset(preset)) {
 		return (
-			<div className="flex size-full min-h-0 flex-col gap-3 p-4">
+			<div
+				className={cn(
+					"flex size-full min-h-0 flex-col gap-3 p-4",
+					cardClassName,
+				)}
+				style={cardStyle}
+			>
 				{content}
 				<div className="relative min-h-0 flex-[2] overflow-hidden rounded-lg bg-muted">
 					<LinkPreview

@@ -1,3 +1,4 @@
+import { getLinkProviderPresentation } from "@sinabro/api";
 import {
 	type CSSProperties,
 	type ReactNode,
@@ -13,6 +14,7 @@ import type {
 } from "@/lib/grid/item-registry";
 import { getItemViewRegistration } from "@/lib/grid/item-registry";
 import type { GridItem, ItemLayout } from "@/lib/grid/types";
+import { getLinkCardThemeStyle } from "@/lib/link/provider-presentation";
 import { cn } from "@/lib/utils";
 
 export const GRID_ITEM_DRAG_CANCEL_SELECTOR = [
@@ -45,6 +47,12 @@ function RuntimeFallback({ item }: { item: GridItem }) {
 			Unsupported {item.type} item
 		</div>
 	);
+}
+
+function getCardThemeStyle(item: GridItem): CSSProperties | undefined {
+	if (item.type !== "link") return undefined;
+	const provider = getLinkProviderPresentation(item.data.url).id;
+	return getLinkCardThemeStyle(provider);
 }
 
 export function GridItemShell({
@@ -82,6 +90,7 @@ export function GridItemShell({
 			? `${Math.min(enteringIndex * 40, 280)}ms`
 			: "0ms",
 	} as CSSProperties;
+	const cardThemeStyle = getCardThemeStyle(item);
 
 	useEffect(() => {
 		setIsMounted(true);
@@ -182,8 +191,10 @@ export function GridItemShell({
 				data-grid-item-card="true"
 				className={cn(
 					"grid-item-card relative size-full overflow-hidden bg-background rounded-2xl shadow-sm",
+					cardThemeStyle && "link-card-themed",
 					item.type === "media" ? "ring-0! border-0!" : "ring-1 ring-black/5",
 				)}
+				style={cardThemeStyle}
 			>
 				<div className="relative z-10 size-full min-h-0 rounded-[inherit]">
 					{hasContent ? children : <RuntimeFallback item={item} />}

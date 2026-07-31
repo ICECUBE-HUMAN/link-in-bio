@@ -20,7 +20,10 @@ import {
 } from "@/components/grid/grid-item-shell";
 import { ItemRenderer } from "@/components/grid/item-renderer";
 import { useGridDragMotion } from "@/hooks/use-grid-drag-motion";
-import { createGridDemoItems } from "@/lib/grid/grid-demo-data";
+import {
+	createGridDemoItems,
+	createLinkProviderDemoItems,
+} from "@/lib/grid/grid-demo-data";
 import {
 	resolveDraggedLayout,
 	toLayoutMap as toGridLayoutMap,
@@ -80,6 +83,7 @@ export function GridSection({
 		new Map(items.map((item) => [item.id, item])),
 	);
 	const [demoItemCount, setDemoItemCount] = useState(0);
+	const [showLinkProviderDemo, setShowLinkProviderDemo] = useState(false);
 	const [exitingItems, setExitingItems] = useState<
 		ReadonlyMap<string, GridItem>
 	>(new Map());
@@ -97,13 +101,15 @@ export function GridSection({
 		getDesktopLayoutServerSnapshot,
 	);
 	const dragMotion = useGridDragMotion();
-	const renderedItems = useMemo(
-		() =>
-			demoItemCount > 0
-				? [...items, ...createGridDemoItems(items, demoItemCount)]
-				: items,
-		[demoItemCount, items],
-	);
+	const renderedItems = useMemo(() => {
+		const gridDemoItems =
+			demoItemCount > 0 ? createGridDemoItems(items, demoItemCount) : [];
+		const itemsWithGridDemo = [...items, ...gridDemoItems];
+		const providerDemoItems = showLinkProviderDemo
+			? createLinkProviderDemoItems(itemsWithGridDemo)
+			: [];
+		return [...itemsWithGridDemo, ...providerDemoItems];
+	}, [demoItemCount, items, showLinkProviderDemo]);
 	const displayItems = useMemo(() => {
 		const renderedItemIds = new Set(renderedItems.map((item) => item.id));
 		return [
@@ -124,6 +130,10 @@ export function GridSection({
 		const count = Number.parseInt(value ?? "", 10);
 		if (Number.isFinite(count))
 			setDemoItemCount(Math.min(Math.max(count, 0), 48));
+		setShowLinkProviderDemo(
+			new URLSearchParams(window.location.search).get("link-demo") ===
+				"providers",
+		);
 	}, []);
 
 	useEffect(() => {
