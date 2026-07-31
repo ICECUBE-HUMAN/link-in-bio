@@ -1,11 +1,6 @@
 import { getLinkProviderPresentation } from "@sinabro/api";
 import { AnimatePresence, motion } from "motion/react";
-import {
-	type MouseEvent,
-	useEffect,
-	useState,
-	useSyncExternalStore,
-} from "react";
+import { useEffect, useState } from "react";
 import { Envelope } from "reicon-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,14 +11,6 @@ import {
 	getConfiguredLinkProviderPresentation,
 	getLinkCardThemeStyle,
 } from "@/lib/link/provider-presentation";
-import {
-	getSpotifyPlayableUrl,
-	getSpotifyPlaybackSnapshot,
-	playSpotify,
-	prepareSpotifyEmbed,
-	stopSpotify,
-	subscribeToSpotifyPlayback,
-} from "@/lib/link/spotify-embed";
 import type { PageMode } from "@/lib/page/page-mode";
 import { cn } from "@/lib/utils";
 
@@ -93,7 +80,6 @@ function LinkAction({
 	actionText,
 	actionVariant,
 	className,
-	onClick,
 }: {
 	href: string;
 	label: string;
@@ -101,7 +87,6 @@ function LinkAction({
 	actionText?: string;
 	actionVariant?: "solid" | "outline";
 	className?: string;
-	onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
 }) {
 	return (
 		<Button
@@ -111,7 +96,6 @@ function LinkAction({
 					target="_blank"
 					rel="noreferrer"
 					aria-label={label}
-					onClick={onClick}
 					className="font-light!"
 				>
 					<span>{label}</span>
@@ -132,104 +116,11 @@ function LinkAction({
 					: undefined
 			}
 			className={cn(
-				"cursor-pointer! self-start shrink-0 rounded-md px-4 text-sm",
+				"cursor-pointer! self-start shrink-0 rounded-md px-3 text-sm",
 				!actionBackground &&
 					"border border-border bg-[#f6f8fa] hover:bg-[#f6f8fa]/80",
 				className,
 			)}
-		/>
-	);
-}
-
-function SpotifyPlayAction({
-	href,
-	label,
-	actionBackground,
-	actionText,
-	actionVariant,
-	className,
-}: {
-	href: string;
-	label: string;
-	actionBackground?: string;
-	actionText?: string;
-	actionVariant?: "solid" | "outline";
-	className?: string;
-}) {
-	const playableUrl = getSpotifyPlayableUrl(href);
-	const playback = useSyncExternalStore(
-		subscribeToSpotifyPlayback,
-		getSpotifyPlaybackSnapshot,
-		getSpotifyPlaybackSnapshot,
-	);
-	const isPlaying = playback.isPlaying && playback.url === playableUrl;
-
-	useEffect(() => {
-		if (playableUrl) prepareSpotifyEmbed(playableUrl);
-	}, [playableUrl]);
-
-	if (!playableUrl) {
-		return (
-			<LinkAction
-				href={href}
-				label={isPlaying ? "Stop" : label}
-				actionBackground={actionBackground}
-				actionText={actionText}
-				actionVariant={actionVariant}
-				className={className}
-			/>
-		);
-	}
-
-	return (
-		<LinkAction
-			href={href}
-			label={isPlaying ? "Stop" : label}
-			actionBackground={actionBackground}
-			actionText={actionText}
-			actionVariant={actionVariant}
-			className={className}
-			onClick={(event) => {
-				event.preventDefault();
-				if (isPlaying) stopSpotify();
-				else playSpotify(playableUrl);
-			}}
-		/>
-	);
-}
-
-function ProviderLinkAction({
-	href,
-	label,
-	actionBackground,
-	actionText,
-	actionVariant,
-	className,
-}: {
-	href: string;
-	label: string;
-	actionBackground?: string;
-	actionText?: string;
-	actionVariant?: "solid" | "outline";
-	className?: string;
-}) {
-	return getSpotifyPlayableUrl(href) ? (
-		<SpotifyPlayAction
-			href={href}
-			label={label}
-			actionBackground={actionBackground}
-			actionText={actionText}
-			actionVariant={actionVariant}
-			className={className}
-		/>
-	) : (
-		<LinkAction
-			href={href}
-			label={label}
-			actionBackground={actionBackground}
-			actionText={actionText}
-			actionVariant={actionVariant}
-			className={className}
 		/>
 	);
 }
@@ -494,7 +385,7 @@ export function LinkItemRenderer({
 				>
 					{leadingContent}
 					{shouldShowLinkAction && (
-						<ProviderLinkAction
+						<LinkAction
 							href={actionHref}
 							{...linkActionProps}
 							className={
@@ -541,7 +432,7 @@ export function LinkItemRenderer({
 					/>
 				</div>
 				{shouldShowLinkAction && (
-					<ProviderLinkAction href={actionHref} {...linkActionProps} />
+					<LinkAction href={actionHref} {...linkActionProps} />
 				)}
 			</div>
 		);
