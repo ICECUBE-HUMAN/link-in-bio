@@ -1,5 +1,6 @@
 import {
 	createInitialLinkMetadata,
+	getLinkProviderIconObjectKey,
 	type PageItemLinkMetadata,
 	type PageItemUpsert,
 	pageItemLinkDataSchema,
@@ -10,6 +11,7 @@ export {
 	normalizeLinkUrl,
 } from "@sinabro/api";
 
+import { getPublicR2ObjectUrl } from "@core/r2";
 import type { DatabaseClient } from "@db/index";
 import { pageItems } from "@db/schema";
 import { and, eq } from "drizzle-orm";
@@ -87,6 +89,7 @@ export async function enrichPageItemMetadata({
 	userId,
 	itemId,
 	url,
+	publicBaseUrl,
 	fetch,
 }: {
 	db: DatabaseClient;
@@ -94,6 +97,7 @@ export async function enrichPageItemMetadata({
 	userId: string;
 	itemId: string;
 	url: string;
+	publicBaseUrl?: string;
 	fetch: (
 		input: RequestInfo | URL,
 		init?: RequestInit,
@@ -137,11 +141,29 @@ export async function enrichPageItemMetadata({
 			new URL(url),
 			{ fetch },
 		);
+	const iconObjectKey =
+		getLinkProviderIconObjectKey(
+			provider.id,
+		);
+	const providerIconUrl = iconObjectKey
+		? getPublicR2ObjectUrl(
+				publicBaseUrl,
+				iconObjectKey,
+			)
+		: undefined;
 	const data = {
 		...currentData,
 		metadata: mergeMetadata(
 			currentData.metadata,
-			enriched,
+			{
+				...enriched,
+				...(providerIconUrl
+					? {
+							faviconUrl:
+								providerIconUrl,
+						}
+					: undefined),
+			},
 		),
 	};
 	data.metadata = mergeMetadata(

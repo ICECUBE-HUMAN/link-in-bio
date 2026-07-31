@@ -221,6 +221,14 @@ export const getItemMediaUrl = (
 ) =>
 	publicBaseUrl &&
 	isItemMediaKey(objectKey)
+		? getPublicR2ObjectUrl(publicBaseUrl, objectKey)
+		: undefined;
+
+export const getPublicR2ObjectUrl = (
+	publicBaseUrl: string | undefined,
+	objectKey: string,
+) =>
+	publicBaseUrl
 		? `${publicBaseUrl.replace(/\/+$/, "")}/${objectKey.split("/").map(encodeURIComponent).join("/")}`
 		: undefined;
 

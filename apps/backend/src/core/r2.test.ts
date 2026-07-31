@@ -7,6 +7,7 @@ import {
 	createItemMediaKey,
 	createProfileImageKey,
 	getItemMediaUrl,
+	getPublicR2ObjectUrl,
 	isItemMediaKey,
 	isProfileImageKey,
 	MAX_ITEM_MEDIA_SIZE,
@@ -88,6 +89,17 @@ describe("item media R2 boundaries", () => {
 			),
 		).toBe(
 			"https://cdn.example.com/users/user_1/page_1/file%20name.png",
+		);
+	});
+
+	it("maps trusted public assets without applying item-media restrictions", () => {
+		expect(
+			getPublicR2ObjectUrl(
+				"https://cdn.example.com/",
+				"assets/link-provider-icon/buy-me-a-coffee.svg",
+			),
+		).toBe(
+			"https://cdn.example.com/assets/link-provider-icon/buy-me-a-coffee.svg",
 		);
 	});
 });

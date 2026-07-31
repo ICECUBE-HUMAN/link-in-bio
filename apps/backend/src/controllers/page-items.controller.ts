@@ -62,6 +62,8 @@ export const pageItemsController =
 						itemId:
 							parsed.output.itemId,
 						url: parsed.output.url,
+						publicBaseUrl:
+							c.env?.R2_PUBLIC_URL,
 						fetch: (input, init) =>
 							fetch(input, init),
 					});

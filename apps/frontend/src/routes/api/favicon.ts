@@ -71,7 +71,6 @@ export const Route = createFileRoute("/api/favicon")({
 				try {
 					imageResponse = await fetch(imageUrl, {
 						signal: AbortSignal.timeout(3000),
-						redirect: "error",
 					});
 				} catch {
 					return new Response("Image unavailable.", { status: 502 });

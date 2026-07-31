@@ -4,8 +4,25 @@ export type LinkProviderId =
 	| "mailto"
 	| "github"
 	| "youtube"
+	| "discord"
 	| "instagram"
 	| "x"
+	| "spotify"
+	| "threads"
+	| "buy-me-a-coffee"
+	| "linkedin"
+	| "chzzk"
+	| "figma"
+	| "ko-fi"
+	| "gumroad"
+	| "medium"
+	| "patreon"
+	| "product-hunt"
+	| "reddit"
+	| "tiktok"
+	| "twitch"
+	| "behance"
+	| "dribbble"
 	| "notion"
 	| "generic-web";
 
@@ -48,6 +65,13 @@ export const linkProviderDefinitions: readonly LinkProviderDefinition[] = [
 		match: (url) => url.hostname.includes("youtube"),
 	},
 	{
+		id: "discord",
+		label: "Discord",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) => url.hostname.includes("discord"),
+	},
+	{
 		id: "instagram",
 		label: "Instagram",
 		priority: 0,
@@ -61,6 +85,118 @@ export const linkProviderDefinitions: readonly LinkProviderDefinition[] = [
 		fallbackTone: "x",
 		match: (url) =>
 			url.hostname.includes("x.com") || url.hostname.includes("twitter"),
+	},
+	{
+		id: "spotify",
+		label: "Spotify",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) => url.hostname.includes("spotify"),
+	},
+	{
+		id: "threads",
+		label: "Threads",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) => url.hostname.includes("threads"),
+	},
+	{
+		id: "buy-me-a-coffee",
+		label: "Buy Me a Coffee",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) => url.hostname.includes("buymeacoffee"),
+	},
+	{
+		id: "linkedin",
+		label: "LinkedIn",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) => url.hostname.includes("linkedin"),
+	},
+	{
+		id: "chzzk",
+		label: "CHZZK",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) => url.hostname.includes("chzzk"),
+	},
+	{
+		id: "figma",
+		label: "Figma",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) => url.hostname.includes("figma"),
+	},
+	{
+		id: "ko-fi",
+		label: "Ko-fi",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) => url.hostname.includes("ko-fi"),
+	},
+	{
+		id: "gumroad",
+		label: "Gumroad",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) => url.hostname.includes("gumroad"),
+	},
+	{
+		id: "medium",
+		label: "Medium",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) => url.hostname.includes("medium"),
+	},
+	{
+		id: "patreon",
+		label: "Patreon",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) => url.hostname.includes("patreon"),
+	},
+	{
+		id: "product-hunt",
+		label: "Product Hunt",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) => url.hostname.includes("producthunt"),
+	},
+	{
+		id: "reddit",
+		label: "Reddit",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) => url.hostname.includes("reddit"),
+	},
+	{
+		id: "tiktok",
+		label: "TikTok",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) => url.hostname.includes("tiktok"),
+	},
+	{
+		id: "twitch",
+		label: "Twitch",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) => url.hostname.includes("twitch"),
+	},
+	{
+		id: "behance",
+		label: "Behance",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) => url.hostname.includes("behance"),
+	},
+	{
+		id: "dribbble",
+		label: "Dribbble",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) => url.hostname.includes("dribbble"),
 	},
 	{
 		id: "notion",
@@ -77,6 +213,39 @@ export const linkProviderDefinitions: readonly LinkProviderDefinition[] = [
 		match: (url) => url.protocol === "https:",
 	},
 ];
+
+export const linkProviderIconObjectKeys = {
+	youtube: "assets/link-provider-icon/youtube.svg",
+	discord: "assets/link-provider-icon/discord.svg",
+	github: "assets/link-provider-icon/github.svg",
+	x: "assets/link-provider-icon/x.svg",
+	spotify: "assets/link-provider-icon/spotify.svg",
+	threads: "assets/link-provider-icon/threads.svg",
+	instagram: "assets/link-provider-icon/instagram.svg",
+	"buy-me-a-coffee": "assets/link-provider-icon/buy-me-a-coffee.svg",
+	linkedin: "assets/link-provider-icon/linkedin.svg",
+	chzzk: "assets/link-provider-icon/chzzk.svg",
+	figma: "assets/link-provider-icon/figma.svg",
+	"ko-fi": "assets/link-provider-icon/ko-fi.svg",
+	gumroad: "assets/link-provider-icon/gumroad.svg",
+	medium: "assets/link-provider-icon/medium.svg",
+	patreon: "assets/link-provider-icon/patreon.svg",
+	"product-hunt": "assets/link-provider-icon/product-hunt.svg",
+	reddit: "assets/link-provider-icon/reddit.svg",
+	tiktok: "assets/link-provider-icon/tiktok.svg",
+	twitch: "assets/link-provider-icon/twitch.svg",
+	behance: "assets/link-provider-icon/behance.svg",
+	dribbble: "assets/link-provider-icon/dribbble.svg",
+} satisfies Partial<Record<LinkProviderId, string>>;
+
+export function getLinkProviderIconObjectKey(
+	provider: string,
+): string | undefined {
+	if (!(provider in linkProviderIconObjectKeys)) return undefined;
+	return linkProviderIconObjectKeys[
+		provider as keyof typeof linkProviderIconObjectKeys
+	];
+}
 
 export function resolveLinkProviderDefinition(
 	url: URL,
