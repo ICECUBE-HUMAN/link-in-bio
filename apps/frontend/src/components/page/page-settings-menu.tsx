@@ -250,7 +250,7 @@ function ChangeHandleView({
 	useEffect(() => {
 		setError(null);
 		if (handle.trim().toLowerCase() === currentHandle) {
-			setAvailability({ handle: currentHandle, available: true, reason: null });
+			setAvailability(null);
 			setIsChecking(false);
 			return;
 		}
@@ -373,7 +373,7 @@ function ChangeHandleView({
 						align="inline-end"
 						data-state={status.availabilityState}
 						id="handle-status"
-						className="size-10 data-[state=available]:text-green-500 data-[state=duplicate]:text-destructive"
+						className="size-10 data-[state=available]:text-green-500 data-[state=duplicate]:text-destructive pr-1"
 					>
 						{HandleAvailabilityIcon}
 					</InputGroupAddon>
