@@ -174,9 +174,12 @@ export function GridItemShell({
 		>
 			<div
 				data-grid-item-card="true"
-				className="grid-item-card relative size-full overflow-hidden rounded-2xl bg-background shadow-sm ring-1 ring-black/5"
+				className={cn(
+					"grid-item-card relative size-full overflow-hidden bg-background rounded-2xl shadow-sm",
+					item.type === "media" ? "ring-0! border-0!" : "ring-1 ring-black/5",
+				)}
 			>
-				<div className="relative z-10 size-full min-h-0">
+				<div className="relative z-10 size-full min-h-0 rounded-[inherit]">
 					{hasContent ? children : <RuntimeFallback item={item} />}
 				</div>
 			</div>
@@ -185,7 +188,7 @@ export function GridItemShell({
 						<div
 							data-grid-item-drag-cancel="true"
 							className={cn(
-								"pointer-events-none fixed z-[99999] -translate-x-1/2",
+								"pointer-events-none fixed z-99999 -translate-x-1/2",
 								"transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]",
 								controlsOpen ? "opacity-100" : "opacity-0",
 							)}

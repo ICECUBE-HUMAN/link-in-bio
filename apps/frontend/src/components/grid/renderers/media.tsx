@@ -1,13 +1,13 @@
+import { Input } from "@/components/ui/input";
 import type { ItemRendererProps } from "@/lib/grid/item-registry";
 import type { GridItemByType } from "@/lib/grid/types";
 import { cn } from "@/lib/utils";
+import { CircleArrowRightUp } from "reicon-react";
 
 function MediaAction({
 	href,
-	label,
 }: {
 	href: string | undefined;
-	label: string;
 }) {
 	if (!href) {
 		return null;
@@ -18,16 +18,15 @@ function MediaAction({
 			href={href}
 			target="_blank"
 			rel="noreferrer"
-			className="pointer-events-auto inline-flex h-8 shrink-0 items-center justify-center rounded-full bg-black/70 px-3 text-xs font-medium text-white transition-colors hover:bg-black/80"
+			className="cursor-pointer! inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-white/60 text-xs font-medium text-white transition-colors hover:bg-white"
 		>
-			{label}
+		  <CircleArrowRightUp size={28} weight="Filled" className="text-black!"/>
 		</a>
 	);
 }
 
 export function MediaItemRenderer({
 	item,
-	preset,
 	mode,
 	onCommand,
 }: ItemRendererProps<GridItemByType<"media">>) {
@@ -35,7 +34,7 @@ export function MediaItemRenderer({
 	const hasMedia = Boolean(item.data.mediaUrl);
 
 	return (
-		<div className="relative size-full overflow-hidden bg-muted">
+		<div className="relative size-full overflow-hidden rounded-[inherit] bg-muted surface-line">
 			{hasMedia ? (
 				isVideo ? (
 					<video
@@ -60,29 +59,31 @@ export function MediaItemRenderer({
 			)}
 			<div
 				className={cn(
-					"pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-gradient-to-t from-black/75 via-black/30 to-transparent p-4 text-white",
-					preset === "squareSmall" ? "min-h-24" : "min-h-28",
+					"pointer-events-none absolute inset-x-0 bottom-0 flex items-end gap-3 p-4 text-white",
+					// preset === "squareSmall" ? "min-h-24" : "min-h-28",
 				)}
 			>
-				<p
-					contentEditable={mode === "edit"}
-					suppressContentEditableWarning
-					onBlur={(event) => {
-						if (!onCommand) return;
-						onCommand({
-							type: "update-data",
-							itemId: item.id,
-							data: {
-								...item.data,
-								caption: event.currentTarget.textContent ?? "",
-							},
-						});
-					}}
-					className="min-w-0 flex-1 truncate text-xs font-medium"
-				>
-					{item.data.caption?.trim() || (isVideo ? "Video" : "Image")}
-				</p>
-				<MediaAction href={item.data.mediaUrl} label="Open" />
+				{mode === "edit" ? (
+					<Input
+						value={item.data.caption ?? ""}
+						placeholder="Caption"
+						onChange={(event) =>
+							onCommand?.({
+								type: "update-data",
+								itemId: item.id,
+								data: { ...item.data, caption: event.target.value },
+							})
+						}
+						className="pointer-events-auto field-sizing-content h-7.5 w-fit max-w-full min-w-24 truncate rounded-sm border-0 bg-white/100 px-2 py-0 text-xs font-medium text-foreground shadow-none  placeholder:text-gray-bright/60"
+					/>
+				) : (
+					<p className="min-w-0 max-w-full truncate text-xs font-medium">
+						{item.data.caption?.trim()}
+					</p>
+				)}
+			</div>
+			<div className="absolute top-4 right-4">
+				<MediaAction href={item.data.mediaUrl} />
 			</div>
 		</div>
 	);
