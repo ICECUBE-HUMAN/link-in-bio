@@ -70,6 +70,22 @@ describe("social profile link providers", () => {
 		});
 	});
 
+	it("parses X follower metadata from profile SSR data when OG description has only the bio", () => {
+		const metadata =
+			parseXProfileMetadata(
+				'<meta property="og:description" content="스텔라이브에 파도를 타고 온 루키">' +
+					"<script>relationship_counts:{followers:97959,following:161}</script>",
+			);
+
+		expect(
+			metadata.providerData,
+		).toEqual({
+			followerCount: 97_959,
+			followerCountLabel: "97959",
+			followerCountApproximate: false,
+		});
+	});
+
 	it("parses TikTok follower metadata from universal hydration JSON", () => {
 		const metadata =
 			parseTikTokProfileMetadata(

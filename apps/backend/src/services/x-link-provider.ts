@@ -29,10 +29,21 @@ export function parseXProfileMetadata(
 ): PageItemLinkMetadata {
 	const metadata =
 		parseSocialProfileMetadata(html);
-	const followerLabel =
+	const descriptionFollowerLabel =
 		metadata.description?.match(
 			/([\d.,]+\s*[KMB]?)\s+followers\b/i,
 		)?.[1];
+	const ssrFollowerLabel = html.match(
+		/\bfollowers\s*:\s*(\d+)\b/i,
+	)?.[1];
+	const visibleFollowerLabel =
+		html.match(
+			/>\s*([\d.,]+\s*[KMB]?)\s*<\/[^>]+>\s*<[^>]+>\s*Followers\s*</i,
+		)?.[1];
+	const followerLabel =
+		descriptionFollowerLabel ??
+		ssrFollowerLabel ??
+		visibleFollowerLabel;
 	const followerData = followerLabel
 		? parseFollowerCountLabel(
 				followerLabel,
@@ -61,6 +72,7 @@ export function createXEnricher(
 					`https://x.com${url.pathname.replace(/\/$/, "")}`,
 				),
 				context,
+				{ readFullDocument: true },
 			);
 		if (!html)
 			return fallbackEnrich(
