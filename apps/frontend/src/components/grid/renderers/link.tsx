@@ -51,12 +51,23 @@ function getProviderCount(
 	provider: ReturnType<typeof getLinkProviderPresentation>["id"],
 	providerData: Record<string, unknown> | undefined,
 ): string | undefined {
+	if (
+		provider === "threads" &&
+		typeof providerData?.followerCountLabel === "string" &&
+		providerData.followerCountLabel.trim()
+	) {
+		return providerData.followerCountLabel.trim();
+	}
 	const countKey = (
 		{
 			discord: "memberCount",
 			chzzk: "followerCount",
+			instagram: "followerCount",
+			tiktok: "followerCount",
+			threads: "followerCount",
 			youtube: "subscriberCount",
 			twitch: "followerCount",
+			x: "followerCount",
 		} as Record<string, string>
 	)[provider];
 	return countKey ? formatProviderCount(providerData?.[countKey]) : undefined;
@@ -242,7 +253,7 @@ function LinkTitle({
 			rows={1}
 			value={value}
 			style={
-				isHalfBanner || isLandscape
+				isHalfBanner || isLandscape || isSquareSmall
 					? { fieldSizing: "fixed", width: "100%" }
 					: undefined
 			}
@@ -259,7 +270,7 @@ function LinkTitle({
 			}}
 			className={cn(
 				"link-title-input block min-h-0 w-full min-w-24 max-w-full resize-none rounded-sm border-0 bg-transparent px-1 py-0 text-sm font-normal wrap-break-wordtext-foreground outline-none focus-visible:ring-0",
-				(isHalfBanner || isLandscape) && "field-sizing-fixed",
+				(isHalfBanner || isLandscape || isSquareSmall) && "field-sizing-fixed",
 				isHalfBanner
 					? "h-8 max-h-8 overflow-hidden whitespace-nowrap leading-8"
 					: "max-h-full overflow-x-hidden overflow-y-auto leading-6",
@@ -317,6 +328,7 @@ export function LinkItemRenderer({
 	};
 	const cardClassName = providerPresentation && "link-card-themed";
 	const cardStyle = getLinkCardThemeStyle(provider);
+	const isSquareSmall = preset === "squareSmall";
 	const updateTitle = (value: string) => {
 		onCommand?.({
 			type: "update-data",
@@ -333,26 +345,10 @@ export function LinkItemRenderer({
 
 	const renderPreset = () => {
 		if (preset === "squareSmall" || isHalfBannerPreset(preset)) {
-			return (
-				<div
-					className={cn(
-						"flex size-full min-h-0 gap-1 p-4",
-						isHalfBannerPreset(preset)
-							? "items-center"
-							: "flex-col items-start",
-						cardClassName,
-					)}
-					style={cardStyle}
-				>
+			const leadingContent = isSquareSmall ? (
+				<div className="flex w-full flex-1 flex-col gap-1">
 					<LinkBadge faviconUrl={faviconUrl} url={item.data.url} />
-					<div
-						className={cn(
-							"min-h-0 min-w-0",
-							isHalfBannerPreset(preset)
-								? "flex-1"
-								: "flex w-full flex-1 flex-col",
-						)}
-					>
+					<div className="flex min-h-0 min-w-0 flex-1 flex-col">
 						<LinkTitle
 							title={title}
 							preset={preset}
@@ -360,6 +356,33 @@ export function LinkItemRenderer({
 							onCommit={updateTitle}
 						/>
 					</div>
+				</div>
+			) : (
+				<>
+					<LinkBadge faviconUrl={faviconUrl} url={item.data.url} />
+					<div className="min-h-0 min-w-0 flex-1">
+						<LinkTitle
+							title={title}
+							preset={preset}
+							mode={mode}
+							onCommit={updateTitle}
+						/>
+					</div>
+				</>
+			);
+
+			return (
+				<div
+					className={cn(
+						"flex size-full min-h-0 p-4",
+						isHalfBannerPreset(preset)
+							? "items-center gap-1"
+							: "flex-col items-start gap-2",
+						cardClassName,
+					)}
+					style={cardStyle}
+				>
+					{leadingContent}
 					{shouldShowLinkAction && (
 						<LinkAction
 							href={item.data.url}
