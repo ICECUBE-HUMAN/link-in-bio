@@ -4,7 +4,11 @@ import {
 } from "@sinabro/api";
 import { createChzzkEnricher } from "./chzzk-link-provider";
 import { createDiscordEnricher } from "./discord-link-provider";
+import { createInstagramEnricher } from "./instagram-link-provider";
+import { createThreadsEnricher } from "./threads-link-provider";
+import { createTikTokEnricher } from "./tiktok-link-provider";
 import { createTwitchEnricher } from "./twitch-link-provider";
+import { createXEnricher } from "./x-link-provider";
 import { createYoutubeEnricher } from "./youtube-link-provider";
 
 const LINK_FETCH_TIMEOUT_MS = 2500;
@@ -461,6 +465,21 @@ const youtubeEnricher =
 	createYoutubeEnricher(
 		enrichGenericWeb,
 	);
+const threadsEnricher =
+	createThreadsEnricher(
+		enrichGenericWeb,
+	);
+const instagramEnricher =
+	createInstagramEnricher(
+		enrichGenericWeb,
+	);
+const tiktokEnricher =
+	createTikTokEnricher(
+		enrichGenericWeb,
+	);
+const xEnricher = createXEnricher(
+	enrichGenericWeb,
+);
 
 const providerEnrichers: Readonly<
 	Record<string, LinkProvider["enrich"]>
@@ -472,6 +491,10 @@ const providerEnrichers: Readonly<
 	discord: discordEnricher,
 	twitch: twitchEnricher,
 	youtube: youtubeEnricher,
+	threads: threadsEnricher,
+	instagram: instagramEnricher,
+	tiktok: tiktokEnricher,
+	x: xEnricher,
 };
 
 const sharedProviders: readonly LinkProvider[] =
