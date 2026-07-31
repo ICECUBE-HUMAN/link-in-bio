@@ -69,6 +69,7 @@ export const pageItemMediaDataSchema = v.object({
 		v.regex(/^(image|video)\/[a-z0-9.+-]+$/i, "Media MIME type required."),
 	),
 	caption: v.optional(v.string()),
+	link: v.optional(httpsUrlSchema),
 });
 
 export const pageItemMediaResponseDataSchema = v.object({

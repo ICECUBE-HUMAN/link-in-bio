@@ -28,6 +28,7 @@ export function MediaItemRenderer({
 	onCommand,
 }: ItemRendererProps<GridItemByType<"media">>) {
 	const isVideo = item.data.mimeType.startsWith("video/");
+	const linkedUrl = item.data.link;
 
 	return (
 		<div className="relative size-full overflow-hidden rounded-[inherit] bg-muted surface-line">
@@ -72,9 +73,11 @@ export function MediaItemRenderer({
 					</p>
 				)}
 			</div>
-			<div className="absolute top-4 right-4">
-				<MediaAction href={item.data.mediaUrl} />
-			</div>
+			{linkedUrl ? (
+				<div className="absolute top-4 right-4">
+					<MediaAction href={linkedUrl} />
+				</div>
+			) : null}
 		</div>
 	);
 }
