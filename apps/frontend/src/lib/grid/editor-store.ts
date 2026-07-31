@@ -92,6 +92,9 @@ function createBatch(
 
 	return {
 		upserts: items
+			.filter(
+				(item) => item.type !== "media" || item.data.objectKey !== "pending",
+			)
 			.map((item) => toBatchItem(item))
 			.filter(hasPageItemContent)
 			.filter((item) => !sameItem(item, persistedById.get(item.id))),
@@ -474,6 +477,64 @@ export function useGridEditorStore({
 		[breakpoint, commitItems, enabled],
 	);
 
+	const addPendingMedia = useCallback(
+		({ mimeType, previewUrl }: { mimeType: string; previewUrl: string }) => {
+			if (!enabled) return null;
+			const currentItems = draftRef.current;
+			const newItem = createGridItem({
+				items: currentItems,
+				itemType: "media",
+				media: { mimeType, previewUrl },
+			});
+			commitItems([...currentItems, newItem]);
+			return newItem.id;
+		},
+		[commitItems, enabled],
+	);
+
+	const updateMediaUpload = useCallback(
+		({
+			itemId,
+			objectKey,
+			mimeType,
+		}: {
+			itemId: string;
+			objectKey: string;
+			mimeType: string;
+		}) => {
+			const currentItems = draftRef.current;
+			const item = currentItems.find(
+				(candidate) => candidate.id === itemId && candidate.type === "media",
+			);
+			if (!item || item.type !== "media") return;
+			commitItems(
+				currentItems.map((candidate) =>
+					candidate.id === itemId && candidate.type === "media"
+						? {
+								...candidate,
+								data: {
+									...candidate.data,
+									objectKey,
+									mimeType,
+								},
+							}
+						: candidate,
+				),
+			);
+		},
+		[commitItems],
+	);
+
+	const removeMediaItem = useCallback(
+		(itemId: string) => {
+			const currentItems = draftRef.current;
+			if (!currentItems.some((item) => item.id === itemId)) return;
+			deletedIdsRef.current.add(itemId);
+			commitItems(currentItems.filter((item) => item.id !== itemId));
+		},
+		[commitItems],
+	);
+
 	const flushPendingChanges = useCallback(async () => {
 		while (saveInFlightRef.current || hasBatchChanges(pendingRef.current)) {
 			if (timerRef.current) {
@@ -498,5 +559,8 @@ export function useGridEditorStore({
 		errorMessage,
 		dispatchCommand,
 		flushPendingChanges,
+		addPendingMedia,
+		updateMediaUpload,
+		removeMediaItem,
 	};
 }

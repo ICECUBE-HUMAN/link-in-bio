@@ -1,3 +1,4 @@
+import type { AppEnv } from "@core/app-factory";
 import type { AuthUser } from "@core/auth";
 import type { DatabaseClient } from "@db/index";
 import {
@@ -15,6 +16,10 @@ import {
 	isNull,
 } from "drizzle-orm";
 import * as v from "valibot";
+import {
+	isLegacyProfileImageKey,
+	isProfileImageKey,
+} from "../core/r2";
 import {
 	ConflictError,
 	ForbiddenError,
@@ -115,18 +120,20 @@ export const assertEligibleUser =
 	};
 
 export const updatePage = async ({
+	env,
 	db,
 	userId,
 	handle,
 	input,
 }: {
+	env: AppEnv["Bindings"];
 	db: DatabaseClient;
 	userId: string;
 	handle: string;
 	input: UpdatePageRequest;
 }) => {
 	try {
-		return await db.transaction(
+		const result = await db.transaction(
 			async (tx) => {
 				const currentUser =
 					await tx.query.user.findFirst(
@@ -197,9 +204,20 @@ export const updatePage = async ({
 					throw new NotFoundError(
 						"Page",
 					);
-				return page;
+				return {
+					page,
+					previousImage: existingPage.image,
+				};
 			},
 		);
+		if (
+			result.previousImage &&
+			result.previousImage !== result.page.image &&
+			(isProfileImageKey(result.previousImage) ||
+				isLegacyProfileImageKey(result.previousImage))
+		)
+			await env.IMAGES.delete(result.previousImage);
+		return result.page;
 	} catch (error) {
 		if (isUniqueHandleViolation(error))
 			throw new ConflictError(

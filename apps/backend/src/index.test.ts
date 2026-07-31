@@ -14,13 +14,13 @@ describe("item media queue consumer", () => {
 					{
 						body: {
 							objectKey:
-								"users/user_1/bento/item_1/photo.png",
+								"users/user_1/page_1/photo.png",
 						},
 					},
 					{
 						body: {
 							objectKey:
-								"users/user_1/profile/photo.png",
+								"users/user_1/profile-photo.png",
 						},
 					},
 				],
@@ -37,7 +37,7 @@ describe("item media queue consumer", () => {
 		);
 
 		expect(deleted).toEqual([
-			"users/user_1/bento/item_1/photo.png",
+				"users/user_1/page_1/photo.png",
 		]);
 	});
 });

@@ -5,12 +5,31 @@ import {
 } from "bun:test";
 import {
 	createItemMediaKey,
+	createProfileImageKey,
 	getItemMediaUrl,
 	isItemMediaKey,
+	isProfileImageKey,
 	MAX_ITEM_MEDIA_SIZE,
 	sanitizeMediaFilename,
 	validateItemMediaUpload,
 } from "@core/r2";
+
+describe("profile image R2 boundaries", () => {
+	it("scopes profile images to the owner and page", () => {
+		const key = createProfileImageKey(
+			"user_1",
+			"page_1",
+			"image/png",
+		);
+		expect(key).toMatch(
+			/^users\/user_1\/page_1\/profile\/[a-f0-9-]+\.png$/,
+		);
+		expect(key && isProfileImageKey(key)).toBe(true);
+		expect(
+			isProfileImageKey("users/profile/legacy.png"),
+		).toBe(false);
+	});
+});
 
 describe("item media R2 boundaries", () => {
 	it("rejects traversal and keeps the key within the owner item prefix", () => {
@@ -22,15 +41,15 @@ describe("item media R2 boundaries", () => {
 		expect(
 			createItemMediaKey({
 				userId: "user_1",
-				itemId: "item_1",
+				pageId: "page_1",
 				filename: "profile photo.png",
 			}),
 		).toBe(
-			"users/user_1/bento/item_1/profile-photo.png",
+			"users/user_1/page_1/profile-photo.png",
 		);
 		expect(
 			isItemMediaKey(
-				"users/other/bento/item_1/file.png",
+				"users/other/page_1/file.png",
 			),
 		).toBe(true);
 		expect(
@@ -65,10 +84,10 @@ describe("item media R2 boundaries", () => {
 		expect(
 			getItemMediaUrl(
 				"https://cdn.example.com/",
-				"users/user_1/bento/item_1/file name.png",
+				"users/user_1/page_1/file name.png",
 			),
 		).toBe(
-			"https://cdn.example.com/users/user_1/bento/item_1/file%20name.png",
+			"https://cdn.example.com/users/user_1/page_1/file%20name.png",
 		);
 	});
 });

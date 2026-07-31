@@ -4,8 +4,9 @@ import {
 	Smartphone,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { ITEM_MEDIA_ACCEPT, MAX_ITEM_MEDIA_SIZE } from "@sinabro/api";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useState } from "react";
+import { type ChangeEvent, useRef, useState } from "react";
 import {
 	Document2,
 	GalleryCircle,
@@ -16,6 +17,7 @@ import {
 	TextCircle,
 	Widget4,
 } from "reicon-react";
+import { toast } from "sonner";
 import type { Breakpoint, ItemType } from "@/lib/grid/types";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
@@ -33,6 +35,7 @@ type ToolbarProps = {
 	isSaving: boolean;
 	onBreakpointChange: (breakpoint: Breakpoint) => void;
 	onItemAdd: (itemType: ItemType, url?: string) => void;
+	onMediaSelect: (file: File) => void | Promise<void>;
 };
 
 function isHttpsUrl(value: string) {
@@ -48,7 +51,9 @@ export default function Toolbar({
 	isSaving,
 	onBreakpointChange,
 	onItemAdd,
+	onMediaSelect,
 }: ToolbarProps) {
+	const mediaInputRef = useRef<HTMLInputElement>(null);
 	const [view, setView] = useState<"toolbar" | "link" | "widget">("toolbar");
 	const [linkUrl, setLinkUrl] = useState("");
 	const canAddLink = isHttpsUrl(linkUrl.trim());
@@ -61,8 +66,30 @@ export default function Toolbar({
 				ease: [0.23, 1, 0.32, 1] as const,
 			};
 
+	function handleMediaChange(event: ChangeEvent<HTMLInputElement>) {
+		const file = event.target.files?.[0];
+		event.target.value = "";
+		if (!file) return;
+		if (file.size > MAX_ITEM_MEDIA_SIZE) {
+			toast.error("Media files must be 3 MB or smaller.");
+			return;
+		}
+		if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+			toast.error("Please choose an image or video file.");
+			return;
+		}
+		void onMediaSelect(file);
+	}
+
 	return (
 		<div className="fixed bottom-8 flex w-full items-center justify-center">
+			<input
+				ref={mediaInputRef}
+				type="file"
+				accept={ITEM_MEDIA_ACCEPT}
+				hidden
+				onChange={handleMediaChange}
+			/>
 			<motion.div
 				layout="size"
 				transition={{ layout: viewTransition }}
@@ -189,7 +216,7 @@ export default function Toolbar({
 									</ToolbarButton>
 									<ToolbarButton
 										label="Gallery"
-										onClick={() => onItemAdd("media")}
+										onClick={() => mediaInputRef.current?.click()}
 									>
 										<GalleryCircle weight="Outline" className="size-5" />
 									</ToolbarButton>

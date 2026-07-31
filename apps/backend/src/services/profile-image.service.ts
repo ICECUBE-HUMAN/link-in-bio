@@ -2,6 +2,7 @@ import type { AppEnv } from "@core/app-factory";
 import {
 	createProfileImageKey,
 	createProfileImageUploadUrl,
+	isLegacyProfileImageKey,
 	isProfileImageKey,
 	MAX_PROFILE_IMAGE_SIZE,
 	validateProfileImageUpload,
@@ -33,7 +34,7 @@ export const createProfileImageUpload =
 		userId: string;
 		input: ProfileImageUploadRequest;
 	}) => {
-		await assertOwnedPage(
+		const page = await assertOwnedPage(
 			db,
 			handle,
 			userId,
@@ -49,6 +50,8 @@ export const createProfileImageUpload =
 			);
 		const objectKey =
 			createProfileImageKey(
+				userId,
+				page.id,
 				input.contentType,
 			);
 		if (!objectKey)
@@ -80,20 +83,21 @@ export const completeProfileImageUpload =
 		userId: string;
 		input: ProfileImageCompleteRequest;
 	}) => {
+		const page = await assertOwnedPage(
+			db,
+			handle,
+			userId,
+		);
 		if (
-			!isProfileImageKey(
-				input.objectKey,
+			!isProfileImageKey(input.objectKey) ||
+			!input.objectKey.startsWith(
+				`users/${userId}/${page.id}/profile/`,
 			)
 		)
 			throw new UnprocessableEntityError(
 				"Invalid profile image key.",
 				"INVALID_PROFILE_IMAGE",
 			);
-		const page = await assertOwnedPage(
-			db,
-			handle,
-			userId,
-		);
 		const uploadedObject =
 			await env.IMAGES.head(
 				input.objectKey,
@@ -114,7 +118,8 @@ export const completeProfileImageUpload =
 		if (
 			page.image &&
 			page.image !== input.objectKey &&
-			isProfileImageKey(page.image)
+			(isProfileImageKey(page.image) ||
+				isLegacyProfileImageKey(page.image))
 		)
 			await env.IMAGES.delete(
 				page.image,

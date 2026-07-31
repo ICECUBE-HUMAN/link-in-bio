@@ -39,7 +39,7 @@ export const pageItemsController =
 				const user = c.get("user");
 				if (!user)
 					throw new UnauthorizedError();
-				await assertOwnedPage(
+				const page = await assertOwnedPage(
 					c.get("db"),
 					c.req.param("handle"),
 					user.id,
@@ -57,6 +57,7 @@ export const pageItemsController =
 					await createItemMediaUpload({
 						env: c.env,
 						userId: user.id,
+						pageId: page.id,
 						input: parsed.output,
 					}),
 				);
@@ -68,7 +69,7 @@ export const pageItemsController =
 				const user = c.get("user");
 				if (!user)
 					throw new UnauthorizedError();
-				await assertOwnedPage(
+				const page = await assertOwnedPage(
 					c.get("db"),
 					c.req.param("handle"),
 					user.id,
@@ -87,6 +88,7 @@ export const pageItemsController =
 						{
 							env: c.env,
 							userId: user.id,
+							pageId: page.id,
 							objectKey:
 								parsed.output.objectKey,
 						},

@@ -130,7 +130,6 @@ describe("pageItemsController", () => {
 						"application/json",
 				},
 				body: JSON.stringify({
-					itemId: "item_1",
 					filename: "../secret.png",
 					contentType: "image/png",
 					size: 10,
@@ -264,7 +263,7 @@ describe("pageItemsController", () => {
 				},
 				body: JSON.stringify({
 					objectKey:
-						"users/user_1/bento/item_1/photo.png",
+						"users/user_1/page_1/photo.png",
 				}),
 			},
 			{
@@ -283,7 +282,7 @@ describe("pageItemsController", () => {
 			await response.json(),
 		).toMatchObject({
 			objectKey:
-				"users/user_1/bento/item_1/photo.png",
+				"users/user_1/page_1/photo.png",
 			mimeType: "image/png",
 			size: 10,
 		});

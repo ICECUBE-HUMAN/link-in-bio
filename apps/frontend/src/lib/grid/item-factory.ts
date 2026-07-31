@@ -13,10 +13,12 @@ export function createGridItem({
 	items,
 	itemType,
 	url,
+	media,
 }: {
 	items: readonly GridItem[];
 	itemType: ItemType;
 	url?: string;
+	media?: { mimeType: string; previewUrl: string };
 }): GridItem {
 	const id = crypto.randomUUID();
 	const preset = getDefaultPreset(itemType);
@@ -47,7 +49,11 @@ export function createGridItem({
 			return {
 				...base,
 				type: itemType,
-				data: { objectKey: "pending", mimeType: "image/jpeg" },
+				data: {
+					objectKey: "pending",
+					mimeType: media?.mimeType ?? "image/jpeg",
+					mediaUrl: media?.previewUrl,
+				},
 			};
 		case "map":
 			return {

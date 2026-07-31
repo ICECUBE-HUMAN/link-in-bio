@@ -1,4 +1,5 @@
 import type { PageItemResponse, PageResponse } from "@sinabro/api";
+import { MAX_ITEM_MEDIA_SIZE } from "@sinabro/api";
 import { useQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
@@ -9,6 +10,7 @@ import {
 import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Send, StackPerspective } from "reicon-react";
+import { toast } from "sonner";
 import { GridSection } from "@/components/grid/grid-section";
 import { EditableParagraph } from "@/components/page/editable-paragraph";
 import { PageImageEditor } from "@/components/page/page-image-editor";
@@ -21,6 +23,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { uploadPageItemMedia } from "@/lib/api/item-media-api";
 import {
 	getMyPage,
 	getPageByHandleQueryOptions,
@@ -160,11 +163,15 @@ function HandlePageContent({
 		status: gridStatus,
 		dispatchCommand,
 		flushPendingChanges,
+		addPendingMedia,
+		updateMediaUpload,
+		removeMediaItem,
 	} = useGridEditorStore({
 		initialItems: loaderData.items,
 		handle: page.handle,
 		breakpoint: previewBreakpoint,
 		enabled: mode === "edit",
+		persistItems: true,
 	});
 
 	useEffect(() => {
@@ -471,6 +478,32 @@ function HandlePageContent({
 					isSaving={status === "saving" || gridStatus === "saving"}
 					onItemAdd={(itemType, url) => {
 						dispatchCommand({ type: "add-item", itemType, url });
+					}}
+					onMediaSelect={async (file) => {
+						if (file.size > MAX_ITEM_MEDIA_SIZE) return;
+						const previewUrl = URL.createObjectURL(file);
+						const itemId = addPendingMedia({
+							mimeType: file.type,
+							previewUrl,
+						});
+						if (!itemId) {
+							URL.revokeObjectURL(previewUrl);
+							return;
+						}
+						try {
+							const uploaded = await uploadPageItemMedia(page.handle, file);
+							updateMediaUpload({
+								itemId,
+								objectKey: uploaded.objectKey,
+								mimeType: uploaded.mimeType,
+							});
+						} catch (error) {
+							removeMediaItem(itemId);
+							URL.revokeObjectURL(previewUrl);
+							toast.error(
+								error instanceof Error ? error.message : "Media upload failed.",
+							);
+						}
 					}}
 					onBreakpointChange={(nextBreakpoint) => {
 						void handlePreviewBreakpointChange(nextBreakpoint);

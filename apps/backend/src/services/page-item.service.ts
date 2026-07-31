@@ -106,6 +106,7 @@ const assertUniqueBatchIds = (
 const assertItemPayload = (
 	item: PageItemUpsert,
 	userId: string,
+	pageId: string,
 ) => {
 	try {
 		validatePageItemData(
@@ -160,7 +161,7 @@ const assertItemPayload = (
 				item.data.objectKey,
 			) ||
 				!item.data.objectKey.startsWith(
-					`users/${userId}/`,
+					`users/${userId}/${pageId}/`,
 				))
 		)
 			throw new Error(
@@ -262,6 +263,7 @@ export const persistPageItemBatch =
 						assertItemPayload(
 							item,
 							userId,
+							page.id,
 						);
 						const current =
 							existingById.get(item.id);

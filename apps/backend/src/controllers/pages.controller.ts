@@ -126,6 +126,7 @@ export const pagesController =
 					"INVALID_PAGE_PAYLOAD",
 				);
 			const page = await updatePage({
+				env: c.env,
 				db: c.get("db"),
 				userId: user.id,
 				handle,

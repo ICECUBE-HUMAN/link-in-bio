@@ -2,15 +2,15 @@ import type {
 	PageItemUploadRequest,
 	ProfileImageUploadRequest,
 } from "@sinabro/api";
+import { MAX_ITEM_MEDIA_SIZE as SHARED_MAX_ITEM_MEDIA_SIZE } from "@sinabro/api";
 
-export const PROFILE_IMAGE_PREFIX =
+export const LEGACY_PROFILE_IMAGE_PREFIX =
 	"users/profile/";
 export const MAX_PROFILE_IMAGE_SIZE =
 	5 * 1024 * 1024;
 export const PROFILE_IMAGE_UPLOAD_TTL_SECONDS =
 	10 * 60;
-export const MAX_ITEM_MEDIA_SIZE =
-	25 * 1024 * 1024;
+export const MAX_ITEM_MEDIA_SIZE = SHARED_MAX_ITEM_MEDIA_SIZE;
 export const ITEM_MEDIA_PREFIX =
 	"users/";
 export const ITEM_MEDIA_UPLOAD_TTL_SECONDS =
@@ -121,15 +121,22 @@ const encodeObjectKeyPath = (
 export const isProfileImageKey = (
 	value: string,
 ) =>
-	value.startsWith(
-		PROFILE_IMAGE_PREFIX,
+	/^users\/[^/]+\/[^/]+\/profile\/[^/]+$/.test(
+		value,
 	) &&
-	value.length >
-		PROFILE_IMAGE_PREFIX.length &&
+	!value.includes("..") &&
+	!value.includes("\\");
+
+export const isLegacyProfileImageKey = (
+	value: string,
+) =>
+	/^users\/profile\/[^/]+$/.test(value) &&
 	!value.includes("..") &&
 	!value.includes("\\");
 
 export const createProfileImageKey = (
+	userId: string,
+	pageId: string,
 	contentType: string,
 ) => {
 	const extension =
@@ -138,13 +145,14 @@ export const createProfileImageKey = (
 		);
 
 	if (!extension) return null;
-	return `${PROFILE_IMAGE_PREFIX}${crypto.randomUUID()}.${extension}`;
+	if (!isSafePathSegment(userId) || !isSafePathSegment(pageId)) return null;
+	return `users/${userId}/${pageId}/profile/${crypto.randomUUID()}.${extension}`;
 };
 
 export const isItemMediaKey = (
 	value: string,
 ) =>
-	/^users\/[^/]+\/bento\/[^/]+\/[^/]+$/.test(
+	/^users\/[^/]+\/[^/]+\/[^/]+$/.test(
 		value,
 	) &&
 	!value.includes("..") &&
@@ -178,21 +186,21 @@ const isSafePathSegment = (
 
 export const createItemMediaKey = ({
 	userId,
-	itemId,
+	pageId,
 	filename,
 }: Pick<
 	PageItemUploadRequest,
-	"itemId" | "filename"
-> & { userId: string }) => {
+	"filename"
+> & { userId: string; pageId: string }) => {
 	const sanitized =
 		sanitizeMediaFilename(filename);
 	if (
 		!sanitized ||
 		!isSafePathSegment(userId) ||
-		!isSafePathSegment(itemId)
+		!isSafePathSegment(pageId)
 	)
 		return null;
-	return `users/${userId}/bento/${itemId}/${sanitized}`;
+	return `users/${userId}/${pageId}/${sanitized}`;
 };
 
 export const validateItemMediaUpload =

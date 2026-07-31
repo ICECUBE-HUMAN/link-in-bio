@@ -10,6 +10,10 @@ export const itemTypeSchema = v.union([
 
 export type ItemType = v.InferOutput<typeof itemTypeSchema>;
 
+export const MAX_ITEM_MEDIA_SIZE = 3 * 1024 * 1024;
+export const ITEM_MEDIA_ACCEPT =
+	".avif,.gif,.jpg,.jpeg,.png,.webp,.bmp,.svg,.mp4,.webm,.mov,.m4v,.avi";
+
 export const breakpointSchema = v.union([
 	v.literal("wide"),
 	v.literal("compact"),
@@ -165,7 +169,6 @@ export type PageItemBatchResponse = v.InferOutput<
 >;
 
 export const pageItemUploadRequestSchema = v.object({
-	itemId: v.pipe(v.string(), v.minLength(1)),
 	filename: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(180)),
 	contentType: v.pipe(
 		v.string(),

@@ -29,10 +29,12 @@ export const createItemMediaUpload =
 	async ({
 		env,
 		userId,
+		pageId,
 		input,
 	}: {
 		env: AppEnv["Bindings"];
 		userId: string;
+		pageId: string;
 		input: PageItemUploadRequest;
 	}) => {
 		const parsed = v.safeParse(
@@ -56,6 +58,7 @@ export const createItemMediaUpload =
 			createItemMediaKey({
 				...parsed.output,
 				userId,
+				pageId,
 			});
 		if (!objectKey)
 			throw new UnprocessableEntityError(
@@ -82,16 +85,18 @@ export const completeItemMediaUpload =
 	async ({
 		env,
 		userId,
+		pageId,
 		objectKey,
 	}: {
 		env: AppEnv["Bindings"];
 		userId: string;
+		pageId: string;
 		objectKey: string;
 	}) => {
 		if (
 			!isItemMediaKey(objectKey) ||
 			!objectKey.startsWith(
-				`users/${userId}/`,
+				`users/${userId}/${pageId}/`,
 			)
 		)
 			throw new UnprocessableEntityError(
