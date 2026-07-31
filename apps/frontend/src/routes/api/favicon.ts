@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { env } from "@/env";
 
-const MAX_IMAGE_BYTES = 256 * 1024;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 function isAllowedImageUrl(imageUrl: URL, requestUrl: URL) {
 	if (imageUrl.origin === requestUrl.origin) {
@@ -83,9 +83,8 @@ export const Route = createFileRoute("/api/favicon")({
 					10,
 				);
 				if (
-					!Number.isSafeInteger(contentLength) ||
-					contentLength < 1 ||
-					contentLength > MAX_IMAGE_BYTES
+					Number.isSafeInteger(contentLength) &&
+					(contentLength < 1 || contentLength > MAX_IMAGE_BYTES)
 				) {
 					return new Response("Image is too large.", { status: 413 });
 				}

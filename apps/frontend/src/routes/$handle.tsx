@@ -47,7 +47,7 @@ type HandleLoaderData = {
 };
 
 function getFaviconUrl(imageUrl: string) {
-	return `/api/favicon?v=2&image=${encodeURIComponent(imageUrl)}`;
+	return `/api/favicon?v=3&image=${encodeURIComponent(imageUrl)}`;
 }
 
 export const Route = createFileRoute("/$handle")({
