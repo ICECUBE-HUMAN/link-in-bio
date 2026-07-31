@@ -34,7 +34,10 @@ export type GridItemPrimaryAction =
 			label: string;
 	  };
 
-export type GridItemControlCommand = "manage-link" | "apply-preset";
+export type GridItemControlCommand =
+	| "manage-link"
+	| "apply-preset"
+	| "delete-item";
 
 export type GridItemCommand =
 	| {
@@ -176,6 +179,13 @@ export function getItemCapabilities(
 		controls.push({
 			command: "manage-link",
 			label: item.data.link ? "Change link" : "Add link",
+		});
+	}
+
+	if (context.mode === "edit") {
+		controls.push({
+			command: "delete-item",
+			label: "Delete",
 		});
 	}
 

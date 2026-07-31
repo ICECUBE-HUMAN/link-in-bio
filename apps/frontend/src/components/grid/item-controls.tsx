@@ -1,3 +1,4 @@
+import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ItemControlsProps } from "@/lib/grid/item-registry";
 
@@ -16,10 +17,22 @@ export function ItemControls({
 				<Button
 					key={`${item.id}:${control.command}:${control.preset ?? control.label}`}
 					type="button"
-					variant="secondary"
 					size="xs"
 					className="rounded-full"
+					variant={
+						control.command === "delete-item" ? "destructive" : "secondary"
+					}
+					aria-label={control.label}
+					title={control.label}
 					onClick={() => {
+						if (control.command === "delete-item") {
+							onCommand?.({
+								type: "delete-item",
+								itemId: item.id,
+							});
+							return;
+						}
+
 						if (control.command === "apply-preset" && control.preset) {
 							onCommand?.({
 								type: "apply-preset",
@@ -35,7 +48,11 @@ export function ItemControls({
 						});
 					}}
 				>
-					{control.label}
+					{control.command === "delete-item" ? (
+						<Trash2 aria-hidden="true" />
+					) : (
+						control.label
+					)}
 				</Button>
 			))}
 		</div>
