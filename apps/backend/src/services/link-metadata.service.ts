@@ -13,14 +13,24 @@ export {
 
 import { getPublicR2ObjectUrl } from "@core/r2";
 import type { DatabaseClient } from "@db/index";
-import { pageItems } from "@db/schema";
+import {
+	pageItems,
+	providerTokens,
+} from "@db/schema";
 import { and, eq } from "drizzle-orm";
 import * as v from "valibot";
 import {
 	NotFoundError,
 	UnprocessableEntityError,
 } from "../exceptions/http-exceptions";
-import { resolveLinkProvider } from "./link-providers";
+import type {
+	TwitchUserToken,
+	TwitchUserTokenStore,
+} from "./link-providers";
+import {
+	type LinkProviderEnvironment,
+	resolveLinkProvider,
+} from "./link-providers";
 import { assertOwnedPage } from "./page.service";
 
 export function prepareLinkItem(
@@ -83,6 +93,75 @@ function mergeMetadata(
 	) as PageItemLinkMetadata;
 }
 
+const TWITCH_PROVIDER_ID = "twitch";
+
+function createTwitchUserTokenStore(
+	db: DatabaseClient,
+): TwitchUserTokenStore {
+	return {
+		get: async () => {
+			const token =
+				await db.query.providerTokens.findFirst(
+					{
+						where: eq(
+							providerTokens.provider,
+							TWITCH_PROVIDER_ID,
+						),
+					},
+				);
+			if (!token) return undefined;
+			return {
+				accessToken: token.accessToken,
+				refreshToken:
+					token.refreshToken ??
+					undefined,
+				expiresAt:
+					token.accessTokenExpiresAt?.getTime(),
+			};
+		},
+		set: async (
+			token: TwitchUserToken,
+		) => {
+			const now = new Date();
+			await db
+				.insert(providerTokens)
+				.values({
+					provider: TWITCH_PROVIDER_ID,
+					accessToken:
+						token.accessToken,
+					refreshToken:
+						token.refreshToken ?? null,
+					accessTokenExpiresAt:
+						token.expiresAt
+							? new Date(
+									token.expiresAt,
+								)
+							: null,
+					createdAt: now,
+					updatedAt: now,
+				})
+				.onConflictDoUpdate({
+					target:
+						providerTokens.provider,
+					set: {
+						accessToken:
+							token.accessToken,
+						refreshToken:
+							token.refreshToken ??
+							null,
+						accessTokenExpiresAt:
+							token.expiresAt
+								? new Date(
+										token.expiresAt,
+									)
+								: null,
+						updatedAt: now,
+					},
+				});
+		},
+	};
+}
+
 export async function enrichPageItemMetadata({
 	db,
 	handle,
@@ -90,6 +169,7 @@ export async function enrichPageItemMetadata({
 	itemId,
 	url,
 	publicBaseUrl,
+	env,
 	fetch,
 }: {
 	db: DatabaseClient;
@@ -98,6 +178,7 @@ export async function enrichPageItemMetadata({
 	itemId: string;
 	url: string;
 	publicBaseUrl?: string;
+	env?: LinkProviderEnvironment;
 	fetch: (
 		input: RequestInfo | URL,
 		init?: RequestInit,
@@ -139,7 +220,19 @@ export async function enrichPageItemMetadata({
 	const enriched =
 		await provider.enrich(
 			new URL(url),
-			{ fetch },
+			{
+				fetch,
+				env,
+				...(provider.id ===
+				TWITCH_PROVIDER_ID
+					? {
+							twitchUserTokenStore:
+								createTwitchUserTokenStore(
+									db,
+								),
+						}
+					: {}),
+			},
 		);
 	const iconObjectKey =
 		getLinkProviderIconObjectKey(

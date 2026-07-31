@@ -5,9 +5,13 @@ import {
 } from "bun:test";
 import { createYoutubeEnricher } from "./youtube-link-provider";
 
+const env = {
+	YOUTUBE_API_KEY: "youtube-key",
+};
+
 describe("youtube link provider", () => {
-	it("uses YouTube oEmbed metadata for video URLs", async () => {
-		const requests: string[] = [];
+	it("extracts channel statistics and the latest upload through the Data API", async () => {
+		const requests: URL[] = [];
 		const enrich =
 			createYoutubeEnricher(
 				async () => ({
@@ -17,17 +21,109 @@ describe("youtube link provider", () => {
 
 		const metadata = await enrich(
 			new URL(
-				"https://www.youtube.com/watch?v=video123",
+				"https://www.youtube.com/@creator",
 			),
 			{
+				env,
 				fetch: async (input) => {
-					requests.push(String(input));
+					const requestUrl = new URL(
+						String(input),
+					);
+					requests.push(requestUrl);
+
+					if (
+						requestUrl.pathname ===
+						"/youtube/v3/channels"
+					) {
+						expect(
+							requestUrl.searchParams.get(
+								"part",
+							),
+						).toBe(
+							"contentDetails,snippet,statistics",
+						);
+						expect(
+							requestUrl.searchParams.get(
+								"forHandle",
+							),
+						).toBe("creator");
+						expect(
+							requestUrl.searchParams.get(
+								"key",
+							),
+						).toBe("youtube-key");
+						return new Response(
+							JSON.stringify({
+								items: [
+									{
+										id: "UCcreator",
+										snippet: {
+											title: "Creator",
+											description:
+												"Creator channel",
+											thumbnails: {
+												medium: {
+													url: "https://yt.example/avatar.jpg",
+												},
+											},
+										},
+										statistics: {
+											subscriberCount:
+												"1234",
+											videoCount: "87",
+											viewCount:
+												"98765",
+										},
+										contentDetails: {
+											relatedPlaylists:
+												{
+													uploads:
+														"UUcreator",
+												},
+										},
+									},
+								],
+							}),
+							{
+								headers: {
+									"content-type":
+										"application/json",
+								},
+							},
+						);
+					}
+
+					expect(
+						requestUrl.pathname,
+					).toBe(
+						"/youtube/v3/playlistItems",
+					);
+					expect(
+						requestUrl.searchParams.get(
+							"playlistId",
+						),
+					).toBe("UUcreator");
 					return new Response(
 						JSON.stringify({
-							title: "Video title",
-							author_name: "Creator",
-							thumbnail_url:
-								"https://i.ytimg.com/vi/video123/hqdefault.jpg",
+							items: [
+								{
+									snippet: {
+										publishedAt:
+											"2026-07-31T00:00:00Z",
+										title:
+											"Latest video",
+										resourceId: {
+											videoId:
+												"latest123",
+										},
+										thumbnails: {
+											high: {
+												url: "https://i.ytimg.com/latest.jpg",
+											},
+										},
+									},
+								},
+							],
 						}),
 						{
 							headers: {
@@ -40,49 +136,141 @@ describe("youtube link provider", () => {
 			},
 		);
 
-		expect(requests).toHaveLength(1);
-		expect(
-			new URL(requests[0] ?? "")
-				.pathname,
-		).toBe("/oembed");
+		expect(requests).toHaveLength(2);
 		expect(metadata).toEqual({
-			title: "Video title",
-			description: "Creator",
+			title: "Creator",
+			description: "Creator channel",
 			imageUrl:
-				"https://i.ytimg.com/vi/video123/hqdefault.jpg",
+				"https://i.ytimg.com/latest.jpg",
+			providerData: {
+				channelId: "UCcreator",
+				channelImageUrl:
+					"https://yt.example/avatar.jpg",
+				subscriberCount: 1234,
+				videoCount: 87,
+				viewCount: 98765,
+				recentVideoId: "latest123",
+				recentVideoTitle:
+					"Latest video",
+				recentVideoThumbnailUrl:
+					"https://i.ytimg.com/latest.jpg",
+				recentVideoPublishedAt:
+					"2026-07-31T00:00:00Z",
+				recentVideoUrl:
+					"https://www.youtube.com/watch?v=latest123",
+			},
 		});
 	});
 
-	it("falls back for YouTube channel URLs", async () => {
+	it("uses the Data API for video URLs", async () => {
+		const enrich =
+			createYoutubeEnricher(
+				async () => ({
+					title: "fallback",
+				}),
+			);
+
+		const metadata = await enrich(
+			new URL(
+				"https://youtu.be/video123",
+			),
+			{
+				env,
+				fetch: async (input) => {
+					const requestUrl = new URL(
+						String(input),
+					);
+					expect(
+						requestUrl.pathname,
+					).toBe("/youtube/v3/videos");
+					expect(
+						requestUrl.searchParams.get(
+							"id",
+						),
+					).toBe("video123");
+					return new Response(
+						JSON.stringify({
+							items: [
+								{
+									id: "video123",
+									snippet: {
+										title:
+											"Video title",
+										description:
+											"Video description",
+										channelId:
+											"UCcreator",
+										channelTitle:
+											"Creator",
+										publishedAt:
+											"2026-07-30T00:00:00Z",
+										thumbnails: {
+											maxres: {
+												url: "https://i.ytimg.com/video.jpg",
+											},
+										},
+									},
+									statistics: {
+										viewCount: "100",
+										likeCount: "10",
+										commentCount: "2",
+									},
+								},
+							],
+						}),
+						{
+							headers: {
+								"content-type":
+									"application/json",
+							},
+						},
+					);
+				},
+			},
+		);
+
+		expect(metadata).toEqual({
+			title: "Video title",
+			description: "Video description",
+			imageUrl:
+				"https://i.ytimg.com/video.jpg",
+			providerData: {
+				channelId: "UCcreator",
+				channelTitle: "Creator",
+				viewCount: 100,
+				likeCount: 10,
+				commentCount: 2,
+				publishedAt:
+					"2026-07-30T00:00:00Z",
+			},
+		});
+	});
+
+	it("falls back for unsupported channel URL forms", async () => {
 		let fallbackCalled = false;
 		const enrich =
 			createYoutubeEnricher(
 				async () => {
 					fallbackCalled = true;
 					return {
-						title: "Channel title",
-						imageUrl:
-							"https://cdn.example.com/channel.jpg",
+						title: "Custom channel",
 					};
 				},
 			);
 
-		const metadata = await enrich(
+		await enrich(
 			new URL(
-				"https://www.youtube.com/@creator",
+				"https://www.youtube.com/c/custom",
 			),
 			{
 				fetch: async () => {
 					throw new Error(
-						"channel routes should use fallback",
+						"unsupported channel should use fallback",
 					);
 				},
 			},
 		);
 
 		expect(fallbackCalled).toBe(true);
-		expect(metadata.imageUrl).toBe(
-			"https://cdn.example.com/channel.jpg",
-		);
 	});
 });

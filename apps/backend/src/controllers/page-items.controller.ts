@@ -64,6 +64,7 @@ export const pageItemsController =
 						url: parsed.output.url,
 						publicBaseUrl:
 							c.env?.R2_PUBLIC_URL,
+						env: c.env,
 						fetch: (input, init) =>
 							fetch(input, init),
 					});

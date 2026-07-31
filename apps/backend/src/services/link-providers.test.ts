@@ -77,76 +77,57 @@ describe("link provider registry", () => {
 		});
 	});
 
-	it("extracts Chzzk metadata from API-backed routes", async () => {
+	it("routes youtu.be links through the YouTube provider", () => {
+		expect(
+			resolveLinkProvider(
+				new URL(
+					"https://youtu.be/video123",
+				),
+			).id,
+		).toBe("youtube");
+	});
+
+	it("extracts Chzzk follower metadata through the official Open API", async () => {
 		const channelId =
 			"c7f544c96a48239a73518866bb7b9564";
-		const apiContent = new Map<
-			string,
-			unknown
-		>([
-			[
-				`/service/v1/channels/${channelId}`,
-				{
-					channelName: "Chzzk Channel",
-					channelDescription:
-						"Channel description",
-					channelImageUrl:
-						"https://cdn.example.com/channel.jpg",
-				},
-			],
-			[
-				`/service/v3.3/channels/${channelId}/live-detail`,
-				{
-					liveTitle: "Live title",
-					liveCategoryValue: "Category",
-					liveImageUrl:
-						"https://cdn.example.com/live_{type}.jpg",
-					channel: {
-						channelName:
-							"Chzzk Channel",
-					},
-				},
-			],
-			[
-				"/service/v3/videos/12345",
-				{
-					videoTitle: "Video title",
-					videoCategoryValue:
-						"Video category",
-					thumbnailImageUrl:
-						"https://cdn.example.com/video.jpg",
-					channel: {
-						channelName:
-							"Chzzk Channel",
-					},
-				},
-			],
-			[
-				"/service/v1/clips/clip123/detail",
-				{
-					clipTitle: "Clip title",
-					clipCategory: "Clip category",
-					thumbnailImageUrl:
-						"https://cdn.example.com/clip.jpg",
-				},
-			],
-		]);
 		const fetchApi = async (
 			input: RequestInfo | URL,
+			init?: RequestInit,
 		) => {
-			const path = new URL(
+			const requestUrl = new URL(
 				String(input),
-			).pathname;
-			const content =
-				apiContent.get(path);
-			if (!content)
-				throw new Error(
-					`Unexpected Chzzk API path: ${path}`,
-				);
+			);
+			expect(
+				init?.headers,
+			).toMatchObject({
+				"Client-Id": "chzzk-client-id",
+				"Client-Secret":
+					"chzzk-client-secret",
+			});
+			expect(requestUrl.pathname).toBe(
+				"/open/v1/channels",
+			);
+			expect(
+				requestUrl.searchParams.get(
+					"channelIds",
+				),
+			).toBe(channelId);
 			return new Response(
 				JSON.stringify({
 					code: 200,
-					content,
+					content: {
+						data: [
+							{
+								channelId,
+								channelName:
+									"Chzzk Channel",
+								channelImageUrl:
+									"https://cdn.example.com/channel.jpg",
+								followerCount: 9876,
+								verifiedMark: true,
+							},
+						],
+					},
 				}),
 				{
 					headers: {
@@ -170,64 +151,27 @@ describe("link provider registry", () => {
 					`https://chzzk.naver.com/${channelId}`,
 				),
 				{
+					env: {
+						CHZZK_CLIENT_ID:
+							"chzzk-client-id",
+						CHZZK_CLIENT_SECRET:
+							"chzzk-client-secret",
+					},
 					fetch: fetchApi,
 				},
 			);
-		const live = await registry
-			.resolve(
-				new URL(
-					`https://chzzk.naver.com/live/${channelId}`,
-				),
-			)
-			.enrich(
-				new URL(
-					`https://chzzk.naver.com/live/${channelId}`,
-				),
-				{
-					fetch: fetchApi,
-				},
-			);
-		const video = await registry
-			.resolve(
-				new URL(
-					"https://chzzk.naver.com/video/12345",
-				),
-			)
-			.enrich(
-				new URL(
-					"https://chzzk.naver.com/video/12345",
-				),
-				{
-					fetch: fetchApi,
-				},
-			);
-		const clip = await registry
-			.resolve(
-				new URL(
-					"https://chzzk.naver.com/clips/clip123",
-				),
-			)
-			.enrich(
-				new URL(
-					"https://chzzk.naver.com/clips/clip123",
-				),
-				{
-					fetch: fetchApi,
-				},
-			);
-
 		expect(channel.imageUrl).toBe(
 			"https://cdn.example.com/channel.jpg",
 		);
-		expect(live.imageUrl).toBe(
-			"https://cdn.example.com/live_480.jpg",
-		);
-		expect(video.imageUrl).toBe(
-			"https://cdn.example.com/video.jpg",
-		);
-		expect(clip.imageUrl).toBe(
-			"https://cdn.example.com/clip.jpg",
-		);
+		expect(
+			channel.providerData,
+		).toEqual({
+			channelId,
+			followerCount: 9876,
+			verifiedMark: true,
+			channelImageUrl:
+				"https://cdn.example.com/channel.jpg",
+		});
 	});
 
 	it("uses generic HTML metadata for unsupported Chzzk routes", async () => {
@@ -625,6 +569,47 @@ describe("link provider registry", () => {
 
 		expect(metadata).toEqual({
 			description: "A large chunk",
+		});
+	});
+
+	it("keeps searching valid image candidates across OG variants", async () => {
+		const html =
+			'<html><head><meta property="og:title" content="Variant page"><meta name="twitter:description" content="A variant description"><meta property="og:image" content="http://invalid.example/image.jpg"><meta content="https://cdn.example.com/preview.jpg?token=abc&amp;size=large" property="og:image:url"></head></html>';
+		const provider =
+			createLinkProviderRegistry().resolve(
+				new URL(
+					"https://example.com/variant",
+				),
+			);
+
+		const metadata =
+			await provider.enrich(
+				new URL(
+					"https://example.com/variant",
+				),
+				{
+					fetch: async () =>
+						new Response(
+							new ReadableStream({
+								start(controller) {
+									controller.enqueue(
+										new TextEncoder().encode(
+											html,
+										),
+									);
+									controller.close();
+								},
+							}),
+						),
+				},
+			);
+
+		expect(metadata).toEqual({
+			title: "Variant page",
+			description:
+				"A variant description",
+			imageUrl:
+				"https://cdn.example.com/preview.jpg?token=abc&size=large",
 		});
 	});
 });

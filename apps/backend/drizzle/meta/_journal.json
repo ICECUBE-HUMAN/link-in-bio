@@ -43,6 +43,13 @@
       "when": 1785155710945,
       "tag": "0005_lush_lyja",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1785509969951,
+      "tag": "0006_silky_spitfire",
+      "breakpoints": true
     }
   ]
 }

@@ -15,6 +15,7 @@
 - Metadata enrichment endpoint is exactly `POST /pages/:handle/metadata`.
 - No Queue is used for link enrichment; an in-flight frontend request may be aborted when the page unmounts.
 - Provider selection is modular and specific providers must be able to override the generic provider.
+- Provider adapters use official APIs when the corresponding Worker secrets are configured, then fall back to generic OG metadata on missing credentials or provider failure.
 - Generic fetches are bounded by timeout, response type, and body size.
 - Frontend tests are not added or run unless explicitly requested; use scoped checks and manual browser verification.
 
@@ -51,7 +52,11 @@
 
 - [ ] Add mailto and generic providers, keeping provider matching synchronous and network-free.
 - [ ] Add registry tests proving mailto precedence, generic fallback, provider priority, bounded fetch behavior, HTML title/description/OG-image extraction, and failure degradation.
-- [ ] Keep provider-specific API adapters extensible without adding unconfigured Discord/YouTube API calls.
+- [ ] Implement YouTube Data API v3 channel/video enrichment, including channel statistics, uploads-playlist latest thumbnail, and video statistics.
+- [ ] Implement Twitch Helix enrichment for channel profile, follower total, live stream data, and latest VOD; use a broadcaster/moderator User Access Token with the required scope for follower totals.
+- [ ] Implement CHZZK official Open API channel/current-live enrichment and explicitly fall back for VOD/clips because no documented official recent-VOD endpoint is available.
+- [ ] Implement Discord invite counts and Bot-authenticated channel/guild counts; do not invent images when the API has no icon/banner hash.
+- [ ] Keep credentials in Worker bindings and local `apps/backend/.env.local`; never embed API keys, tokens, or provider default image URLs in source.
 - [ ] Run focused provider tests and backend typecheck.
 
 ### Task 3: Immediate batch metadata and metadata endpoint

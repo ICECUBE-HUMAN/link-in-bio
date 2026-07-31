@@ -16,6 +16,34 @@ export type LinkProviderContext = {
 		input: RequestInfo | URL,
 		init?: RequestInit,
 	) => Promise<Response>;
+	env?: LinkProviderEnvironment;
+	twitchUserTokenStore?: TwitchUserTokenStore;
+};
+
+export type LinkProviderEnvironment = {
+	YOUTUBE_API_KEY?: string;
+	CHZZK_CLIENT_ID?: string;
+	CHZZK_CLIENT_SECRET?: string;
+	TWITCH_CLIENT_ID?: string;
+	TWITCH_CLIENT_SECRET?: string;
+	TWITCH_USER_ACCESS_TOKEN?: string;
+	TWITCH_USER_REFRESH_TOKEN?: string;
+	DISCORD_BOT_TOKEN?: string;
+};
+
+export type TwitchUserToken = {
+	accessToken: string;
+	refreshToken?: string;
+	expiresAt?: number;
+};
+
+export type TwitchUserTokenStore = {
+	get: () => Promise<
+		TwitchUserToken | undefined
+	>;
+	set: (
+		token: TwitchUserToken,
+	) => Promise<void>;
 };
 
 export type LinkProvider = {
@@ -85,7 +113,7 @@ function hasCompleteMetadata(
 	html: string,
 	baseUrl: URL,
 ): boolean {
-	const title = getTitle(html);
+	const title = getPageTitle(html);
 	const description =
 		getMetaContent(
 			html,
@@ -94,9 +122,13 @@ function hasCompleteMetadata(
 		getMetaContent(
 			html,
 			"og:description",
+		) ??
+		getMetaContent(
+			html,
+			"twitter:description",
 		);
-	const imageUrl = getHttpsImageUrl(
-		getMetaContent(html, "og:image"),
+	const imageUrl = getFirstImageUrl(
+		html,
 		baseUrl,
 	);
 	return Boolean(
@@ -165,12 +197,13 @@ function decodeHtmlEntities(
 	);
 }
 
-function getMetaContent(
+function getMetaContents(
 	html: string,
 	expectedProperty: string,
-): string | undefined {
+): string[] {
 	const tagPattern =
 		/<meta\b([^>]+)>/gi;
+	const values: string[] = [];
 	for (const match of html.matchAll(
 		tagPattern,
 	)) {
@@ -195,11 +228,23 @@ function getMetaContent(
 			attributes,
 			"content",
 		);
-		return content
-			? decodeHtmlEntities(content)
-			: undefined;
+		if (content) {
+			values.push(
+				decodeHtmlEntities(content),
+			);
+		}
 	}
-	return undefined;
+	return values;
+}
+
+function getMetaContent(
+	html: string,
+	expectedProperty: string,
+): string | undefined {
+	return getMetaContents(
+		html,
+		expectedProperty,
+	)[0];
 }
 
 function getTitle(
@@ -213,6 +258,19 @@ function getTitle(
 		decodeHtmlEntities(title)
 			.replace(/\s+/g, " ")
 			.trim() || undefined
+	);
+}
+
+function getPageTitle(
+	html: string,
+): string | undefined {
+	return (
+		getTitle(html) ??
+		getMetaContent(html, "og:title") ??
+		getMetaContent(
+			html,
+			"twitter:title",
+		)
 	);
 }
 
@@ -233,6 +291,31 @@ function getHttpsImageUrl(
 	} catch {
 		return undefined;
 	}
+}
+
+function getFirstImageUrl(
+	html: string,
+	baseUrl: URL,
+): string | undefined {
+	for (const property of [
+		"og:image",
+		"og:image:url",
+		"og:image:secure_url",
+		"twitter:image",
+		"twitter:image:src",
+	]) {
+		for (const value of getMetaContents(
+			html,
+			property,
+		)) {
+			const imageUrl = getHttpsImageUrl(
+				value,
+				baseUrl,
+			);
+			if (imageUrl) return imageUrl;
+		}
+	}
+	return undefined;
 }
 
 async function enrichGenericWeb(
@@ -311,12 +394,8 @@ async function enrichGenericWeb(
 					metadataBaseUrl,
 				),
 		);
-		const image = getMetaContent(
-			html,
-			"og:image",
-		);
 		return {
-			title: getTitle(html),
+			title: getPageTitle(html),
 			description:
 				getMetaContent(
 					html,
@@ -325,9 +404,13 @@ async function enrichGenericWeb(
 				getMetaContent(
 					html,
 					"og:description",
+				) ??
+				getMetaContent(
+					html,
+					"twitter:description",
 				),
-			imageUrl: getHttpsImageUrl(
-				image,
+			imageUrl: getFirstImageUrl(
+				html,
 				metadataBaseUrl,
 			),
 		};
@@ -344,6 +427,7 @@ function isHtmlResponse(
 	const contentType = response.headers
 		.get("content-type")
 		?.toLowerCase();
+	if (!contentType) return true;
 	return (
 		contentType?.includes(
 			"text/html",

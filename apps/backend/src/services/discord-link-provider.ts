@@ -7,9 +7,19 @@ import type {
 const DISCORD_API_ORIGIN =
 	"https://discord.com";
 const DISCORD_API_TIMEOUT_MS = 2500;
+const DISCORD_HOSTS = new Set([
+	"discord.gg",
+	"discord.com",
+	"www.discord.com",
+	"discordapp.com",
+	"www.discordapp.com",
+]);
 
 type DiscordInviteResponse = {
+	approximate_member_count?: unknown;
+	approximate_presence_count?: unknown;
 	guild?: unknown;
+	channel?: unknown;
 };
 
 function asRecord(
@@ -25,8 +35,37 @@ function asString(
 	value: unknown,
 ): string | undefined {
 	return typeof value === "string" &&
-		value
-		? value
+		value.trim()
+		? value.trim()
+		: undefined;
+}
+
+function asNumber(
+	value: unknown,
+): number | undefined {
+	const number =
+		typeof value === "number"
+			? value
+			: typeof value === "string" &&
+					value.trim()
+				? Number(value)
+				: Number.NaN;
+	return Number.isFinite(number)
+		? number
+		: undefined;
+}
+
+function getProviderData(
+	values: Record<string, unknown>,
+): PageItemLinkMetadata["providerData"] {
+	const defined = Object.fromEntries(
+		Object.entries(values).filter(
+			([, value]) =>
+				value !== undefined,
+		),
+	);
+	return Object.keys(defined).length > 0
+		? (defined as PageItemLinkMetadata["providerData"])
 		: undefined;
 }
 
@@ -38,13 +77,12 @@ function getInviteCode(
 	const segments = url.pathname
 		.split("/")
 		.filter(Boolean);
-
-	if (hostname === "discord.gg") {
-		return segments.length === 1
-			? segments[0]
-			: undefined;
+	if (
+		hostname === "discord.gg" &&
+		segments.length === 1
+	) {
+		return decodeSegment(segments[0]);
 	}
-
 	if (
 		[
 			"discord.com",
@@ -54,10 +92,54 @@ function getInviteCode(
 		].includes(hostname) &&
 		segments.length === 2 &&
 		segments[0] === "invite"
-	)
-		return segments[1];
-
+	) {
+		return decodeSegment(segments[1]);
+	}
 	return undefined;
+}
+
+function getChannelTarget(url: URL):
+	| {
+			guildId: string;
+			channelId: string;
+	  }
+	| undefined {
+	if (
+		!DISCORD_HOSTS.has(
+			url.hostname.toLowerCase(),
+		)
+	) {
+		return undefined;
+	}
+	const segments = url.pathname
+		.split("/")
+		.filter(Boolean);
+	if (
+		segments.length !== 3 ||
+		segments[0] !== "channels" ||
+		!segments[1] ||
+		!segments[2] ||
+		segments[1] === "@me"
+	) {
+		return undefined;
+	}
+	return {
+		guildId: segments[1],
+		channelId: segments[2],
+	};
+}
+
+function decodeSegment(
+	value: string | undefined,
+): string | undefined {
+	if (!value) return undefined;
+	try {
+		const decoded =
+			decodeURIComponent(value);
+		return decoded || undefined;
+	} catch {
+		return undefined;
+	}
 }
 
 function getDiscordImageUrl(
@@ -74,38 +156,40 @@ function getDiscordImageUrl(
 	return `https://cdn.discordapp.com/${kind}/${encodeURIComponent(guildId)}/${encodeURIComponent(imageHash)}.${extension}?size=512`;
 }
 
-async function fetchDiscordInvite(
-	code: string,
+async function fetchDiscordJson<T>(
+	path: string,
 	context: LinkProviderContext,
-): Promise<
-	DiscordInviteResponse | undefined
-> {
+	botToken?: string,
+): Promise<T | undefined> {
 	const controller =
 		new AbortController();
 	const timeout = setTimeout(
 		() => controller.abort(),
 		DISCORD_API_TIMEOUT_MS,
 	);
-
 	try {
-		const endpoint = `${DISCORD_API_ORIGIN}/api/v10/invites/${encodeURIComponent(code)}?with_counts=true`;
 		const response =
-			await context.fetch(endpoint, {
-				redirect: "manual",
-				signal: controller.signal,
-				headers: {
-					accept: "application/json",
-					"user-agent":
-						"Sinabro Link Metadata/1.0",
+			await context.fetch(
+				`${DISCORD_API_ORIGIN}/api/v10${path}`,
+				{
+					redirect: "manual",
+					signal: controller.signal,
+					headers: {
+						accept: "application/json",
+						...(botToken
+							? {
+									Authorization: `Bot ${botToken}`,
+								}
+							: {}),
+						"user-agent":
+							"Sinabro Link Metadata/1.0",
+					},
 				},
-			});
+			);
 		if (!response.ok) return undefined;
 		const payload =
 			(await response.json()) as unknown;
-		return typeof payload ===
-			"object" && payload !== null
-			? (payload as DiscordInviteResponse)
-			: undefined;
+		return payload as T;
 	} catch {
 		return undefined;
 	} finally {
@@ -113,18 +197,15 @@ async function fetchDiscordInvite(
 	}
 }
 
-async function enrichDiscordRoute(
+async function enrichDiscordInvite(
+	code: string,
 	url: URL,
 	context: LinkProviderContext,
 	fallbackEnrich: LinkProvider["enrich"],
 ): Promise<PageItemLinkMetadata> {
-	const code = getInviteCode(url);
-	if (!code)
-		return fallbackEnrich(url, context);
-
 	const payload =
-		await fetchDiscordInvite(
-			code,
+		await fetchDiscordJson<DiscordInviteResponse>(
+			`/invites/${encodeURIComponent(code)}?with_counts=true`,
 			context,
 		);
 	const guild = asRecord(
@@ -134,6 +215,35 @@ async function enrichDiscordRoute(
 		return fallbackEnrich(url, context);
 
 	const guildId = asString(guild.id);
+	const channel = asRecord(
+		payload?.channel,
+	);
+	const channelId = asString(
+		channel?.id,
+	);
+	const channelName = asString(
+		channel?.name,
+	);
+	const memberCount = asNumber(
+		payload?.approximate_member_count,
+	);
+	const onlineMemberCount = asNumber(
+		payload?.approximate_presence_count,
+	);
+	const providerData =
+		memberCount !== undefined ||
+		onlineMemberCount !== undefined ||
+		channelId ||
+		channelName
+			? getProviderData({
+					guildId,
+					channelId,
+					channelName,
+					memberCount,
+					onlineMemberCount,
+					inviteCode: code,
+				})
+			: undefined;
 	const iconUrl = getDiscordImageUrl(
 		guildId,
 		asString(guild.icon),
@@ -144,20 +254,130 @@ async function enrichDiscordRoute(
 		asString(guild.banner),
 		"banners",
 	);
-	const metadata: PageItemLinkMetadata =
-		{
-			title: asString(guild.name),
-			description: asString(
-				guild.description,
-			),
-			imageUrl: iconUrl ?? bannerUrl,
-		};
-	if (
-		metadata.title ||
-		metadata.description ||
-		metadata.imageUrl
-	)
-		return metadata;
+
+	return {
+		title: asString(guild.name),
+		description: asString(
+			guild.description,
+		),
+		imageUrl: iconUrl ?? bannerUrl,
+		providerData,
+	};
+}
+
+async function enrichDiscordChannel(
+	target: {
+		guildId: string;
+		channelId: string;
+	},
+	url: URL,
+	context: LinkProviderContext,
+	fallbackEnrich: LinkProvider["enrich"],
+): Promise<PageItemLinkMetadata> {
+	const botToken =
+		context.env?.DISCORD_BOT_TOKEN?.trim();
+	if (!botToken)
+		return fallbackEnrich(url, context);
+
+	const channel = asRecord(
+		await fetchDiscordJson<unknown>(
+			`/channels/${encodeURIComponent(target.channelId)}`,
+			context,
+			botToken,
+		),
+	);
+	const guildId =
+		asString(channel?.guild_id) ??
+		target.guildId;
+	if (!channel || !guildId) {
+		return fallbackEnrich(url, context);
+	}
+
+	const guild = asRecord(
+		await fetchDiscordJson<unknown>(
+			`/guilds/${encodeURIComponent(guildId)}?with_counts=true`,
+			context,
+			botToken,
+		),
+	);
+	if (!guild)
+		return fallbackEnrich(url, context);
+
+	const channelId =
+		asString(channel.id) ??
+		target.channelId;
+	const channelName = asString(
+		channel.name,
+	);
+	const guildName = asString(
+		guild.name,
+	);
+	const memberCount =
+		asNumber(
+			guild.approximate_member_count,
+		) ?? asNumber(guild.member_count);
+	const onlineMemberCount = asNumber(
+		guild.approximate_presence_count,
+	);
+	const channelMemberCount = asNumber(
+		channel.member_count,
+	);
+	const providerData = getProviderData({
+		guildId,
+		channelId,
+		channelName,
+		memberCount,
+		onlineMemberCount,
+		channelMemberCount,
+	});
+	const iconUrl = getDiscordImageUrl(
+		guildId,
+		asString(guild.icon),
+		"icons",
+	);
+	const bannerUrl = getDiscordImageUrl(
+		guildId,
+		asString(guild.banner),
+		"banners",
+	);
+	return {
+		title:
+			guildName && channelName
+				? `${guildName} - ${channelName}`
+				: (channelName ?? guildName),
+		description:
+			asString(channel.topic) ??
+			asString(guild.description),
+		imageUrl: iconUrl ?? bannerUrl,
+		providerData,
+	};
+}
+
+async function enrichDiscordRoute(
+	url: URL,
+	context: LinkProviderContext,
+	fallbackEnrich: LinkProvider["enrich"],
+): Promise<PageItemLinkMetadata> {
+	const code = getInviteCode(url);
+	if (code) {
+		return enrichDiscordInvite(
+			code,
+			url,
+			context,
+			fallbackEnrich,
+		);
+	}
+
+	const channelTarget =
+		getChannelTarget(url);
+	if (channelTarget) {
+		return enrichDiscordChannel(
+			channelTarget,
+			url,
+			context,
+			fallbackEnrich,
+		);
+	}
 
 	return fallbackEnrich(url, context);
 }

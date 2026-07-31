@@ -30,9 +30,13 @@ The metadata service is split into focused pieces:
 - Provider contract and registry: providers match parsed URLs synchronously and expose an enrichment function. Registry order/priority lets specific providers override the generic provider.
 - `mailto` provider: no network request.
 - Generic web provider: bounded HTTPS GET with an abort timeout, HTML content-type/size guard, and extraction of title, description, and `og:image`.
+- YouTube adapter: YouTube Data API v3 `channels.list`, the channel uploads playlist through `playlistItems.list`, and `videos.list` for video URLs. Channel metadata includes subscriber, video, and view counts plus the latest upload thumbnail.
+- Twitch adapter: Helix `Get Users`, `Get Channel Followers`, `Get Streams`, and `Get Videos`. It uses an app token for public channel/stream/VOD data and a User Access Token with `moderator:read:followers` from the broadcaster or one of its moderators for follower data.
+- CHZZK adapter: the official Open API `/open/v1/channels` and `/open/v1/lives` endpoints with `Client-Id` and `Client-Secret` headers. The official API does not expose a documented per-channel recent VOD/clips list, so private `/service/*` endpoints are intentionally excluded.
+- Discord adapter: the public invite endpoint with `with_counts=true`, and Bot-authenticated channel/guild endpoints for Discord channel URLs. Discord channel URLs require `DISCORD_BOT_TOKEN`; invite counts do not.
 - Metadata endpoint service: authorization, item lookup, provider selection, persistence, and response mapping.
 
-No Discord or YouTube credentials/API behavior is invented in this change. Their future adapters can implement the same provider contract and take precedence over the generic provider.
+Provider API credentials are passed from Worker bindings through the metadata context. If a provider credential is missing or an API request fails, the adapter falls back to the bounded generic OG metadata fetcher. Provider-specific values are returned through the existing scalar `providerData` record without adding provider-specific URL constants or default images.
 
 ## Failure and performance behavior
 

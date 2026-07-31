@@ -144,6 +144,27 @@ export const verification = pgTable(
 	],
 );
 
+export const providerTokens = pgTable(
+	"provider_tokens",
+	{
+		provider:
+			text("provider").primaryKey(),
+		accessToken: text(
+			"access_token",
+		).notNull(),
+		refreshToken: text("refresh_token"),
+		accessTokenExpiresAt: timestamp(
+			"access_token_expires_at",
+		),
+		createdAt: timestamp("created_at")
+			.defaultNow()
+			.notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.notNull(),
+	},
+);
+
 export const pages = pgTable(
 	"pages",
 	{

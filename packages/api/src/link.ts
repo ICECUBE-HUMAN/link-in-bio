@@ -62,7 +62,8 @@ export const linkProviderDefinitions: readonly LinkProviderDefinition[] = [
 		label: "YouTube",
 		priority: 0,
 		fallbackTone: "youtube",
-		match: (url) => url.hostname.includes("youtube"),
+		match: (url) =>
+			url.hostname.includes("youtube") || url.hostname === "youtu.be",
 	},
 	{
 		id: "discord",
