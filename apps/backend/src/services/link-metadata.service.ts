@@ -144,6 +144,12 @@ export async function enrichPageItemMetadata({
 			enriched,
 		),
 	};
+	data.metadata = mergeMetadata(
+		data.metadata,
+		{
+			provider: provider.id,
+		},
+	);
 	await db
 		.update(pageItems)
 		.set({

@@ -10,7 +10,7 @@ import { MY_PAGE_QUERY_KEY } from "@/lib/api/pages.functions";
 import { updatePage } from "@/lib/api/pages-api";
 import { type EditablePageFields, getChangedPageFields } from "./page-update";
 
-export const PAGE_AUTOSAVE_DEBOUNCE_MS = 600;
+export const PAGE_AUTOSAVE_DEBOUNCE_MS = 1000;
 
 export type PageAutoSaveStatus = "saved" | "dirty" | "saving" | "error";
 

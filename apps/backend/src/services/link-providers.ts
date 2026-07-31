@@ -1,4 +1,7 @@
-import type { PageItemLinkMetadata } from "@sinabro/api";
+import {
+	linkProviderDefinitions,
+	type PageItemLinkMetadata,
+} from "@sinabro/api";
 
 const LINK_FETCH_TIMEOUT_MS = 2500;
 const MAX_HEAD_BYTES = 512 * 1024;
@@ -206,16 +209,6 @@ async function enrichGenericWeb(
 	}
 }
 
-const mailtoProvider: LinkProvider = {
-	id: "mailto",
-	priority: 100,
-	match: (url) =>
-		url.protocol === "mailto:",
-	enrich: async (url) => ({
-		title: url.pathname,
-	}),
-};
-
 const genericWebProvider: LinkProvider =
 	{
 		id: "generic-web",
@@ -225,12 +218,30 @@ const genericWebProvider: LinkProvider =
 		enrich: enrichGenericWeb,
 	};
 
+const sharedProviders: readonly LinkProvider[] =
+	linkProviderDefinitions
+		.filter(
+			(definition) =>
+				definition.id !== "generic-web",
+		)
+		.map((definition) => ({
+			id: definition.id,
+			priority: definition.priority,
+			match: definition.match,
+			enrich:
+				definition.id === "mailto"
+					? async (url) => ({
+							title: url.pathname,
+						})
+					: enrichGenericWeb,
+		}));
+
 export function createLinkProviderRegistry(
 	additionalProviders: readonly LinkProvider[] = [],
 ) {
 	const providers = [
-		mailtoProvider,
 		...additionalProviders,
+		...sharedProviders,
 		genericWebProvider,
 	].sort(
 		(left, right) =>
@@ -254,7 +265,5 @@ export const linkProviderRegistry =
 export function resolveLinkProvider(
 	url: URL,
 ): LinkProvider {
-	return linkProviderRegistry.resolve(
-		url,
-	);
+	return linkProviderRegistry.resolve(url);
 }
