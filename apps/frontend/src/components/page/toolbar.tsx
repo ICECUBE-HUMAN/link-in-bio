@@ -123,7 +123,7 @@ export default function Toolbar({
 								size="icon"
 								variant="ghost"
 								aria-label="Back to toolbar"
-								className="rounded-full text-muted-foreground hover:bg-muted-foreground/40 hover:text-background/90 active:scale-[0.97]"
+								className="rounded-full text-muted-foreground hover:bg-muted-foreground/40 hover:text-background/90"
 								onClick={() => setView("toolbar")}
 							>
 								<HugeiconsIcon
@@ -156,7 +156,7 @@ export default function Toolbar({
 										type="button"
 										size="icon-sm"
 										aria-label="Add link"
-										className="bg-brand text-primary-foreground active:scale-[0.97] hover:bg-brand/80 hover:text-primary-foreground"
+										className="bg-brand text-primary-foreground hover:bg-brand/80 hover:text-primary-foreground"
 										disabled={!canAddLink}
 										onClick={() => {
 											submitLink(linkUrl);
@@ -181,7 +181,7 @@ export default function Toolbar({
 								size="icon"
 								variant="ghost"
 								aria-label="Back to toolbar"
-								className="rounded-full text-muted-foreground hover:bg-muted-foreground/40 hover:text-background/90 active:scale-[0.97]"
+								className="rounded-full text-muted-foreground hover:bg-muted-foreground/40 hover:text-background/90"
 								onClick={() => setView("toolbar")}
 							>
 								<HugeiconsIcon

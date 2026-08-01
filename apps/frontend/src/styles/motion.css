@@ -136,8 +136,6 @@
 	justify-content: center;
 	gap: 0.125rem;
 }
-.t-copy-button { transition: transform 160ms var(--check-ease-out); }
-.t-copy-button:active { transform: scale(0.97); }
 .t-copy-icon {
 	display: grid;
 	width: 0;
