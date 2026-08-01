@@ -114,7 +114,7 @@ export function PageImageEditor({
 						{imageContent}
 						{image ? (
 							<span
-								className={`pointer-events-none absolute inset-0 flex items-center justify-center bg-black/25 text-white transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none ${isUploading ? "opacity-100" : "opacity-0 group-hover/image:opacity-100 group-focus-within/image:opacity-100"}`}
+								className={`pointer-events-none absolute inset-0 flex items-center justify-center bg-black/25 text-white transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none ${isUploading ? "opacity-100" : "opacity-0 group-hover/image:opacity-100"}`}
 							>
 								{isUploading ? (
 									<Loader className="size-8 animate-spin" />
@@ -129,7 +129,7 @@ export function PageImageEditor({
 							variant="ghost"
 							size="icon-sm"
 							aria-label="Crop profile image"
-							className={`absolute top-0 left-0 inline-flex size-10 items-center justify-center rounded-full border border-border/60 bg-background opacity-0 shadow-md transition-[opacity,transform,scale,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:scale-100 focus-visible:opacity-100 group-hover/image:scale-100 group-hover/image:opacity-100 group-focus-within/image:scale-100 group-focus-within/image:opacity-100 motion-reduce:transition-none ${layoutClasses.imageCrop}`}
+							className={`absolute top-0 left-0 inline-flex size-10 items-center justify-center rounded-full border border-border/60 bg-background opacity-0 shadow-md transition-[opacity,transform,scale,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:scale-100 focus-visible:opacity-100 group-hover/image:scale-100 group-hover/image:opacity-100 motion-reduce:transition-none ${layoutClasses.imageCrop}`}
 						>
 							<CropIcon className="size-5 stroke-3" />
                     </Button>
@@ -140,7 +140,7 @@ export function PageImageEditor({
 							aria-label="Remove profile image"
 							disabled={isUploading}
 							onClick={handleImageRemove}
-							className={`absolute top-0 right-0 inline-flex size-10 items-center justify-center rounded-full border border-border/60 bg-background opacity-0 shadow-md transition-[opacity,transform,scale,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:scale-100 focus-visible:opacity-100 group-hover/image:scale-100 group-hover/image:opacity-100 group-focus-within/image:scale-100 group-focus-within/image:opacity-100 motion-reduce:transition-none ${layoutClasses.imageRemove}`}
+							className={`absolute top-0 right-0 inline-flex size-10 items-center justify-center rounded-full border border-border/60 bg-background opacity-0 shadow-md transition-[opacity,transform,scale,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:scale-100 focus-visible:opacity-100 group-hover/image:scale-100 group-hover/image:opacity-100 motion-reduce:transition-none ${layoutClasses.imageRemove}`}
 						>
 							<TrashIcon className="size-5 stroke-3" />
 						</Button>
