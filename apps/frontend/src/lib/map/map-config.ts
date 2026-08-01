@@ -21,6 +21,12 @@ export type MapCamera = {
 	zoom: number;
 };
 
+type MapCameraInput = {
+	latitude: number;
+	longitude: number;
+	zoom: number;
+};
+
 export function getMapboxAccessToken() {
 	return env.VITE_MAPBOX_ACCESS_TOKEN?.trim() || undefined;
 }
@@ -40,6 +46,21 @@ export function normalizeMapCamera(data: {
 			data.zoom <= MAP_ZOOM_MAX
 				? data.zoom
 				: DEFAULT_MAP_ZOOM,
+	};
+}
+
+export function sanitizeMapCamera(data: MapCameraInput): MapCamera | undefined {
+	if (
+		!Number.isFinite(data.latitude) ||
+		!Number.isFinite(data.longitude) ||
+		!Number.isFinite(data.zoom)
+	)
+		return undefined;
+
+	return {
+		latitude: data.latitude,
+		longitude: data.longitude,
+		zoom: Math.min(MAP_ZOOM_MAX, Math.max(MAP_ZOOM_MIN, data.zoom)),
 	};
 }
 
