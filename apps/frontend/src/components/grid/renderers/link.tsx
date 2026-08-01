@@ -76,6 +76,7 @@ function getProviderCount(
 function LinkAction({
 	href,
 	label,
+	detail,
 	actionBackground,
 	actionText,
 	actionVariant,
@@ -83,6 +84,7 @@ function LinkAction({
 }: {
 	href: string;
 	label: string;
+	detail?: string;
 	actionBackground?: string;
 	actionText?: string;
 	actionVariant?: "solid" | "outline";
@@ -95,10 +97,22 @@ function LinkAction({
 					href={href}
 					target="_blank"
 					rel="noreferrer"
-					aria-label={label}
+					aria-label={detail ? `${label} ${detail}` : label}
 					className="font-light!"
 				>
 					<span>{label}</span>
+					{detail && (
+						<span
+							className={cn(
+								"ml-1",
+								actionBackground && actionText
+									? "opacity-70"
+									: "text-muted-foreground",
+							)}
+						>
+							{detail}
+						</span>
+					)}
 				</a>
 			}
 			nativeButton={false}
@@ -320,9 +334,8 @@ export function LinkItemRenderer({
 		providerPresentation?.actionLabel ??
 		(provider === "mailto" ? "Send" : "Open");
 	const linkActionProps = {
-		label: providerCount
-			? `${baseActionLabel} ${providerCount}`
-			: baseActionLabel,
+		label: baseActionLabel,
+		detail: providerCount,
 		actionBackground: providerPresentation?.actionBackground,
 		actionText: providerPresentation?.actionText,
 		actionVariant: providerPresentation?.actionVariant,
