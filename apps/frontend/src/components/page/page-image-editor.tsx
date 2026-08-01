@@ -1,4 +1,4 @@
-import { TrashIcon } from "lucide-react";
+import { TrashIcon, CropIcon } from "lucide-react";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { Loader, Upload3 } from "reicon-react";
 import { Button } from "@/components/ui/button";
@@ -123,17 +123,28 @@ export function PageImageEditor({
 						) : null}
 					</button>
 					{image && !isUploading ? (
-						<Button
+            <>
+              <Button
+							type="button"
+							variant="ghost"
+							size="icon-sm"
+							aria-label="Crop profile image"
+							className={`absolute top-0 left-0 inline-flex size-10 items-center justify-center rounded-full border border-border/60 bg-background opacity-0 shadow-md transition-[opacity,transform,scale,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:scale-100 focus-visible:opacity-100 group-hover/image:scale-100 group-hover/image:opacity-100 group-focus-within/image:scale-100 group-focus-within/image:opacity-100 motion-reduce:transition-none ${layoutClasses.imageCrop}`}
+						>
+							<CropIcon className="size-5 stroke-3" />
+                    </Button>
+                    <Button
 							type="button"
 							variant="ghost"
 							size="icon-sm"
 							aria-label="Remove profile image"
 							disabled={isUploading}
 							onClick={handleImageRemove}
-								className={`absolute top-0 right-0 inline-flex size-10 items-center justify-center rounded-full border border-border/60 bg-background opacity-0 shadow-md transition-[opacity,transform,scale,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:scale-100 focus-visible:opacity-100 group-hover/image:scale-100 group-hover/image:opacity-100 group-focus-within/image:scale-100 group-focus-within/image:opacity-100 motion-reduce:transition-none ${layoutClasses.imageRemove}`}
+							className={`absolute top-0 right-0 inline-flex size-10 items-center justify-center rounded-full border border-border/60 bg-background opacity-0 shadow-md transition-[opacity,transform,scale,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:scale-100 focus-visible:opacity-100 group-hover/image:scale-100 group-hover/image:opacity-100 group-focus-within/image:scale-100 group-focus-within/image:opacity-100 motion-reduce:transition-none ${layoutClasses.imageRemove}`}
 						>
 							<TrashIcon className="size-5 stroke-3" />
 						</Button>
+						</>
 					) : null}
 				</div>
 			) : (

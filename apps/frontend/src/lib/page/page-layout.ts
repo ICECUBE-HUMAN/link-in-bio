@@ -10,6 +10,7 @@ export type PageLayoutClasses = {
 	name: string;
 	bio: string;
 	image: string;
+	imageCrop: string;
 	imageRemove: string;
 };
 
@@ -28,6 +29,7 @@ const PAGE_LAYOUT_CLASSES: Record<Breakpoint, PageLayoutClasses> = {
 		name: "min-[90rem]:text-[40px]",
 		bio: "min-[90rem]:text-xl min-[90rem]:leading-8",
 		image: "sm:size-32 min-[90rem]:size-46",
+		imageCrop: "min-[90rem]:top-2 min-[90rem]:left-2",
 		imageRemove: "min-[90rem]:top-2 min-[90rem]:right-2",
 	},
 	compact: {
@@ -42,6 +44,7 @@ const PAGE_LAYOUT_CLASSES: Record<Breakpoint, PageLayoutClasses> = {
 		name: "",
 		bio: "",
 		image: "",
+		imageCrop: "",
 		imageRemove: "",
 	},
 };
