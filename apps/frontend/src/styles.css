@@ -2,6 +2,7 @@
 @plugin '@tailwindcss/typography';
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import 'shadow-plugin';
 
 @import "@fontsource-variable/inter";
 @import "./fonts.css";
@@ -262,6 +263,13 @@
     
     --shadow-brand: 0px 40px 60px 0px rgba(0, 0, 0, 0.06);
     --shadow-brand-small: 0px 20px 30px 1px rgba(0, 0, 0, 0.06);
+
+    --shadow-xs: var(--smooth-shadow-xs);
+    --shadow-sm: var(--smooth-shadow-sm);
+    --shadow-md: var(--smooth-shadow-md);
+    --shadow-lg: var(--smooth-shadow-lg);
+    --shadow-xl: var(--smooth-shadow-xl);
+    --shadow-2xl: var(--smooth-shadow-2xl);
 }
 
 .dark {
@@ -391,5 +399,9 @@
           0 5.4px 8.775px rgba(0, 0, 0, 0.02),
           0 2.2px 4.4px rgba(0, 0, 0, 0.016),
           0 0.5px 2.125px rgba(0, 0, 0, 0.01);
+    }
+
+    .beautiful-shadow {
+        @apply smooth-shadow-ring shadow-black smooth-ring-neutral-300/30;
     }
 }
