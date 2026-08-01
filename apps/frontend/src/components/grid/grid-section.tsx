@@ -341,7 +341,7 @@ export function GridSection({
 
 	return (
 		<div
-			className="grid-section-shell flex min-w-full max-w-full shrink-0 justify-center overflow-visible pb-80"
+			className={`grid-section-shell flex min-w-full max-w-full shrink-0 justify-center overflow-visible ${mode === "edit" ? "pb-80" : ""}`}
 			style={{ width: gridWidth }}
 		>
 			<GridLayout
