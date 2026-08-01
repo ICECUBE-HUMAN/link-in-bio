@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import * as React from "react";
 
-import { Command, CommandItem, CommandList } from "@/components/ui/command";
+import { Command } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import {
 	MapboxGeocodingError,
@@ -246,19 +246,28 @@ export function MapLocationSearch({
 				{showPanel ? (
 					<div className="absolute inset-x-0 top-full z-20 mt-2 overflow-hidden rounded-2xl border bg-popover text-popover-foreground shadow-lg">
 						{status === "ready" ? (
-							<CommandList
+							<div
 								id={listboxId}
+								role="listbox"
 								aria-label="Location results"
-								className="max-h-72 p-1"
+								className="no-scrollbar max-h-72 scroll-py-1 overflow-x-hidden overflow-y-auto p-1 outline-none"
 							>
 								{results.map((result, index) => (
-									<CommandItem
+									<div
 										key={result.id}
 										id={`${searchId}-option-${index}`}
+										role="option"
+										aria-selected={activeIndex === index}
+										tabIndex={-1}
 										data-active={activeIndex === index || undefined}
 										onMouseEnter={() => setActiveIndex(index)}
-										onSelect={() => selectResult(result)}
-										className="items-start text-left data-[active=true]:bg-muted"
+										onClick={() => selectResult(result)}
+										onKeyDown={(event) => {
+											if (event.key !== "Enter" && event.key !== " ") return;
+											event.preventDefault();
+											selectResult(result);
+										}}
+										className="group/command-item relative flex cursor-default items-start gap-2 rounded-2xl px-3 py-2 text-left text-sm font-medium outline-hidden select-none hover:bg-muted data-[active=true]:bg-muted [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
 									>
 										<MapPinIcon className="mt-0.5" aria-hidden="true" />
 										<span className="min-w-0">
@@ -269,9 +278,9 @@ export function MapLocationSearch({
 												</span>
 											) : null}
 										</span>
-									</CommandItem>
+									</div>
 								))}
-							</CommandList>
+							</div>
 						) : status === "loading" ? (
 							<div className="flex items-center gap-2 px-3 py-3 text-sm text-muted-foreground">
 								<Loader2Icon
