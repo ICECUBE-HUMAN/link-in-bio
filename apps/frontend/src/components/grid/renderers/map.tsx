@@ -132,7 +132,7 @@ export function MapItemRenderer({
 				)}
 			</div>
 
-			<div className="relative flex size-full flex-col justify-between gap-4">
+			<div className="pointer-events-none relative flex size-full flex-col justify-between gap-4">
 				<div className="flex items-start justify-between gap-3">
 					{showMapFallback ? (
 						<div />
@@ -141,7 +141,7 @@ export function MapItemRenderer({
 							Coordinates
 						</div>
 					)}
-					<div className="flex items-center gap-2">
+					<div className="pointer-events-auto flex items-center gap-2">
 						{mode === "edit" ? (
 							<div data-grid-item-drag-cancel="true">
 								<Button
@@ -207,7 +207,7 @@ export function MapItemRenderer({
 						</p>
 					)}
 					{item.data.caption?.trim() ? (
-						<div className="inline-flex max-w-full rounded-full bg-black/70 px-3 py-1 text-xs font-medium text-white">
+						<div className="pointer-events-auto inline-flex max-w-full rounded-full bg-black/70 px-3 py-1 text-xs font-medium text-white">
 							<p
 								contentEditable={mode === "edit"}
 								suppressContentEditableWarning
