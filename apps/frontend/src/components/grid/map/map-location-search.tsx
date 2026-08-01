@@ -72,12 +72,9 @@ export function MapLocationSearch({
 	const searchId = React.useId();
 	const inputId = `${searchId}-input`;
 	const listboxId = `${searchId}-listbox`;
-	const request = React.useMemo(
-		() => ({ query: searchQuery.trim(), retryNonce }),
-		[retryNonce, searchQuery],
-	);
-	const trimmedQuery = request.query;
+	const trimmedQuery = searchQuery.trim();
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: retryNonce intentionally retries the current query.
 	React.useEffect(() => {
 		const sequence = requestSequenceRef.current + 1;
 		requestSequenceRef.current = sequence;
@@ -93,7 +90,7 @@ export function MapLocationSearch({
 			return;
 		}
 
-		if (request.query.length < 2) {
+		if (trimmedQuery.length < 2) {
 			setResults([]);
 			setStatus("idle");
 			setErrorMessage(null);
@@ -108,7 +105,7 @@ export function MapLocationSearch({
 		const controller = new AbortController();
 		controllerRef.current = controller;
 		const timeoutId = window.setTimeout(() => {
-			void searchMapboxLocations(request.query, {
+			void searchMapboxLocations(trimmedQuery, {
 				accessToken,
 				language,
 				signal: controller.signal,
@@ -146,7 +143,7 @@ export function MapLocationSearch({
 			controller.abort();
 			if (controllerRef.current === controller) controllerRef.current = null;
 		};
-	}, [accessToken, disabled, language, request]);
+	}, [accessToken, disabled, language, retryNonce, trimmedQuery]);
 
 	function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
 		setInputValue(event.target.value);
@@ -199,6 +196,7 @@ export function MapLocationSearch({
 		activeIndex >= 0 ? `${searchId}-option-${activeIndex}` : undefined;
 	const showPanel =
 		!disabled && isOpen && (status !== "idle" || trimmedQuery.length > 0);
+	const hasListbox = showPanel && status === "ready";
 	const liveMessage =
 		status === "loading"
 			? "Searching locations."
@@ -231,10 +229,10 @@ export function MapLocationSearch({
 						disabled={disabled}
 						aria-autocomplete="list"
 						aria-label="Search locations"
-						aria-controls={listboxId}
+						aria-controls={hasListbox ? listboxId : undefined}
 						aria-expanded={showPanel}
 						aria-haspopup="listbox"
-						aria-activedescendant={activeOptionId}
+						aria-activedescendant={hasListbox ? activeOptionId : undefined}
 						aria-busy={status === "loading"}
 						placeholder="Search locations"
 						className="pr-9"
@@ -249,18 +247,14 @@ export function MapLocationSearch({
 					<div className="absolute inset-x-0 top-full z-20 mt-2 overflow-hidden rounded-2xl border bg-popover text-popover-foreground shadow-lg">
 						{status === "ready" ? (
 							<CommandList
-								ref={(element) => {
-									if (element) element.id = listboxId;
-								}}
+								id={listboxId}
 								aria-label="Location results"
 								className="max-h-72 p-1"
 							>
 								{results.map((result, index) => (
 									<CommandItem
 										key={result.id}
-										ref={(element) => {
-											if (element) element.id = `${searchId}-option-${index}`;
-										}}
+										id={`${searchId}-option-${index}`}
 										data-active={activeIndex === index || undefined}
 										onMouseEnter={() => setActiveIndex(index)}
 										onSelect={() => selectResult(result)}
@@ -279,28 +273,19 @@ export function MapLocationSearch({
 								))}
 							</CommandList>
 						) : status === "loading" ? (
-							<output
-								aria-live="polite"
-								className="flex items-center gap-2 px-3 py-3 text-sm text-muted-foreground"
-							>
+							<div className="flex items-center gap-2 px-3 py-3 text-sm text-muted-foreground">
 								<Loader2Icon
 									aria-hidden="true"
 									className="size-4 animate-spin"
 								/>
 								Searching locations…
-							</output>
+							</div>
 						) : status === "empty" ? (
-							<output
-								aria-live="polite"
-								className="px-3 py-3 text-sm text-muted-foreground"
-							>
+							<div className="px-3 py-3 text-sm text-muted-foreground">
 								No locations found.
-							</output>
+							</div>
 						) : status === "error" ? (
-							<output
-								aria-live="polite"
-								className="flex items-center justify-between gap-3 px-3 py-3 text-sm text-destructive"
-							>
+							<div className="flex items-center justify-between gap-3 px-3 py-3 text-sm text-destructive">
 								<span>
 									{errorMessage ?? "Couldn’t load locations. Try again."}
 								</span>
@@ -312,21 +297,18 @@ export function MapLocationSearch({
 									<RefreshCwIcon aria-hidden="true" className="size-3.5" />
 									Retry
 								</button>
-							</output>
+							</div>
 						) : (
-							<output
-								aria-live="polite"
-								className="px-3 py-3 text-sm text-muted-foreground"
-							>
+							<div className="px-3 py-3 text-sm text-muted-foreground">
 								Enter at least 2 characters.
-							</output>
+							</div>
 						)}
 					</div>
 				) : null}
 			</Command>
-			<output className="sr-only" aria-live="polite" aria-atomic="true">
+			<div className="sr-only" aria-live="polite" aria-atomic="true">
 				{liveMessage}
-			</output>
+			</div>
 		</div>
 	);
 }
