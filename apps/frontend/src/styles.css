@@ -402,6 +402,6 @@
     }
 
     .beautiful-shadow {
-        @apply smooth-shadow-ring shadow-black smooth-ring-neutral-300/30;
+        @apply smooth-shadow-ring shadow-neutral-500 smooth-ring-neutral-300/20;
     }
 }
