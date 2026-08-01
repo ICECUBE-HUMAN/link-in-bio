@@ -17,7 +17,7 @@ export function getRouter() {
 		defaultPreloadStaleTime: 0,
 		defaultNotFoundComponent: NotFound,
 		defaultErrorComponent: ErrorState,
-		defaultPendingComponent: Pending,
+		// defaultPendingComponent: Pending,
 	});
 
 	setupRouterSsrQueryIntegration({
