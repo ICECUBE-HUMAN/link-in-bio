@@ -407,6 +407,10 @@
   html {
     @apply font-brand;
   }
+  .mapboxgl-ctrl,
+  .mapboxgl-ctrl-logo {
+      @apply hidden opacity-0;
+  }
 }
 
 @layer utilities {

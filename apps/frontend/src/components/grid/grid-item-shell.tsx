@@ -167,7 +167,9 @@ export function GridItemShell({
 				className={cn(
 					"grid-item-card relative size-full overflow-hidden bg-background rounded-2xl shadow-sm",
 					cardThemeStyle && "link-card-themed",
-					item.type === "media" ? "ring-0! border-0!" : "ring-1 ring-black/5",
+					item.type === "media" || item.type === "map"
+						? "ring-0! border-0!"
+						: "ring-1 ring-black/5",
 				)}
 				style={cardThemeStyle}
 			>

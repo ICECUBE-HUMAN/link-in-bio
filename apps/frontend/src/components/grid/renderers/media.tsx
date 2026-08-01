@@ -1,4 +1,4 @@
-import { CircleArrowRightUp } from "reicon-react";
+import { ItemExternalAction } from "@/components/grid/item-external-action";
 import { Input } from "@/components/ui/input";
 import type { ItemRendererProps } from "@/lib/grid/item-registry";
 import type { GridItemByType } from "@/lib/grid/types";
@@ -10,16 +10,7 @@ function MediaAction({ href }: { href: string | undefined }) {
 		return null;
 	}
 
-	return (
-		<a
-			href={href}
-			target="_blank"
-			rel="noreferrer"
-			className="cursor-pointer! inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-white/60 text-xs font-medium text-white transition-colors hover:bg-white"
-		>
-			<CircleArrowRightUp size={28} weight="Filled" className="text-black!" />
-		</a>
-	);
+	return <ItemExternalAction href={href} ariaLabel="Open media" />;
 }
 
 export function MediaItemRenderer({

@@ -1,3 +1,4 @@
+import { ItemExternalAction } from "@/components/grid/item-external-action";
 import { Button } from "@/components/ui/button";
 import { toGoogleMapsUrl } from "@/lib/grid/item-registry";
 import type { MapCamera } from "@/lib/map/map-config";
@@ -28,14 +29,10 @@ export function MapFallback({ camera, onRetry }: MapFallbackProps) {
 					<Button type="button" variant="outline" size="sm" onClick={onRetry}>
 						Retry
 					</Button>
-					<a
+					<ItemExternalAction
 						href={toGoogleMapsUrl(camera.latitude, camera.longitude)}
-						target="_blank"
-						rel="noreferrer"
-						className="inline-flex h-8 items-center justify-center rounded-full bg-foreground px-3 text-xs font-medium text-background transition-colors hover:bg-foreground/85"
-					>
-						Google Maps
-					</a>
+						ariaLabel="Open Google Maps"
+					/>
 				</div>
 			</div>
 		</div>

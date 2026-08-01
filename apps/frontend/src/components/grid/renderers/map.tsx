@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { ItemExternalAction } from "@/components/grid/item-external-action";
 import { MapFallback } from "@/components/grid/map/map-fallback";
 import { MapLocationSearch } from "@/components/grid/map/map-location-search";
 import { MapViewportGate } from "@/components/grid/map/map-viewport-gate";
@@ -7,6 +8,7 @@ import {
 	type MapboxMapSurfaceHandle,
 } from "@/components/grid/map/mapbox-map-surface";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { ItemRendererProps } from "@/lib/grid/item-registry";
 import { toGoogleMapsUrl } from "@/lib/grid/item-registry";
 import type { GridItemByType } from "@/lib/grid/types";
@@ -17,10 +19,6 @@ import {
 	normalizeMapCamera,
 } from "@/lib/map/map-config";
 import type { MapSearchResult } from "@/lib/map/mapbox-geocoding";
-
-function formatCoordinate(value: number) {
-	return value.toFixed(5);
-}
 
 export function MapItemRenderer({
 	item,
@@ -93,7 +91,7 @@ export function MapItemRenderer({
 	const href = toGoogleMapsUrl(item.data.latitude, item.data.longitude);
 
 	return (
-		<div className="relative size-full overflow-hidden bg-[radial-gradient(circle_at_top_left,var(--color-primary)/16,transparent_55%),linear-gradient(135deg,var(--color-muted),color-mix(in_oklch,var(--color-muted),white_28%))] p-4">
+		<div className="relative size-full overflow-hidden rounded-[inherit] bg-muted surface-line">
 			<div className="absolute inset-0">
 				{showMapFallback ? (
 					<MapFallback camera={normalizedCamera} onRetry={retryMap} />
@@ -132,15 +130,9 @@ export function MapItemRenderer({
 				)}
 			</div>
 
-			<div className="pointer-events-none relative flex size-full flex-col justify-between gap-4">
-				<div className="flex items-start justify-between gap-3">
-					{showMapFallback ? (
-						<div />
-					) : (
-						<div className="rounded-full bg-background/85 px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm">
-							Coordinates
-						</div>
-					)}
+			<div className="pointer-events-none relative size-full">
+				<div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
+					<div />
 					<div className="pointer-events-auto flex items-center gap-2">
 						{mode === "edit" ? (
 							<div data-grid-item-drag-cancel="true">
@@ -166,14 +158,7 @@ export function MapItemRenderer({
 							</div>
 						) : null}
 						{showMapFallback ? null : (
-							<a
-								href={href}
-								target="_blank"
-								rel="noreferrer"
-								className="inline-flex h-8 shrink-0 items-center justify-center rounded-full bg-foreground px-3 text-xs font-medium text-background transition-colors hover:bg-foreground/85"
-							>
-								Google Maps
-							</a>
+							<ItemExternalAction href={href} ariaLabel="Open Google Maps" />
 						)}
 					</div>
 				</div>
@@ -188,47 +173,39 @@ export function MapItemRenderer({
 							disabled={!interactive}
 							onSelect={handleLocationSelect}
 						/>
-						{geolocationError ? (
-							<output
-								aria-live="polite"
-								className="rounded-full bg-background/90 px-3 py-1 text-xs font-medium text-destructive shadow-sm"
-							>
-								Couldn’t determine your location. Try again.
-							</output>
-						) : null}
 					</div>
 				) : null}
 
-				<div className="space-y-2">
-					{showMapFallback ? null : (
-						<p className="text-lg font-semibold tracking-tight text-foreground tabular-nums">
-							{formatCoordinate(item.data.latitude)},{" "}
-							{formatCoordinate(item.data.longitude)}
-						</p>
-					)}
-					{item.data.caption?.trim() ? (
-						<div className="pointer-events-auto inline-flex max-w-full rounded-full bg-black/70 px-3 py-1 text-xs font-medium text-white">
-							<p
-								contentEditable={mode === "edit"}
-								suppressContentEditableWarning
-								onBlur={(event) => {
-									if (!onCommand) return;
-									onCommand({
-										type: "update-data",
-										itemId: item.id,
-										data: {
-											...item.data,
-											caption: event.currentTarget.textContent ?? "",
-										},
-									});
-								}}
-								className="truncate"
-							>
-								{item.data.caption}
-							</p>
-						</div>
-					) : null}
-				</div>
+				{geolocationError ? (
+					<output
+						aria-live="polite"
+						className="pointer-events-auto absolute inset-x-0 top-12 z-20 mx-4 rounded-full bg-background/90 px-3 py-1 text-center text-xs font-medium text-destructive shadow-sm"
+					>
+						Couldn’t determine your location. Try again.
+					</output>
+				) : null}
+			</div>
+
+			<div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end gap-3 p-4 text-white">
+				{mode === "edit" ? (
+					<Input
+						data-bro-ignore="true"
+						value={item.data.caption ?? ""}
+						placeholder="Caption"
+						onChange={(event) =>
+							onCommand?.({
+								type: "update-data",
+								itemId: item.id,
+								data: { ...item.data, caption: event.target.value },
+							})
+						}
+						className="pointer-events-auto field-sizing-content h-7.5 w-fit max-w-full min-w-24 truncate rounded-sm ring ring-border bg-white/100 px-2 py-0 text-xs font-medium text-foreground shadow-xs placeholder:text-gray-bright/60"
+					/>
+				) : (
+					<p className="min-w-0 max-w-full truncate text-xs font-medium ring ring-border bg-white/100">
+						{item.data.caption?.trim()}
+					</p>
+				)}
 			</div>
 		</div>
 	);
