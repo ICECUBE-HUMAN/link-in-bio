@@ -10,9 +10,19 @@ export const mapPageResponse = (
 	name: page.name,
 	bio: page.bio,
 	image: page.image,
+	imageSource: page.imageSource ?? null,
+	imageCrop: page.imageCrop ?? null,
 	role: page.role,
 	createdAt:
 		page.createdAt.toISOString(),
 	updatedAt:
 		page.updatedAt.toISOString(),
+});
+
+export const mapPublicPageResponse = (
+	page: typeof pages.$inferSelect,
+): PageResponse => ({
+	...mapPageResponse(page),
+	imageSource: null,
+	imageCrop: null,
 });

@@ -22,6 +22,13 @@ type TestPage = {
 	name: string | null;
 	bio: string | null;
 	image: string | null;
+	imageSource?: string | null;
+	imageCrop?: {
+		x: number;
+		y: number;
+		width: number;
+		height: number;
+	} | null;
 	role: string | null;
 	createdAt: Date;
 	updatedAt: Date;
@@ -527,7 +534,16 @@ describe("pagesController", () => {
 					handle: "kim",
 					name: "Kim",
 					bio: "Hello",
-					image: null,
+					image:
+						"users/user_1/page_1/profile/avatar-crop.webp",
+					imageSource:
+						"users/user_1/page_1/profile/avatar.png",
+					imageCrop: {
+						x: 10,
+						y: 10,
+						width: 80,
+						height: 80,
+					},
 					role: null,
 					createdAt: now,
 					updatedAt: now,
@@ -554,6 +570,8 @@ describe("pagesController", () => {
 			handle: "kim",
 			name: "Kim",
 			bio: "Hello",
+			imageSource: null,
+			imageCrop: null,
 		});
 	});
 

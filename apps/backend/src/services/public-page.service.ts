@@ -7,7 +7,10 @@ import {
 import { eq } from "drizzle-orm";
 import * as v from "valibot";
 import { NotFoundError } from "../exceptions/http-exceptions";
-import { mapPageResponse } from "../mappers/page.mapper";
+import {
+	mapPageResponse,
+	mapPublicPageResponse,
+} from "../mappers/page.mapper";
 import {
 	listPageItems,
 	mapPageItemResponse,
@@ -17,10 +20,12 @@ export const getPublicPage = async ({
 	db,
 	handle,
 	publicBaseUrl,
+	viewerUserId,
 }: {
 	db: DatabaseClient;
 	handle: string;
 	publicBaseUrl?: string;
+	viewerUserId?: string | null;
 }) => {
 	const parsed = v.safeParse(
 		pageHandleSchema,
@@ -40,7 +45,10 @@ export const getPublicPage = async ({
 	return v.parse(
 		pageByHandleResponseSchema,
 		{
-			page: mapPageResponse(page),
+			page:
+				viewerUserId === page.userId
+					? mapPageResponse(page)
+					: mapPublicPageResponse(page),
 			items: (
 				await listPageItems(db, page.id)
 			).map((item) =>

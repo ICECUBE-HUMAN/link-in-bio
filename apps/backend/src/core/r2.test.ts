@@ -5,11 +5,16 @@ import {
 } from "bun:test";
 import {
 	createItemMediaKey,
+	createProfileImageCropKey,
 	createProfileImageKey,
+	createProfileImageStagingKey,
 	getItemMediaUrl,
+	getProfileImageDisplayContentType,
 	getPublicR2ObjectUrl,
 	isItemMediaKey,
+	isProfileImageCropKey,
 	isProfileImageKey,
+	isProfileImageStagingKey,
 	MAX_ITEM_MEDIA_SIZE,
 	sanitizeMediaFilename,
 	validateItemMediaUpload,
@@ -25,10 +30,69 @@ describe("profile image R2 boundaries", () => {
 		expect(key).toMatch(
 			/^users\/user_1\/page_1\/profile\/[a-f0-9-]+\.png$/,
 		);
-		expect(key && isProfileImageKey(key)).toBe(true);
 		expect(
-			isProfileImageKey("users/profile/legacy.png"),
+			key && isProfileImageKey(key),
+		).toBe(true);
+		expect(
+			isProfileImageKey(
+				"users/profile/legacy.png",
+			),
 		).toBe(false);
+	});
+
+	it("derives the crop key from the source UUID", () => {
+		const sourceKey =
+			"users/user_1/page_1/profile/source-id.jpg";
+
+		expect(
+			createProfileImageCropKey(
+				"user_1",
+				"page_1",
+				sourceKey,
+			),
+		).toBe(
+			"users/user_1/page_1/profile/source-id-crop.webp",
+		);
+		expect(
+			createProfileImageCropKey(
+				"user_1",
+				"page_1",
+				sourceKey,
+				"image/jpeg",
+			),
+		).toBe(
+			"users/user_1/page_1/profile/source-id-crop.jpg",
+		);
+		expect(
+			isProfileImageCropKey(
+				"users/user_1/page_1/profile/source-id-crop.webp",
+			),
+		).toBe(true);
+		expect(
+			getProfileImageDisplayContentType(
+				"users/user_1/page_1/profile/source-id-crop.jpg",
+			),
+		).toBe("image/jpeg");
+		expect(
+			getProfileImageDisplayContentType(
+				"users/user_1/page_1/profile/source-id-crop.webp",
+			),
+		).toBe("image/webp");
+		const stagingKey =
+			createProfileImageStagingKey(
+				"user_1",
+				"page_1",
+				sourceKey,
+			);
+		expect(stagingKey).toMatch(
+			/^users\/user_1\/page_1\/profile\/source-id-crop\.upload-[a-f0-9-]+\.webp$/,
+		);
+		expect(
+			stagingKey &&
+				isProfileImageStagingKey(
+					stagingKey,
+				),
+		).toBe(true);
 	});
 });
 

@@ -1,16 +1,21 @@
-import type {
-	PageItemUploadRequest,
-	ProfileImageUploadRequest,
+import type { PageItemUploadRequest } from "@sinabro/api";
+import {
+	MAX_ITEM_MEDIA_SIZE as SHARED_MAX_ITEM_MEDIA_SIZE,
+	MAX_PROFILE_IMAGE_SIZE as SHARED_MAX_PROFILE_IMAGE_SIZE,
 } from "@sinabro/api";
-import { MAX_ITEM_MEDIA_SIZE as SHARED_MAX_ITEM_MEDIA_SIZE } from "@sinabro/api";
 
 export const LEGACY_PROFILE_IMAGE_PREFIX =
 	"users/profile/";
 export const MAX_PROFILE_IMAGE_SIZE =
-	5 * 1024 * 1024;
+	SHARED_MAX_PROFILE_IMAGE_SIZE;
 export const PROFILE_IMAGE_UPLOAD_TTL_SECONDS =
 	10 * 60;
-export const MAX_ITEM_MEDIA_SIZE = SHARED_MAX_ITEM_MEDIA_SIZE;
+export const PROFILE_IMAGE_DISPLAY_CONTENT_TYPE =
+	"image/webp";
+export const PROFILE_IMAGE_DISPLAY_CACHE_CONTROL =
+	"no-cache, must-revalidate";
+export const MAX_ITEM_MEDIA_SIZE =
+	SHARED_MAX_ITEM_MEDIA_SIZE;
 export const ITEM_MEDIA_PREFIX =
 	"users/";
 export const ITEM_MEDIA_UPLOAD_TTL_SECONDS =
@@ -23,6 +28,18 @@ const supportedImageTypes = new Map([
 	["image/png", "png"],
 	["image/webp", "webp"],
 ]);
+
+const supportedDisplayImageTypes =
+	new Map([
+		["image/jpeg", "jpg"],
+		["image/webp", "webp"],
+	]);
+
+const displayImageTypesByExtension =
+	new Map([
+		["jpg", "image/jpeg"],
+		["webp", "image/webp"],
+	]);
 
 const mediaTypePattern =
 	/^(image|video)\/[a-z0-9.+-]+$/i;
@@ -130,7 +147,9 @@ export const isProfileImageKey = (
 export const isLegacyProfileImageKey = (
 	value: string,
 ) =>
-	/^users\/profile\/[^/]+$/.test(value) &&
+	/^users\/profile\/[^/]+$/.test(
+		value,
+	) &&
 	!value.includes("..") &&
 	!value.includes("\\");
 
@@ -145,9 +164,95 @@ export const createProfileImageKey = (
 		);
 
 	if (!extension) return null;
-	if (!isSafePathSegment(userId) || !isSafePathSegment(pageId)) return null;
+	if (
+		!isSafePathSegment(userId) ||
+		!isSafePathSegment(pageId)
+	)
+		return null;
 	return `users/${userId}/${pageId}/profile/${crypto.randomUUID()}.${extension}`;
 };
+
+export const createProfileImageCropKey =
+	(
+		userId: string,
+		pageId: string,
+		sourceObjectKey: string,
+		contentType = PROFILE_IMAGE_DISPLAY_CONTENT_TYPE,
+	) => {
+		if (
+			!isSafePathSegment(userId) ||
+			!isSafePathSegment(pageId)
+		)
+			return null;
+		const sourceFilename =
+			sourceObjectKey.split("/").pop();
+		const sourceBase =
+			sourceFilename?.replace(
+				/\.[^.]+$/,
+				"",
+			);
+		const extension =
+			supportedDisplayImageTypes.get(
+				contentType,
+			);
+		if (
+			!sourceBase ||
+			!isSafePathSegment(sourceBase) ||
+			!extension
+		)
+			return null;
+		return `users/${userId}/${pageId}/profile/${sourceBase}-crop.${extension}`;
+	};
+
+export const createProfileImageStagingKey =
+	(
+		userId: string,
+		pageId: string,
+		sourceObjectKey: string,
+		contentType = PROFILE_IMAGE_DISPLAY_CONTENT_TYPE,
+	) => {
+		const cropKey =
+			createProfileImageCropKey(
+				userId,
+				pageId,
+				sourceObjectKey,
+				contentType,
+			);
+		if (!cropKey) return null;
+		return cropKey.replace(
+			/\.(jpg|webp)$/,
+			`.upload-${crypto.randomUUID()}.$1`,
+		);
+	};
+
+export const isProfileImageCropKey = (
+	value: string,
+) =>
+	/^users\/[^/]+\/[^/]+\/profile\/[^/]+-crop\.(?:jpg|webp)$/.test(
+		value,
+	) &&
+	!value.includes("..") &&
+	!value.includes("\\");
+
+export const isProfileImageStagingKey =
+	(value: string) =>
+		/^users\/[^/]+\/[^/]+\/profile\/[^/]+-crop\.upload-[a-f0-9-]+\.(?:jpg|webp)$/.test(
+			value,
+		) &&
+		!value.includes("..") &&
+		!value.includes("\\");
+
+export const getProfileImageDisplayContentType =
+	(value: string) => {
+		const extension = value
+			.split(".")
+			.pop();
+		return extension
+			? (displayImageTypesByExtension.get(
+					extension,
+				) ?? null)
+			: null;
+	};
 
 export const isItemMediaKey = (
 	value: string,
@@ -191,7 +296,10 @@ export const createItemMediaKey = ({
 }: Pick<
 	PageItemUploadRequest,
 	"filename"
-> & { userId: string; pageId: string }) => {
+> & {
+	userId: string;
+	pageId: string;
+}) => {
 	const sanitized =
 		sanitizeMediaFilename(filename);
 	if (
@@ -221,7 +329,10 @@ export const getItemMediaUrl = (
 ) =>
 	publicBaseUrl &&
 	isItemMediaKey(objectKey)
-		? getPublicR2ObjectUrl(publicBaseUrl, objectKey)
+		? getPublicR2ObjectUrl(
+				publicBaseUrl,
+				objectKey,
+			)
 		: undefined;
 
 export const getPublicR2ObjectUrl = (
@@ -233,7 +344,10 @@ export const getPublicR2ObjectUrl = (
 		: undefined;
 
 export const validateProfileImageUpload =
-	(input: ProfileImageUploadRequest) =>
+	(input: {
+		contentType: string;
+		size: number;
+	}) =>
 		input.size <=
 			MAX_PROFILE_IMAGE_SIZE &&
 		supportedImageTypes.has(
@@ -246,6 +360,7 @@ export async function createProfileImageUploadUrl({
 	secretAccessKey,
 	objectKey,
 	contentType,
+	cacheControl,
 	now = new Date(),
 }: {
 	accountId: string;
@@ -253,6 +368,7 @@ export async function createProfileImageUploadUrl({
 	secretAccessKey: string;
 	objectKey: string;
 	contentType: string;
+	cacheControl?: string;
 	now?: Date;
 }) {
 	return createSignedUploadUrl({
@@ -261,6 +377,7 @@ export async function createProfileImageUploadUrl({
 		secretAccessKey,
 		objectKey,
 		contentType,
+		cacheControl,
 		ttlSeconds:
 			PROFILE_IMAGE_UPLOAD_TTL_SECONDS,
 		now,
@@ -274,9 +391,12 @@ export async function createItemMediaUploadUrl({
 	objectKey,
 	contentType,
 	now = new Date(),
-}: Parameters<
-	typeof createProfileImageUploadUrl
->[0]) {
+}: Omit<
+	Parameters<
+		typeof createProfileImageUploadUrl
+	>[0],
+	"cacheControl"
+>) {
 	return createSignedUploadUrl({
 		accountId,
 		accessKeyId,
@@ -295,6 +415,7 @@ async function createSignedUploadUrl({
 	secretAccessKey,
 	objectKey,
 	contentType,
+	cacheControl,
 	ttlSeconds,
 	now,
 }: {
@@ -303,6 +424,7 @@ async function createSignedUploadUrl({
 	secretAccessKey: string;
 	objectKey: string;
 	contentType: string;
+	cacheControl?: string;
 	ttlSeconds: number;
 	now: Date;
 }) {
@@ -315,8 +437,9 @@ async function createSignedUploadUrl({
 		.replace(/[:-]|\.\d{3}/g, "");
 	const shortDate = amzDate.slice(0, 8);
 	const credential = `${accessKeyId}/${shortDate}/${region}/${service}/aws4_request`;
-	const signedHeaders =
-		"content-type;host";
+	const signedHeaders = cacheControl
+		? "cache-control;content-type;host"
+		: "content-type;host";
 	const query = new URLSearchParams([
 		[
 			"X-Amz-Algorithm",
@@ -344,7 +467,9 @@ async function createSignedUploadUrl({
 			)
 			.join("&");
 	const canonicalUri = `/${bucket}/${encodeObjectKeyPath(objectKey)}`;
-	const canonicalHeaders = `content-type:${contentType}\nhost:${host}\n`;
+	const canonicalHeaders = cacheControl
+		? `cache-control:${cacheControl}\ncontent-type:${contentType}\nhost:${host}\n`
+		: `content-type:${contentType}\nhost:${host}\n`;
 	const canonicalRequest = [
 		"PUT",
 		canonicalUri,

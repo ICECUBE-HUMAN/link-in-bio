@@ -17,14 +17,16 @@ import {
 } from "drizzle-orm";
 import * as v from "valibot";
 import {
-	isLegacyProfileImageKey,
+	isProfileImageCropKey,
 	isProfileImageKey,
+	isProfileImageStagingKey,
 } from "../core/r2";
 import {
 	ConflictError,
 	ForbiddenError,
 	NotFoundError,
 	UnauthorizedError,
+	UnprocessableEntityError,
 } from "../exceptions/http-exceptions";
 
 const isUniqueHandleViolation = (
@@ -45,6 +47,62 @@ const isUniqueHandleViolation = (
 			"pages_handle_idx"
 	);
 };
+
+const deleteProfileImagesBestEffort =
+	async ({
+		env,
+		userId,
+		pageId,
+		keys,
+		protectedKeys,
+	}: {
+		env: AppEnv["Bindings"];
+		userId: string;
+		pageId: string;
+		keys: Iterable<string>;
+		protectedKeys: Iterable<
+			string | null | undefined
+		>;
+	}) => {
+		const protectedKeySet = new Set(
+			[...protectedKeys].filter(
+				(key): key is string =>
+					Boolean(key),
+			),
+		);
+		const ownedPrefix = `users/${userId}/${pageId}/profile/`;
+		const results =
+			await Promise.allSettled(
+				[...new Set(keys)]
+					.filter(
+						(key) =>
+							key.startsWith(
+								ownedPrefix,
+							) &&
+							(isProfileImageKey(key) ||
+								isProfileImageCropKey(
+									key,
+								) ||
+								isProfileImageStagingKey(
+									key,
+								)) &&
+							!protectedKeySet.has(key),
+					)
+					.map((key) =>
+						env.IMAGES.delete(key),
+					),
+			);
+		for (const result of results) {
+			if (
+				result.status === "rejected"
+			) {
+				console.error(
+					"[page] R2 profile image cleanup failed",
+					result.reason,
+				);
+			}
+		}
+	};
 
 export const getPrimaryPage = async ({
 	db,
@@ -132,6 +190,23 @@ export const updatePage = async ({
 	handle: string;
 	input: UpdatePageRequest;
 }) => {
+	const hasProfileMetadataUpdate =
+		input.imageSource !== undefined ||
+		input.imageCrop !== undefined;
+	const isImageClear =
+		input.image === null &&
+		input.imageSource === null &&
+		input.imageCrop === null;
+	if (
+		hasProfileMetadataUpdate &&
+		!isImageClear
+	) {
+		throw new UnprocessableEntityError(
+			"Profile image metadata must be updated through image completion.",
+			"INVALID_PROFILE_IMAGE",
+		);
+	}
+
 	try {
 		const result = await db.transaction(
 			async (tx) => {
@@ -185,6 +260,14 @@ export const updatePage = async ({
 							input.image === undefined
 								? existingPage.image
 								: input.image,
+						imageSource:
+							input.image === null
+								? null
+								: existingPage.imageSource,
+						imageCrop:
+							input.image === null
+								? null
+								: existingPage.imageCrop,
 						updatedAt: new Date(),
 					})
 					.where(
@@ -206,17 +289,30 @@ export const updatePage = async ({
 					);
 				return {
 					page,
-					previousImage: existingPage.image,
+					previousImage:
+						existingPage.image,
+					previousImageSource:
+						existingPage.imageSource,
 				};
 			},
 		);
-		if (
-			result.previousImage &&
-			result.previousImage !== result.page.image &&
-			(isProfileImageKey(result.previousImage) ||
-				isLegacyProfileImageKey(result.previousImage))
-		)
-			await env.IMAGES.delete(result.previousImage);
+		await deleteProfileImagesBestEffort(
+			{
+				env,
+				userId,
+				pageId: result.page.id,
+				keys: [
+					result.previousImage,
+					result.previousImageSource,
+				].filter((key): key is string =>
+					Boolean(key),
+				),
+				protectedKeys: [
+					result.page.image,
+					result.page.imageSource,
+				],
+			},
+		);
 		return result.page;
 	} catch (error) {
 		if (isUniqueHandleViolation(error))

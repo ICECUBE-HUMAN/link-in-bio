@@ -67,6 +67,22 @@ const nullableTrimmedImageSchema = v.pipe(
 	v.transform((value) => (value.length === 0 ? null : value)),
 );
 
+export const profileImageCropSchema = v.pipe(
+	v.object({
+		x: v.pipe(v.number(), v.minValue(0), v.maxValue(100)),
+		y: v.pipe(v.number(), v.minValue(0), v.maxValue(100)),
+		width: v.pipe(v.number(), v.minValue(0), v.maxValue(100)),
+		height: v.pipe(v.number(), v.minValue(0), v.maxValue(100)),
+	}),
+	v.check(
+		({ x, y, width, height }) =>
+			width > 0 && height > 0 && x + width <= 100 && y + height <= 100,
+		"Crop area must stay within the source image.",
+	),
+);
+
+export type ProfileImageCrop = v.InferOutput<typeof profileImageCropSchema>;
+
 /**
  * Public HTTP response contracts shared by the backend and its consumers.
  * Keep implementation details such as auth, database, and Cloudflare bindings
@@ -108,6 +124,8 @@ export const updatePageRequestSchema = v.object({
 	name: v.optional(v.nullable(nullableTrimmedNameSchema)),
 	bio: v.optional(nullableTrimmedBioSchema),
 	image: v.optional(v.nullable(nullableTrimmedImageSchema)),
+	imageSource: v.optional(v.nullable(v.pipe(v.string(), v.trim()))),
+	imageCrop: v.optional(v.nullable(profileImageCropSchema)),
 });
 
 export type UpdatePageRequest = v.InferOutput<typeof updatePageRequestSchema>;
@@ -119,6 +137,8 @@ export const pageResponseSchema = v.object({
 	name: v.nullable(v.string()),
 	bio: v.nullable(v.string()),
 	image: v.nullable(v.string()),
+	imageSource: v.nullable(v.string()),
+	imageCrop: v.nullable(profileImageCropSchema),
 	role: v.nullable(v.string()),
 	createdAt: v.string(),
 	updatedAt: v.string(),
@@ -170,19 +190,38 @@ export const myPageResponseSchema = v.object({
 
 export type MyPageResponse = v.InferOutput<typeof myPageResponseSchema>;
 
-export const profileImageUploadRequestSchema = v.object({
+const profileImageSourceUploadSchema = v.object({
 	contentType: v.pipe(v.string(), v.trim(), v.regex(/^image\/[a-z0-9.+-]+$/i)),
 	size: v.pipe(v.number(), v.integer(), v.minValue(1)),
+});
+
+export const profileImageUploadRequestSchema = v.object({
+	source: v.optional(profileImageSourceUploadSchema),
+	sourceObjectKey: v.optional(v.pipe(v.string(), v.trim(), v.minLength(1))),
+	displayContentType: v.pipe(
+		v.string(),
+		v.trim(),
+		v.regex(/^image\/(?:jpeg|webp)$/i),
+	),
+	displaySize: v.pipe(v.number(), v.integer(), v.minValue(1)),
 });
 
 export type ProfileImageUploadRequest = v.InferOutput<
 	typeof profileImageUploadRequestSchema
 >;
 
-export const profileImageUploadResponseSchema = v.object({
+export const profileImageUploadSlotSchema = v.object({
 	objectKey: v.pipe(v.string(), v.minLength(1)),
 	uploadUrl: v.pipe(v.string(), v.url()),
 	expiresAt: v.string(),
+	contentType: v.pipe(v.string(), v.minLength(1)),
+	cacheControl: v.nullable(v.string()),
+});
+
+export const profileImageUploadResponseSchema = v.object({
+	source: v.nullable(profileImageUploadSlotSchema),
+	display: profileImageUploadSlotSchema,
+	expectedUpdatedAt: v.string(),
 });
 
 export type ProfileImageUploadResponse = v.InferOutput<
@@ -190,7 +229,10 @@ export type ProfileImageUploadResponse = v.InferOutput<
 >;
 
 export const profileImageCompleteRequestSchema = v.object({
-	objectKey: v.pipe(v.string(), v.minLength(1)),
+	sourceObjectKey: v.pipe(v.string(), v.minLength(1)),
+	displayObjectKey: v.pipe(v.string(), v.minLength(1)),
+	crop: profileImageCropSchema,
+	expectedUpdatedAt: v.pipe(v.string(), v.minLength(1)),
 });
 
 export type ProfileImageCompleteRequest = v.InferOutput<

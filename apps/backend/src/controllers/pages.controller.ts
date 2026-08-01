@@ -117,6 +117,8 @@ export const pagesController =
 				parsed.output.name,
 				parsed.output.bio,
 				parsed.output.image,
+				parsed.output.imageSource,
+				parsed.output.imageCrop,
 			].some(
 				(field) => field !== undefined,
 			);
@@ -223,6 +225,8 @@ export const pagesController =
 					handle: c.req.param("handle"),
 					publicBaseUrl:
 						c.env?.R2_PUBLIC_URL,
+					viewerUserId:
+						c.get("user")?.id ?? null,
 				});
 			return c.json(
 				v.parse(

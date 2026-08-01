@@ -50,6 +50,13 @@
       "when": 1785509969951,
       "tag": "0006_silky_spitfire",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1785574922324,
+      "tag": "0007_hard_james_howlett",
+      "breakpoints": true
     }
   ]
 }

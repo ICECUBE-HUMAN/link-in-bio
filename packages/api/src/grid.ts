@@ -11,6 +11,7 @@ export const itemTypeSchema = v.union([
 export type ItemType = v.InferOutput<typeof itemTypeSchema>;
 
 export const MAX_ITEM_MEDIA_SIZE = 3 * 1024 * 1024;
+export const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024;
 export const ITEM_MEDIA_ACCEPT =
 	".avif,.gif,.jpg,.jpeg,.png,.webp,.bmp,.svg,.mp4,.webm,.mov,.m4v,.avi";
 

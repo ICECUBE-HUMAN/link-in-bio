@@ -1,3 +1,4 @@
+import type { ProfileImageCrop } from "@sinabro/api";
 import { relations } from "drizzle-orm";
 import {
 	boolean,
@@ -178,6 +179,10 @@ export const pages = pgTable(
 		name: text("name"),
 		bio: text("bio"),
 		image: text("image"),
+		imageSource: text("image_source"),
+		imageCrop: jsonb(
+			"image_crop",
+		).$type<ProfileImageCrop | null>(),
 		role: text("role"),
 		createdAt: timestamp("created_at")
 			.defaultNow()
