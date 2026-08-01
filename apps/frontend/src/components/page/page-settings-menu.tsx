@@ -118,7 +118,7 @@ export function PageSettingsMenu({ page, onChanged }: PageSettingsMenuProps) {
 							</button>
 							<button
 								type="button"
-								className="flex items-center w-full justify-start rounded-lg font-normal h-15"
+								className="flex items-center w-full justify-start rounded-lg font-normal h-15 text-gray-bright"
 								onClick={() => setView("delete")}
 							>
 								Delete Account
