@@ -1,7 +1,7 @@
 import { env } from "@/env";
 
 export const MAPBOX_STYLE_URL =
-	"mapbox://styles/justhumanb2ing/cmk41psg9008501svgo054v8p";
+	"mapbox://styles/justhumanb2ing/cmk406try001601pr180409zf";
 
 export const DEFAULT_MAP_LOCATION = {
 	latitude: 35.6762,
