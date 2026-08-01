@@ -226,6 +226,11 @@
 	filter: blur(0);
 }
 
+.t-stagger-line--1:has([data-profile-crop-open="true"]) {
+	position: relative;
+	z-index: 50;
+}
+
 .t-breakpoint-crossfade {
 	opacity: 1;
 	filter: blur(0);

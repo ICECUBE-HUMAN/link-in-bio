@@ -152,11 +152,12 @@ function HandlePageContent({
 		useState<Breakpoint>("wide");
 	const pageScrollRef = useRef<HTMLElement | null>(null);
 	const shouldReduceMotion = useReducedMotion();
-	const { draft, status, updateField } = usePageAutoSave({
-		page,
-		handle: page.handle,
-		enabled: mode === "edit",
-	});
+	const { commitFields, draft, status, updateField, updateFields } =
+		usePageAutoSave({
+			page,
+			handle: page.handle,
+			enabled: mode === "edit",
+		});
 	const {
 		items,
 		autoFocusItemId,
@@ -283,11 +284,16 @@ function HandlePageContent({
 					>
 						<div className="t-stagger-line t-stagger-line--1">
 							<PageImageEditor
+								pageId={page.id}
 								initialImage={draft.image}
+								initialImageUpdatedAt={page.updatedAt}
+								initialImageSource={draft.imageSource}
+								initialImageCrop={draft.imageCrop}
 								handle={page.handle}
 								mode={mode}
 								breakpoint={previewBreakpoint}
-								onImageChange={(image) => updateField("image", image)}
+								onImageChange={updateFields}
+								onImageCommit={commitFields}
 							/>
 						</div>
 						<div

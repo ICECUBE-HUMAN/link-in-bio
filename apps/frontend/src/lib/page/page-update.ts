@@ -6,7 +6,10 @@ import {
 } from "@sinabro/api";
 import * as v from "valibot";
 
-export type EditablePageFields = Pick<PageResponse, "name" | "bio" | "image">;
+export type EditablePageFields = Pick<
+	PageResponse,
+	"name" | "bio" | "image" | "imageSource" | "imageCrop"
+>;
 
 export function getChangedPageFields(
 	draft: EditablePageFields,
@@ -14,9 +17,15 @@ export function getChangedPageFields(
 ): UpdatePageRequest {
 	const changes: UpdatePageRequest = {};
 
-	for (const field of ["name", "bio", "image"] as const) {
+	for (const field of [
+		"name",
+		"bio",
+		"image",
+		"imageSource",
+		"imageCrop",
+	] as const) {
 		if (draft[field] !== previous[field]) {
-			changes[field] = draft[field];
+			Object.assign(changes, { [field]: draft[field] });
 		}
 	}
 

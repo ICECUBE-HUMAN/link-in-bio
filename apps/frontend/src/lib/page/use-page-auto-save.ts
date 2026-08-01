@@ -25,6 +25,8 @@ export function getEditablePageFields(page: PageResponse): EditablePageFields {
 		name: page.name,
 		bio: page.bio,
 		image: page.image,
+		imageSource: page.imageSource,
+		imageCrop: page.imageCrop,
 	};
 }
 
@@ -56,7 +58,7 @@ export function usePageAutoSave({
 	const pendingRef = useRef<UpdatePageRequest>({});
 	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const saveSequenceRef = useRef(0);
-	const { name, bio, image } = page;
+	const { name, bio, image, imageSource, imageCrop } = page;
 	const pageMutation = useMutation({
 		mutationFn: (changes: UpdatePageRequest) => updatePage(handle, changes),
 		onMutate: async (changes) => {
@@ -97,7 +99,7 @@ export function usePageAutoSave({
 			timerRef.current = null;
 		}
 
-		const nextDraft = { name, bio, image };
+		const nextDraft = { name, bio, image, imageSource, imageCrop };
 		pendingRef.current = {};
 		saveSequenceRef.current += 1;
 		draftRef.current = nextDraft;
@@ -105,7 +107,7 @@ export function usePageAutoSave({
 		setDraft(nextDraft);
 		setStatus("saved");
 		setErrorMessage(null);
-	}, [name, bio, image]);
+	}, [name, bio, image, imageSource, imageCrop]);
 
 	const applyOptimisticUpdate = useCallback(
 		(changes: UpdatePageRequest) => {
@@ -121,6 +123,28 @@ export function usePageAutoSave({
 			);
 		},
 		[handle, queryClient],
+	);
+
+	const commitFields = useCallback(
+		(changes: Partial<EditablePageFields>) => {
+			if (!enabled) return;
+
+			const nextDraft = {
+				...draftRef.current,
+				...changes,
+			};
+			const nextPersisted = {
+				...persistedRef.current,
+				...changes,
+			};
+			draftRef.current = nextDraft;
+			persistedRef.current = nextPersisted;
+			setDraft(nextDraft);
+			pendingRef.current = getChangedPageFields(nextDraft, nextPersisted);
+			applyOptimisticUpdate(changes);
+			setStatus(Object.keys(pendingRef.current).length > 0 ? "dirty" : "saved");
+		},
+		[applyOptimisticUpdate, enabled],
 	);
 
 	const savePendingChanges = useCallback(async () => {
@@ -150,6 +174,8 @@ export function usePageAutoSave({
 			name: response.page.name,
 			bio: response.page.bio,
 			image: response.page.image,
+			imageSource: response.page.imageSource,
+			imageCrop: response.page.imageCrop,
 		};
 
 		const latestChanges = getChangedPageFields(
@@ -195,16 +221,13 @@ export function usePageAutoSave({
 		}, PAGE_AUTOSAVE_DEBOUNCE_MS);
 	}, [savePendingChanges]);
 
-	const updateField = useCallback(
-		<Field extends keyof EditablePageFields>(
-			field: Field,
-			value: EditablePageFields[Field],
-		) => {
+	const updateFields = useCallback(
+		(changes: Partial<EditablePageFields>) => {
 			if (!enabled) return;
 
 			const nextDraft = {
 				...draftRef.current,
-				[field]: value,
+				...changes,
 			} as EditablePageFields;
 			draftRef.current = nextDraft;
 			setDraft(nextDraft);
@@ -219,5 +242,20 @@ export function usePageAutoSave({
 		[enabled, scheduleSave],
 	);
 
-	return { draft, errorMessage, status, updateField };
+	const updateField = useCallback(
+		<Field extends keyof EditablePageFields>(
+			field: Field,
+			value: EditablePageFields[Field],
+		) => updateFields({ [field]: value } as Partial<EditablePageFields>),
+		[updateFields],
+	);
+
+	return {
+		commitFields,
+		draft,
+		errorMessage,
+		status,
+		updateField,
+		updateFields,
+	};
 }
