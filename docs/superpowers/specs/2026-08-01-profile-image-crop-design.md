@@ -3,7 +3,7 @@
 ## 목적
 
 페이지 편집기의 프로필 이미지에 1:1 크롭 기능을 추가한다. 사용자가 업로드 전에
-이미지의 위치와 확대 배율을 조정하고, 원형 프레임으로 보이는 결과를 확인한 뒤
+이미지의 위치와 확대 배율을 조정하고, 1:1 crop viewport 결과를 확인한 뒤
 확정한다.
 
 이 문서는 2026-08-01 기준으로 현재 Sinabro 코드와 공개 라이브러리 문서,
@@ -89,7 +89,7 @@ X의 공개 검색 페이지는 이 환경에서 로그인/동적 렌더링으�
 1. 이미지 선택 버튼과 기존 이미지의 크롭 버튼 모두 같은 `CropProfileImageDialog`
    를 연다.
 2. 새 파일을 선택해도 `적용` 전에는 네트워크 요청을 하지 않는다.
-3. dialog 안에서는 원형 1:1 프레임을 고정한다. 사용자는 프레임 안의 이미지를
+3. dialog 안에서는 투명한 surface 위에 원형 1:1 crop viewport를 고정한다. 사용자는 프레임 안의 이미지를
    drag/pan하고, wheel 또는 pinch, zoom slider와 +/- 버튼으로 확대한다.
 4. 1차 범위에서는 사용자 회전과 free-form ratio를 제공하지 않는다. 모바일
    사진의 EXIF orientation은 export 전에 자동 정규화한다.
@@ -98,9 +98,13 @@ X의 공개 검색 페이지는 이 환경에서 로그인/동적 렌더링으�
    dialog를 닫는다. R2 업로드와 page persistence는 닫힘 transition과 병렬로
    진행한다. 성공하면 local preview를 public R2 URL로 조용히 교체하고,
    실패하면 기존 이미지로 되돌린다.
-7. crop dialog는 fade/slide만 사용하고 scale-in 애니메이션을 사용하지 않는다.
+7. crop dialog는 흰색 panel background 없이 이미지 중심의 투명한 surface를 사용한다.
+   fade/slide만 사용하고 scale-in 애니메이션을 사용하지 않는다.
    현재 공통 `DialogContent`의 zoom-in 기본 동작을 이 dialog에서 override한다.
    Cropper는 부모가 `position: relative`이고 고정 높이를 가진 영역 안에 mount한다.
+   shared 원형 이미지가 도착한 뒤 Cropper surface는 250ms ease-out으로 원형에서
+   최종 사각 viewport로 morph한다. 전환 중에는 2px blur를 사용해 두 media layer의
+   모양 교체가 갑작스럽게 보이지 않게 한다.
 
 ### Shared image transition UI
 
@@ -144,9 +148,11 @@ closing
 
 - `motion/react`의 `LayoutGroup`으로 profile trigger와 dialog portal을 같은
   projection scope에 둔다.
-- trigger image와 dialog의 crop viewport wrapper에 동일하고 page-scoped인
+- trigger image와 dialog의 실제 media element에 동일하고 page-scoped인
   `layoutId`, 예를 들어 `profile-image-${pageId}`, 를 사용한다.
-- `layoutId`는 dialog 전체나 버튼이 아니라 이미지의 visual shell에만 둔다.
+- `layoutId`는 dialog 전체나 버튼, cropper wrapper가 아니라 실제 shared
+  `motion.img`에 둔다. shared image가 정착하면 해당 visual layer를 숨기고,
+  Cropper의 단일 편집 image만 남겨 같은 이미지가 겹쳐 보이지 않게 한다.
   title, zoom control, footer가 같이 날아다니면 shared image의 정체성이 흐려진다.
 - `AnimatePresence`는 `mode="sync"`로 사용한다. source와 target이 동시에
   mount된 상태에서 Motion이 두 layout을 측정해야 하므로 `mode="wait"`를
@@ -218,8 +224,8 @@ profile editor의 upload error를 표시한다. 업로드 중에는 Change/Crop/
 
 ### 이미지 결과물
 
-- crop area: 1:1
-- preview shape: round
+- crop area: 1:1 round viewport
+- preview shape: profile page와 crop frame 모두 round mask
 - output: 512×512 WebP, quality 약 0.88
 - 원본 source object와 최종 display object를 모두 R2에 저장한다.
 - UUID는 원본 object를 생성할 때 한 번만 만든다. crop object를 위해 별도 UUID를
@@ -229,8 +235,9 @@ profile editor의 upload error를 표시한다. 업로드 중에는 Change/Crop/
 - `pages.image`는 현재 public page에 표시할 display object key다.
 - `pages.imageSource`는 재크롭에 사용할 immutable original object key다.
 - `pages.imageCrop`은 원본 이미지 기준의 정규화된 crop 영역이다.
-- 원형은 표시용 mask다. 파일 자체를 원형으로 오려 투명 영역을 만들지 않는다.
-  그래야 public page의 기존 `img`/`object-cover` 렌더링을 그대로 유지한다.
+- 원형은 crop dialog와 public profile의 표시용 mask다. 파일 자체를 원형으로
+  오려 투명 영역을 만들지 않는다. 그래야 public page의 기존
+  `img`/`object-cover` 렌더링을 그대로 유지한다.
 - crop 좌표는 DB에 저장하지만 zoom 자체는 저장하지 않는다. crop 영역만으로
   원본 위의 이전 선택 영역과 결과물을 재현할 수 있다.
 - 새 crop을 적용할 때 display object만 교체하고 source object는 유지한다.
@@ -251,7 +258,7 @@ PageImageEditor
 ├─ committedImageUrl / pendingDisplayUrl / transitionImageUrl
 ├─ source: File | existing public URL
 ├─ CropProfileImageDialog
-│  ├─ react-easy-crop (aspect=1, cropShape=round, restrictPosition)
+│  ├─ react-easy-crop (aspect=1, cropShape=round, objectFit=contain, restrictPosition)
 │  ├─ zoom controls
 │  └─ Cancel / Apply
 └─ uploadProfileImage({ sourceFile?, displayFile, crop })
@@ -327,9 +334,17 @@ source로 승격한다. 이미 과거에 destructive crop된 이미지는 그 �
 - 재크롭: 기존 `imageSource`를 재사용하고 `displayFile` upload 1개만 발급한다.
 - 재크롭: 기존 `imageSource`에서 UUID base를 추출해 `{uuid}-crop` key를
   재사용한다. 새 UUID는 생성하지 않는다.
-- completion 요청은 `sourceObjectKey?`, `displayObjectKey`, `crop`을 받아 소유권,
-  MIME, object 존재 여부와 crop 범위를 검증한 뒤 `image`, `imageSource`,
-  `imageCrop`을 함께 저장한다.
+- presigned display PUT은 completion 전용 staging key로 받고, completion이
+  검증 후 최종 `{uuid}-crop.{displayExtension}` key로 승격한다. 최종 key는
+  신규 업로드와 재크롭 모두 동일한 UUID 규칙을 따른다.
+- upload 응답에는 presign 시점의 `page.updatedAt`을 `expectedUpdatedAt`으로
+  포함하고, completion 요청도 이를 돌려보낸다. completion은 해당 timestamp를
+  조건으로 DB를 갱신해, 느린 이전 crop 작업이 최신 crop을 덮어쓰지 않게 한다.
+- completion 요청은 `sourceObjectKey`, `displayObjectKey`, `crop`,
+  `expectedUpdatedAt`을 받아 소유권, MIME, object 존재 여부와 crop 범위를 검증한
+  뒤 `image`, `imageSource`, `imageCrop`을 함께 저장한다. timestamp가 더 이상
+  현재 page와 일치하지 않으면 `PROFILE_IMAGE_OPERATION_STALE` conflict를
+  반환한다.
 
 이렇게 하면 crop preview는 display raster로 즉시 표시할 수 있고, 다음 crop은
 항상 original source와 저장된 percentage 영역을 함께 사용한다.
@@ -369,8 +384,12 @@ R2 CORS 규칙에 다음을 추가하고 실제 응답으로 확인한다.
 
 - 허용 origin: local frontend origin과 production frontend origin
 - 허용 method: `GET`, `HEAD`, `PUT`
-- 허용 request header: `Content-Type`
+- 허용 request header: `Content-Type`, `Cache-Control`
 - 노출 header: 필요 시 `Content-Length`, `ETag`
+
+현재 원격 `test-images` 버킷은 `http://localhost:3000`에 대해 `GET`, `HEAD`,
+`PUT`과 `Content-Type`, `Cache-Control`을 허용하며, presigned PUT preflight가
+`204`와 두 request header를 반환하는 것까지 확인했다.
 
 CORS가 실패하면 기존 이미지와 DB를 유지하고, “현재 이미지를 불러오지 못해
 크롭할 수 없습니다” 오류를 보여준다. backend proxy를 새로 만드는 것은 이
@@ -382,12 +401,17 @@ CORS가 실패하면 기존 이미지와 DB를 유지하고, “현재 이미지
 
 - `aspect={1}`
 - `cropShape="round"`
+- `objectFit="contain"`으로 zoom 1에서 세로 이미지는 이미지 너비를 crop width로,
+  가로 이미지는 이미지 높이를 crop height로 사용한다.
 - `showGrid={false}`
 - `restrictPosition={true}`
 - `zoom`은 1부터 3 사이에서 시작한다.
 - `onCropComplete`의 `croppedAreaPixels`만 export 직전에 사용한다.
 - `imageCrop`을 `initialCroppedAreaPercentages`로 전달해 기존 선택 영역을
   복원한다. percentage를 우선 사용하고 pixel 값은 export 시점에만 계산한다.
+- Cropper container는 transparent로 두고, crop area 바깥의 box shadow만 외부
+  backdrop과 같은 `rgba(0, 0, 0, 0.75)`를 사용한다. 별도의 검은 panel을 이미지
+  뒤에 겹치지 않는다.
 - cropper 결과를 File로 만드는 작은 canvas helper를 별도 모듈로 둔다.
   cropper 라이브러리와 업로드/R2 API를 한 컴포넌트에 섞지 않는다.
 
@@ -407,10 +431,13 @@ Canvas helper는 다음을 책임진다.
 - presign, PUT, completion 중 하나라도 실패하면 `onImageChange`를 호출하지
   않고 committed image를 유지한다.
 - completion은 source/display key와 crop metadata를 모두 검증한 뒤 함께 저장한다.
+- completion은 staging display를 최종 display key로 승격하며, DB 저장 실패 시
+  기존 최종 display object를 복원한 뒤 staging object를 정리한다.
 - 새 파일로 교체할 때 backend는 completion 이후 이전 display와 source object를
   삭제한다. 재크롭에서는 이전 source를 삭제하지 않는다.
-- 성공 후 새 public URL이 캐시되어 이전 이미지가 보일 수 있으므로, object key가
-  UUID 기반이라는 현재 정책을 유지한다.
+- 재크롭은 동일한 `{uuid}-crop.{extension}` object key를 덮어쓰므로 completion 응답의
+  `page.updatedAt`을 public URL의 `?v=` cache version으로 사용한다. object key 규칙은
+  UUID 기반으로 유지하고, 화면은 완료 직후 새 URL을 사용한다.
 - 새 crop source와 pending preview의 object URL은 성공/실패/취소/언마운트
   모든 경로에서 revoke한다.
 
@@ -437,6 +464,8 @@ Canvas helper는 다음을 책임진다.
   - source key와 crop metadata를 profile image completion 결과와 동기화
 - R2 CORS 설정/문서
   - existing image 재크롭을 위한 `GET`/`HEAD` 허용 추가
+- public page 응답
+  - 소유자 외 viewer에게는 `imageSource`/`imageCrop`을 노출하지 않음
 
 ## 검증 기준
 
@@ -456,7 +485,7 @@ Canvas helper는 다음을 책임진다.
 
 - Given: 로그인한 사용자가 편집 모드이고 가로로 긴 이미지 파일을 준비한다.
 - When: 파일을 선택하고 이미지를 이동/확대한 뒤 `적용`을 누른다.
-- Then: 원형 preview가 선택한 위치를 보여주고, completion 성공 후 display key,
+- Then: 1:1 preview가 선택한 위치를 보여주고, completion 성공 후 display key,
   source key, percentage crop이 함께 저장된다. R2에는 원본과 512×512 display
   결과물이 모두 존재한다.
 - Evidence: browser 화면, presign/PUT/completion Network, R2 `HEAD` 2개,
@@ -483,7 +512,7 @@ Canvas helper는 다음을 책임진다.
 
 - Given: 모바일 viewport 또는 touch device다.
 - When: pinch, drag, zoom control, keyboard focus를 사용한다.
-- Then: 원형 프레임 밖에 빈 영역이 생기지 않고, controls는 label/focus 상태를
+- Then: 1:1 프레임 밖에 빈 영역이 생기지 않고, controls는 label/focus 상태를
   가지며 Escape로 취소할 수 있다.
 - Evidence: 실제 browser touch/keyboard interaction, focus outline, reduced-motion
   환경 화면.

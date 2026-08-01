@@ -67,11 +67,28 @@ The backend expects an R2 bucket binding named `IMAGES` pointing to the
 - `R2_SECRET_ACCESS_KEY`
 
 The access key must be an R2 API token with Object Read and Object Write access
-to `test-images`. The browser uploads through a short-lived presigned PUT URL;
-the bucket must have CORS configured to allow the frontend origin to send PUT
-requests with the `Content-Type` header.
+to `test-images`. The browser uploads through short-lived presigned PUT URLs;
+the bucket must have CORS configured to allow the frontend origins to send
+`GET`, `HEAD`, and `PUT` requests with the `Content-Type` and `Cache-Control`
+headers. `GET` and
+`HEAD` are required when an existing original is opened for re-cropping.
 
 Make the bucket publicly readable through an R2 custom domain (or an `r2.dev`
 subdomain for development) and configure the matching `VITE_R2_PUBLIC_URL` in
-the frontend. Database rows store only the object key, such as
-`users/profile/uuid.webp`.
+the frontend. New profile images use an immutable source object and a display
+object derived from the same UUID, such as
+`users/{userId}/{pageId}/profile/{uuid}.jpg` and
+`users/{userId}/{pageId}/profile/{uuid}-crop.webp`. The display object is
+uploaded with `Cache-Control: no-cache, must-revalidate` because re-cropping
+reuses its key.
+
+Apply the Drizzle migration before deploying the Worker. The Worker reads the
+new `pages.image_source` and `pages.image_crop` columns during page queries:
+
+```sh
+bun run --filter @sinabro/backend db:migrate
+bun run deploy:backend
+```
+
+Keep the additive columns during rollback; deploy the previous Worker before
+rolling back database schema changes.
