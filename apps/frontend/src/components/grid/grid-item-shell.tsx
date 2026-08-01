@@ -2,12 +2,11 @@ import { getLinkProviderPresentation } from "@sinabro/api";
 import {
 	type CSSProperties,
 	type ReactNode,
-	useCallback,
 	useEffect,
 	useRef,
 	useState,
 } from "react";
-import { createPortal } from "react-dom";
+import { ItemDeleteButton } from "@/components/grid/item-controls";
 import type {
 	GridItemCommandHandler,
 	ItemCapabilities,
@@ -69,7 +68,16 @@ export function GridItemShell({
 }: GridItemShellProps) {
 	const hasContent = children !== null && children !== undefined;
 	const hasControls =
-		capabilities.controls.length > 0 &&
+		capabilities.controls.some(
+			(control) => control.command !== "delete-item",
+		) &&
+		onCommand &&
+		!isAnyItemDragging &&
+		!isExiting;
+	const hasDeleteControl =
+		capabilities.controls.some(
+			(control) => control.command === "delete-item",
+		) &&
 		onCommand &&
 		!isAnyItemDragging &&
 		!isExiting;
@@ -77,12 +85,7 @@ export function GridItemShell({
 	const shellRef = useRef<HTMLDivElement>(null);
 	const hideControlsTimer = useRef<number | null>(null);
 	const pointerInsideRef = useRef(false);
-	const [controlsPosition, setControlsPosition] = useState<{
-		left: number;
-		top: number;
-	} | null>(null);
 	const [controlsOpen, setControlsOpen] = useState(false);
-	const [isMounted, setIsMounted] = useState(false);
 	const style = {
 		"--grid-item-layout-w": String(layout.w),
 		"--grid-item-layout-h": String(layout.h),
@@ -93,7 +96,6 @@ export function GridItemShell({
 	const cardThemeStyle = getCardThemeStyle(item);
 
 	useEffect(() => {
-		setIsMounted(true);
 		return () => {
 			if (hideControlsTimer.current !== null) {
 				window.clearTimeout(hideControlsTimer.current);
@@ -101,21 +103,11 @@ export function GridItemShell({
 		};
 	}, []);
 
-	const updateControlsPosition = useCallback(() => {
-		const rect = shellRef.current?.getBoundingClientRect();
-		if (!rect) return;
-		setControlsPosition({
-			left: rect.left + rect.width / 2,
-			top: rect.bottom + 12,
-		});
-	}, []);
-
 	function showControls() {
 		if (hideControlsTimer.current !== null) {
 			window.clearTimeout(hideControlsTimer.current);
 			hideControlsTimer.current = null;
 		}
-		updateControlsPosition();
 		setControlsOpen(true);
 	}
 
@@ -130,35 +122,18 @@ export function GridItemShell({
 	}
 
 	useEffect(() => {
-		if (!controlsOpen) return;
-		const handleViewportChange = () => updateControlsPosition();
-		window.addEventListener("resize", handleViewportChange);
-		window.addEventListener("scroll", handleViewportChange, true);
-		return () => {
-			window.removeEventListener("resize", handleViewportChange);
-			window.removeEventListener("scroll", handleViewportChange, true);
-		};
-	}, [controlsOpen, updateControlsPosition]);
-
-	useEffect(() => {
 		if (isAnyItemDragging) {
 			if (hideControlsTimer.current !== null) {
 				window.clearTimeout(hideControlsTimer.current);
 				hideControlsTimer.current = null;
 			}
 			setControlsOpen(false);
-			setControlsPosition(null);
 			return;
 		}
 		if (!pointerInsideRef.current) return;
 
-		const frame = window.requestAnimationFrame(() => {
-			if (!pointerInsideRef.current) return;
-			updateControlsPosition();
-			setControlsOpen(true);
-		});
-		return () => window.cancelAnimationFrame(frame);
-	}, [isAnyItemDragging, updateControlsPosition]);
+		setControlsOpen(true);
+	}, [isAnyItemDragging]);
 
 	return (
 		<div
@@ -200,33 +175,31 @@ export function GridItemShell({
 					{hasContent ? children : <RuntimeFallback item={item} />}
 				</div>
 			</div>
-			{hasControls && isMounted && controlsPosition
-				? createPortal(
-						<div
-							data-grid-item-drag-cancel="true"
-							className={cn(
-								"pointer-events-none fixed z-99999 -translate-x-1/2",
-								"transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]",
-								controlsOpen ? "opacity-100" : "opacity-0",
-							)}
-							style={{
-								left: controlsPosition.left,
-								top: controlsPosition.top,
-							}}
-							onPointerEnter={showControls}
-							onPointerLeave={hideControls}
-						>
-							<div className="pointer-events-auto w-max">
-								<ControlsView
-									item={item}
-									capabilities={capabilities}
-									onCommand={onCommand}
-								/>
-							</div>
-						</div>,
-						document.body,
-					)
-				: null}
+			{hasDeleteControl ? (
+				<ItemDeleteButton itemId={item.id} onCommand={onCommand} />
+			) : null}
+			{hasControls ? (
+				<div
+					data-grid-item-drag-cancel="true"
+					className={cn(
+						"absolute top-full left-1/2 z-99999 mt-3 -translate-x-1/2",
+						"transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]",
+						controlsOpen
+							? "pointer-events-auto opacity-100"
+							: "pointer-events-none opacity-0",
+					)}
+					onPointerEnter={showControls}
+					onPointerLeave={hideControls}
+				>
+					<div className="w-max">
+						<ControlsView
+							item={item}
+							capabilities={capabilities}
+							onCommand={onCommand}
+						/>
+					</div>
+				</div>
+			) : null}
 		</div>
 	);
 }
