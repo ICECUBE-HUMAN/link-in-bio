@@ -56,6 +56,8 @@ export function MediaItemRenderer({
 			>
 				{mode === "edit" ? (
 					<Input
+						// Prevent password-manager content scripts from mutating SSR markup before hydration.
+						data-bro-ignore="true"
 						value={item.data.caption ?? ""}
 						placeholder="Caption"
 						onChange={(event) =>
