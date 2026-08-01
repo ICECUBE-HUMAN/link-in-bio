@@ -15,6 +15,21 @@ const page = {
 	handle: "kim",
 };
 
+const defaultLayouts = {
+	wide: {
+		x: 0,
+		y: 0,
+		w: 2,
+		h: 2,
+	},
+	compact: {
+		x: 0,
+		y: 0,
+		w: 2,
+		h: 2,
+	},
+} as const;
+
 function createApp(
 	user: { id: string } | null = null,
 ) {
@@ -489,6 +504,129 @@ describe("pageItemsController", () => {
 				faviconUrl:
 					"https://icons.duckduckgo.com/ip3/example.com.ico",
 			},
+		});
+	});
+
+	it("preserves map zoom when a valid map item is created", async () => {
+		const { app, items } =
+			createBatchApp();
+		const response = await app.request(
+			"/pages/kim/batch",
+			{
+				method: "PATCH",
+				headers: {
+					"content-type":
+						"application/json",
+				},
+				body: JSON.stringify({
+					upserts: [
+						{
+							id: "map_1",
+							type: "map",
+							data: {
+								latitude: 35.6762,
+								longitude: 139.6503,
+								zoom: 12,
+							},
+							style: {},
+							layouts: defaultLayouts,
+						},
+					],
+					deletes: [],
+				}),
+			},
+		);
+
+		expect(response.status).toBe(200);
+		expect(items).toHaveLength(1);
+		expect(items[0]?.data).toEqual({
+			latitude: 35.6762,
+			longitude: 139.6503,
+			zoom: 12,
+		});
+		expect(
+			(
+				(await response.json()) as {
+					items: Array<{
+						data: unknown;
+					}>;
+				}
+			).items[0]?.data,
+		).toEqual({
+			latitude: 35.6762,
+			longitude: 139.6503,
+			zoom: 12,
+		});
+	});
+
+	it("rejects map zoom outside the shared schema boundary", async () => {
+		const { app, items } =
+			createBatchApp();
+		const response = await app.request(
+			"/pages/kim/batch",
+			{
+				method: "PATCH",
+				headers: {
+					"content-type":
+						"application/json",
+				},
+				body: JSON.stringify({
+					upserts: [
+						{
+							id: "map_1",
+							type: "map",
+							data: {
+								latitude: 35.6762,
+								longitude: 139.6503,
+								zoom: 23,
+							},
+							style: {},
+							layouts: defaultLayouts,
+						},
+					],
+					deletes: [],
+				}),
+			},
+		);
+
+		expect(response.status).toBe(422);
+		expect(items).toHaveLength(0);
+	});
+
+	it("accepts legacy map payloads without zoom", async () => {
+		const { app, items } =
+			createBatchApp();
+		const response = await app.request(
+			"/pages/kim/batch",
+			{
+				method: "PATCH",
+				headers: {
+					"content-type":
+						"application/json",
+				},
+				body: JSON.stringify({
+					upserts: [
+						{
+							id: "map_1",
+							type: "map",
+							data: {
+								latitude: 35.6762,
+								longitude: 139.6503,
+							},
+							style: {},
+							layouts: defaultLayouts,
+						},
+					],
+					deletes: [],
+				}),
+			},
+		);
+
+		expect(response.status).toBe(200);
+		expect(items).toHaveLength(1);
+		expect(items[0]?.data).toEqual({
+			latitude: 35.6762,
+			longitude: 139.6503,
 		});
 	});
 

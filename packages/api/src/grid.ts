@@ -81,6 +81,7 @@ export const pageItemMediaResponseDataSchema = v.object({
 export const pageItemMapDataSchema = v.object({
 	latitude: v.pipe(v.number(), v.minValue(-90), v.maxValue(90)),
 	longitude: v.pipe(v.number(), v.minValue(-180), v.maxValue(180)),
+	zoom: v.optional(v.pipe(v.number(), v.minValue(0), v.maxValue(22))),
 	caption: v.optional(v.string()),
 });
 

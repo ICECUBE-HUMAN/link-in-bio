@@ -5,6 +5,7 @@ import {
 	getPresetGeometry,
 	placeAtFirstAvailable,
 } from "@sinabro/grid-layout";
+import { DEFAULT_MAP_LOCATION, DEFAULT_MAP_ZOOM } from "../map/map-config";
 import { toLayoutMap } from "./layout-engine";
 import type { Breakpoint, GridItem, ItemType } from "./types";
 
@@ -60,7 +61,10 @@ export function createGridItem({
 			return {
 				...base,
 				type: itemType,
-				data: { latitude: 37.5665, longitude: 126.978 },
+				data: {
+					...DEFAULT_MAP_LOCATION,
+					zoom: DEFAULT_MAP_ZOOM,
+				},
 			};
 		case "section":
 			return { ...base, type: itemType, data: { title: "" } };

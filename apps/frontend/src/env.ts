@@ -14,6 +14,7 @@ export const env = createEnv({
 		VITE_APP_TITLE: z.string().min(1).optional(),
 		VITE_APP_URL: z.url().optional(),
 		VITE_API_BASE_URL: z.url().optional(),
+		VITE_MAPBOX_ACCESS_TOKEN: z.string().min(1).optional(),
 		VITE_R2_PUBLIC_URL: z.url().optional(),
 		VITE_APP_DOMAIN: z.string(),
 		VITE_ENABLE_ANNOUNCEMENT: z
