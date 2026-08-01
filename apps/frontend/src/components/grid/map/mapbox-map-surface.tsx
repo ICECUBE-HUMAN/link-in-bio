@@ -56,12 +56,18 @@ export const MapboxMapSurface = forwardRef<
 ) {
 	const mapRef = useRef<MapRef>(null);
 	const mapErrorReportedRef = useRef(false);
+	const mapLoadedRef = useRef(false);
+	const pendingCameraRef = useRef<MapCamera | null>(null);
 
 	useImperativeHandle(
 		ref,
 		() => ({
 			flyTo(nextCamera) {
-				mapRef.current?.flyTo({
+				pendingCameraRef.current = nextCamera;
+				if (!mapLoadedRef.current || !mapRef.current) return;
+
+				pendingCameraRef.current = null;
+				mapRef.current.flyTo({
 					center: [nextCamera.longitude, nextCamera.latitude],
 					zoom: nextCamera.zoom,
 					duration: getFlyToDuration(),
@@ -98,6 +104,17 @@ export const MapboxMapSurface = forwardRef<
 
 	function handleMapLoad(event: MapEvent) {
 		event.target.touchZoomRotate.disableRotation();
+		mapLoadedRef.current = true;
+
+		const pendingCamera = pendingCameraRef.current;
+		if (!pendingCamera) return;
+
+		pendingCameraRef.current = null;
+		event.target.flyTo({
+			center: [pendingCamera.longitude, pendingCamera.latitude],
+			zoom: pendingCamera.zoom,
+			duration: getFlyToDuration(),
+		});
 	}
 
 	return (
@@ -119,6 +136,7 @@ export const MapboxMapSurface = forwardRef<
 				touchPitch={false}
 				dragPan={interactive}
 				scrollZoom={interactive}
+				boxZoom={interactive}
 				doubleClickZoom={interactive}
 				keyboard={interactive}
 				touchZoomRotate={interactive}
