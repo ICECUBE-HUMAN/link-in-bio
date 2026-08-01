@@ -18,7 +18,7 @@ const PAGE_LAYOUT_CLASSES: Record<Breakpoint, PageLayoutClasses> = {
 	wide: {
 		shell:
 			"min-[90rem]:flex-row min-[90rem]:items-stretch min-[90rem]:justify-around",
-		profile: "min-[90rem]:min-h-0 min-[90rem]:w-md min-[90rem]:max-w-none",
+		profile: "min-[90rem]:min-h-0 min-[90rem]:w-2xl min-[90rem]:max-w-none",
 		content:
 			"min-[90rem]:h-full min-[90rem]:min-h-[calc(100dvh-4rem)] min-[90rem]:w-4xl min-[90rem]:max-w-none min-[90rem]:shrink-0 min-[90rem]:pt-16",
 		profileAside:
