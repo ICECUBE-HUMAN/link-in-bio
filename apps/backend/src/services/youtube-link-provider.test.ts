@@ -103,6 +103,11 @@ describe("youtube link provider", () => {
 							"playlistId",
 						),
 					).toBe("UUcreator");
+					expect(
+						requestUrl.searchParams.get(
+							"maxResults",
+						),
+					).toBe("4");
 					return new Response(
 						JSON.stringify({
 							items: [
@@ -119,6 +124,57 @@ describe("youtube link provider", () => {
 										thumbnails: {
 											high: {
 												url: "https://i.ytimg.com/latest.jpg",
+											},
+										},
+									},
+								},
+								{
+									snippet: {
+										publishedAt:
+											"2026-07-30T00:00:00Z",
+										title:
+											"Second video",
+										resourceId: {
+											videoId:
+												"second123",
+										},
+										thumbnails: {
+											high: {
+												url: "https://i.ytimg.com/second.jpg",
+											},
+										},
+									},
+								},
+								{
+									snippet: {
+										publishedAt:
+											"2026-07-29T00:00:00Z",
+										title:
+											"Third video",
+										resourceId: {
+											videoId:
+												"third123",
+										},
+										thumbnails: {
+											high: {
+												url: "https://i.ytimg.com/third.jpg",
+											},
+										},
+									},
+								},
+								{
+									snippet: {
+										publishedAt:
+											"2026-07-28T00:00:00Z",
+										title:
+											"Fourth video",
+										resourceId: {
+											videoId:
+												"fourth123",
+										},
+										thumbnails: {
+											high: {
+												url: "https://i.ytimg.com/fourth.jpg",
 											},
 										},
 									},
@@ -154,6 +210,12 @@ describe("youtube link provider", () => {
 					"Latest video",
 				recentVideoThumbnailUrl:
 					"https://i.ytimg.com/latest.jpg",
+				recentVideoThumbnailUrls: [
+					"https://i.ytimg.com/latest.jpg",
+					"https://i.ytimg.com/second.jpg",
+					"https://i.ytimg.com/third.jpg",
+					"https://i.ytimg.com/fourth.jpg",
+				],
 				recentVideoPublishedAt:
 					"2026-07-31T00:00:00Z",
 				recentVideoUrl:

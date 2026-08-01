@@ -97,7 +97,13 @@ export const pageItemLinkMetadataSchema = v.object({
 	providerData: v.optional(
 		v.record(
 			v.string(),
-			v.union([v.string(), v.number(), v.boolean(), v.null()]),
+			v.union([
+				v.string(),
+				v.number(),
+				v.boolean(),
+				v.null(),
+				v.array(httpsUrlSchema),
+			]),
 		),
 	),
 });

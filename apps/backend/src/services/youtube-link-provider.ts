@@ -379,9 +379,8 @@ async function enrichYoutubeChannel(
 		channel.contentDetails
 			?.relatedPlaylists?.uploads,
 	);
-	let recentVideo:
-		| YoutubePlaylistItem
-		| undefined;
+	let recentVideos: YoutubePlaylistItem[] =
+		[];
 	if (uploadsPlaylistId) {
 		const playlistResponse =
 			await fetchYoutubeApi<YoutubePlaylistItem>(
@@ -389,14 +388,18 @@ async function enrichYoutubeChannel(
 				{
 					part: "snippet",
 					playlistId: uploadsPlaylistId,
-					maxResults: "1",
+					maxResults: "4",
 				},
 				context,
 			);
-		recentVideo =
-			playlistResponse?.items?.[0];
+		recentVideos =
+			playlistResponse?.items?.slice(
+				0,
+				4,
+			) ?? [];
 	}
 
+	const recentVideo = recentVideos[0];
 	const recentVideoId = asString(
 		recentVideo?.snippet?.resourceId
 			?.videoId,
@@ -405,6 +408,16 @@ async function enrichYoutubeChannel(
 		getThumbnailUrl(
 			recentVideo?.snippet?.thumbnails,
 		);
+	const recentVideoThumbnailUrls =
+		recentVideos
+			.map((video) =>
+				getThumbnailUrl(
+					video.snippet?.thumbnails,
+				),
+			)
+			.filter((url): url is string =>
+				Boolean(url),
+			);
 	const metadata: PageItemLinkMetadata =
 		{
 			title: asString(
@@ -435,6 +448,11 @@ async function enrichYoutubeChannel(
 					recentVideo?.snippet?.title,
 				),
 				recentVideoThumbnailUrl,
+				recentVideoThumbnailUrls:
+					recentVideoThumbnailUrls.length >
+					0
+						? recentVideoThumbnailUrls
+						: undefined,
 				recentVideoPublishedAt:
 					asString(
 						recentVideo?.snippet

@@ -200,20 +200,36 @@ function LinkBadge({
 }
 
 function LinkPreview({
-	imageUrl,
+	imageUrls,
 	url,
 	isLoading,
 }: {
-	imageUrl: string | undefined;
+	imageUrls: readonly string[];
 	url: string;
 	isLoading: boolean;
 }) {
 	const fallback = getProviderFallback(url);
 
-	if (isLoading && !imageUrl) {
+	if (isLoading && imageUrls.length === 0) {
 		return <Skeleton className="size-full rounded-none" />;
 	}
 
+	if (imageUrls.length > 1) {
+		return (
+			<div className="grid size-full grid-cols-2 gap-2">
+				{imageUrls.map((imageUrl) => (
+					<div
+						key={imageUrl}
+						className="min-h-0 min-w-0 overflow-hidden rounded-md bg-muted"
+					>
+						<img src={imageUrl} alt="" className="size-full object-cover" />
+					</div>
+				))}
+			</div>
+		);
+	}
+
+	const imageUrl = imageUrls[0];
 	if (imageUrl) {
 		return <img src={imageUrl} alt="" className="size-full object-cover" />;
 	}
@@ -267,7 +283,7 @@ function LinkTitle({
 			rows={1}
 			value={value}
 			style={
-				isHalfBanner || isLandscape || isSquareSmall
+				isHalfBanner || isLandscape || isSquareSmall || isTall
 					? { fieldSizing: "fixed", width: "100%" }
 					: undefined
 			}
@@ -284,10 +300,13 @@ function LinkTitle({
 			}}
 			className={cn(
 				"link-title-input block min-h-0 w-full min-w-24 max-w-full resize-none rounded-sm border-0 bg-transparent px-1 py-0 text-sm font-normal wrap-break-wordtext-foreground outline-none focus-visible:ring-0",
-				(isHalfBanner || isLandscape || isSquareSmall) && "field-sizing-fixed",
+				(isHalfBanner || isLandscape || isSquareSmall || isTall) &&
+					"field-sizing-fixed",
 				isHalfBanner
 					? "h-8 max-h-8 overflow-hidden whitespace-nowrap leading-8"
-					: "max-h-full overflow-x-hidden overflow-y-auto leading-5",
+					: isTall
+						? "h-20 max-h-20 overflow-x-hidden overflow-y-auto leading-5"
+						: "max-h-full overflow-x-hidden overflow-y-auto leading-5",
 				isLandscape && "flex-1",
 				isSquareSmall && "flex-1",
 				isTall && "flex-1",
@@ -326,6 +345,20 @@ export function LinkItemRenderer({
 			? providerData.channelImageUrl.trim() || undefined
 			: undefined;
 	const imageUrl = channelImageUrl ?? item.data.metadata?.imageUrl;
+	const recentVideoThumbnailUrls =
+		provider === "youtube" &&
+		Array.isArray(providerData?.recentVideoThumbnailUrls)
+			? providerData.recentVideoThumbnailUrls.filter(
+					(value): value is string =>
+						typeof value === "string" && value.trim().length > 0,
+				)
+			: [];
+	const imageUrls =
+		recentVideoThumbnailUrls.length > 0
+			? recentVideoThumbnailUrls
+			: imageUrl
+				? [imageUrl]
+				: [];
 	const providerPresentation = getConfiguredLinkProviderPresentation(provider);
 	const shouldShowLinkAction = provider !== "generic-web";
 	const providerCount = getProviderCount(provider, providerData);
@@ -459,10 +492,10 @@ export function LinkItemRenderer({
 					)}
 					style={cardStyle}
 				>
-					{imageUrl && (
-						<div className="relative min-h-0 min-w-0 flex-3 overflow-hidden rounded-lg bg-muted">
+					{imageUrls.length > 0 && (
+						<div className="relative min-h-0 min-w-0 flex-4 overflow-hidden rounded-lg bg-muted">
 							<LinkPreview
-								imageUrl={imageUrl}
+								imageUrls={imageUrls}
 								url={item.data.url}
 								isLoading={isEnriching}
 							/>
@@ -483,10 +516,10 @@ export function LinkItemRenderer({
 					style={cardStyle}
 				>
 					{content}
-					{imageUrl && (
-						<div className="relative min-h-0 flex-2 overflow-hidden rounded-lg bg-muted">
+					{imageUrls.length > 0 && (
+						<div className="relative min-h-0 flex-3 overflow-hidden rounded-lg bg-muted">
 							<LinkPreview
-								imageUrl={imageUrl}
+								imageUrls={imageUrls}
 								url={item.data.url}
 								isLoading={isEnriching}
 							/>
