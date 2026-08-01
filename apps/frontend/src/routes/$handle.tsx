@@ -291,7 +291,7 @@ function HandlePageContent({
 							/>
 						</div>
 						<div
-							className={`flex min-w-0 flex-col gap-4 ${layoutClasses.profileDetails}`}
+							className={`flex min-w-0 flex-col gap-2 ${layoutClasses.profileDetails}`}
 						>
 							<EditableParagraph
 								value={draft.name}
@@ -307,7 +307,7 @@ function HandlePageContent({
 								mode={mode}
 								onChange={(bio) => updateField("bio", bio)}
 								rows={2}
-								className={`t-stagger-line t-stagger-line--3 px-0.5 text-base leading-7 text-primary/80 ${layoutClasses.bio}`}
+								className={`t-stagger-line t-stagger-line--3 px-0.5 text-base leading-6 text-primary/80 ${layoutClasses.bio}`}
 							/>
 						</div>
 					</aside>
