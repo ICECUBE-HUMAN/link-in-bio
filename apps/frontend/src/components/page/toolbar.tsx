@@ -104,7 +104,7 @@ export default function Toolbar({
 				onChange={handleMediaChange}
 			/>
 			<motion.div
-				layout="size"
+				layout
 				transition={{ layout: viewTransition }}
 				className="flex items-center overflow-hidden rounded-full bg-test p-1.5"
 			>
