@@ -5,7 +5,6 @@ import type {
 	PageResponse,
 } from "@sinabro/api";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import { ChevronLeftIcon } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Check, CheckCircle, Gear, Loader, XCircle } from "reicon-react";
@@ -36,6 +35,8 @@ import { SharedLayoutBg } from "../motion/shared-layout-bg";
 
 type SettingsView = "menu" | "delete" | "handle";
 
+const DELETE_CONFIRMATION_CLICKS = 3;
+
 type PageSettingsMenuProps = {
 	page: PageResponse;
 	onChanged: (page: PageResponse) => void;
@@ -53,7 +54,6 @@ export function PageSettingsMenu({ page, onChanged }: PageSettingsMenuProps) {
 		volume: 2,
 	});
 
-	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const [view, setView] = useState<SettingsView>("menu");
 	const [open, setOpen] = useState(false);
@@ -80,11 +80,12 @@ export function PageSettingsMenu({ page, onChanged }: PageSettingsMenuProps) {
 			<PopoverContent
 				align="start"
 				sideOffset={12}
-				className={`${isHandleSuccess ? "w-88" : view === "handle" ? "w-88" : "w-64"} t-resize overflow-hidden p-2 shadow-brand-small! ring-0 border border-border/40 bg-background rounded-2xl`}
+				className={`${isHandleSuccess || view === "handle" ? "w-88" : view === "delete" ? "w-80" : "w-64"} t-resize overflow-hidden ${view === "delete" ? "p-4 rounded-4xl" : "p-2 rounded-2xl"} beautiful-shadow  bg-background`}
 			>
 				<div
 					className="t-page-slide t-resize"
 					data-page={view === "menu" ? "1" : "2"}
+					data-view={view}
 					data-success={isHandleSuccess ? "true" : undefined}
 				>
 					<section className="t-page" data-page-id="1">
@@ -115,25 +116,19 @@ export function PageSettingsMenu({ page, onChanged }: PageSettingsMenuProps) {
 							>
 								Log out
 							</button>
+							<button
+								type="button"
+								className="flex items-center w-full justify-start rounded-lg font-normal h-15"
+								onClick={() => setView("delete")}
+							>
+								Delete Account
+							</button>
 						</SharedLayoutBg>
-						{/*<button
-							type="button"
-							className="w-full justify-start rounded-lg font-normal h-13"
-							onClick={() => setView("delete")}
-						>
-							Delete Account
-						</Button>*/}
 					</section>
 					<section className="t-page p-1" data-page-id="2">
 						{view === "delete" ? (
-							<DeleteAccountView
-								onBack={() => setView("menu")}
-								onDeleted={() => {
-									setOpen(false);
-									void navigate({ to: "/" });
-								}}
-							/>
-						) : (
+							<DeleteAccountView onBack={() => setView("menu")} />
+						) : view === "handle" ? (
 							<ChangeHandleView
 								page={page}
 								isActive={view === "handle"}
@@ -145,7 +140,7 @@ export function PageSettingsMenu({ page, onChanged }: PageSettingsMenuProps) {
 								onChanged={onChanged}
 								onSuccessChange={setIsHandleSuccess}
 							/>
-						)}
+						) : null}
 					</section>
 				</div>
 			</PopoverContent>
@@ -168,43 +163,127 @@ function BackButton({ onBack }: { onBack: () => void }) {
 	);
 }
 
-function DeleteAccountView({
-	onBack,
-	onDeleted,
-}: {
-	onBack: () => void;
-	onDeleted: () => void;
-}) {
+function DeleteAccountView({ onBack }: { onBack: () => void }) {
 	const [isDeleting, setIsDeleting] = useState(false);
+	const [isVerificationSent, setIsVerificationSent] = useState(false);
+	const [deleteConfirmationClicks, setDeleteConfirmationClicks] = useState(0);
 	const [error, setError] = useState<string | null>(null);
+	const deleteProgress = deleteConfirmationClicks / DELETE_CONFIRMATION_CLICKS;
+	const deleteButtonLabel =
+		deleteConfirmationClicks === DELETE_CONFIRMATION_CLICKS
+			? "Come back anytime!"
+			: deleteConfirmationClicks > 0
+				? deleteConfirmationClicks === DELETE_CONFIRMATION_CLICKS - 1
+					? "Almost there"
+					: "One more step"
+				: "Begin account deletion";
+
 	async function handleDelete() {
 		setIsDeleting(true);
 		setError(null);
-		const result = await authClient.deleteUser({});
-		if (result.error)
-			setError(result.error.message ?? "Could not delete your account.");
-		else onDeleted();
-		setIsDeleting(false);
+		try {
+			const result = await authClient.deleteUser({
+				callbackURL: new URL("/", window.location.origin).toString(),
+			});
+			if (result.error) {
+				setError(result.error.message ?? "Could not send the deletion email.");
+				return;
+			}
+			setIsVerificationSent(true);
+		} catch {
+			setError("Could not send the deletion email.");
+		} finally {
+			setIsDeleting(false);
+		}
+	}
+
+	function handleDeleteClick() {
+		if (deleteConfirmationClicks < DELETE_CONFIRMATION_CLICKS) {
+			setDeleteConfirmationClicks((clicks) =>
+				Math.min(clicks + 1, DELETE_CONFIRMATION_CLICKS),
+			);
+			return;
+		}
+
+		void handleDelete();
 	}
 
 	return (
-		<div className="flex flex-col gap-3">
-			<div className="flex items-center gap-1">
-				<BackButton onBack={onBack} />
-				<h3 className="font-medium">Delete Account</h3>
+		<div
+			className="flex h-full flex-col justify-between gap-8"
+			data-verification-sent={isVerificationSent ? "true" : undefined}
+		>
+			<div className="flex min-h-0 flex-1 flex-col gap-3">
+				{isVerificationSent ? (
+					<p className="text-base text-balance text-primary">
+						Your inbox has the final step. Confirm when you’re ready, and we’ll
+						take care of the rest.
+						<span className="mt-4 block">
+							See you again, whenever you’re ready.
+						</span>
+					</p>
+				) : (
+					<>
+						<h3 className="font-semibold text-xl">Leaving alreday?</h3>
+						<div className="text-base text-balance text-primary">
+							<p>Ready to move on?</p>
+							<p>
+								We’ll send one last confirmation before your account and page
+								are permanently removed.
+							</p>
+						</div>
+						{error ? <p className="text-xs text-destructive">{error}</p> : null}
+						<div className="mt-auto flex flex-col items-start gap-2">
+							<Button
+								variant="destructive"
+								size="lg"
+								className="relative w-full overflow-hidden rounded-lg h-12 text-base"
+								disabled={isDeleting}
+								onClick={handleDeleteClick}
+							>
+								<span className="relative z-0">
+									{isDeleting ? (
+										<Loader weight="Filled" className="animate-spin size-5" />
+									) : (
+										deleteButtonLabel
+									)}
+								</span>
+								<span
+									aria-hidden="true"
+									className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-red-500 text-primary-foreground transition-[clip-path] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+									style={{
+										clipPath: `inset(0 ${(1 - deleteProgress) * 100}% 0 0)`,
+									}}
+								>
+									{isDeleting ? (
+										<Loader weight="Filled" className="animate-spin size-5" />
+									) : (
+										deleteButtonLabel
+									)}
+								</span>
+							</Button>
+							<Button
+								type="button"
+								variant="secondary"
+								size="lg"
+								className="w-full h-12 rounded-lg text-base text-muted-foreground"
+								onClick={onBack}
+							>
+								Cancel
+							</Button>
+						</div>
+					</>
+				)}
 			</div>
-			<p className="text-xs text-muted-foreground">
-				This permanently deletes your account and page.
-			</p>
-			{error ? <p className="text-xs text-destructive">{error}</p> : null}
-			<Button
-				variant="destructive"
-				size="sm"
-				disabled={isDeleting}
-				onClick={() => void handleDelete()}
-			>
-				{isDeleting ? "Deleting…" : "Delete account"}
-			</Button>
+			{isVerificationSent ? (
+				<div className="pt-4">
+					<p className="text-sm italic text-muted-foreground">
+						With care,
+						<br />
+						The founder
+					</p>
+				</div>
+			) : null}
 		</div>
 	);
 }
