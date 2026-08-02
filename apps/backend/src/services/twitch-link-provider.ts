@@ -244,7 +244,7 @@ async function getTwitchAppToken(
 				headers: {
 					accept: "application/json",
 					"user-agent":
-						"Sinabro Link Metadata/1.0",
+						"Mozilla/5.0 ",
 				},
 			});
 		if (!response.ok) return userToken;
@@ -342,7 +342,7 @@ async function refreshTwitchUserToken(
 						"content-type":
 							"application/x-www-form-urlencoded",
 						"user-agent":
-							"Sinabro Link Metadata/1.0",
+							"Mozilla/5.0 ",
 					},
 					body: body.toString(),
 				},
@@ -449,7 +449,7 @@ async function fetchTwitchApi<T>(
 						"",
 					Authorization: `Bearer ${token}`,
 					"user-agent":
-						"Sinabro Link Metadata/1.0",
+						"Mozilla/5.0 ",
 				},
 			});
 		if (!response.ok)

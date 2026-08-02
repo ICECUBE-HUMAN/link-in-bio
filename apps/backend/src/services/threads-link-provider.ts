@@ -283,7 +283,7 @@ export function createThreadsEnricher(
 							accept:
 								"text/html,application/xhtml+xml;q=0.9",
 							"user-agent":
-								"Mozilla/5.0 (compatible; Sinabro Link Metadata/1.0)",
+								"Mozilla/5.0 ",
 						},
 					},
 				);

@@ -182,7 +182,7 @@ async function fetchDiscordJson<T>(
 								}
 							: {}),
 						"user-agent":
-							"Sinabro Link Metadata/1.0",
+							"Mozilla/5.0 ",
 					},
 				},
 			);

@@ -186,7 +186,7 @@ async function fetchChzzkApi(
 					"Client-Id": clientId,
 					"Client-Secret": clientSecret,
 					"user-agent":
-						"Sinabro Link Metadata/1.0",
+						"Mozilla/5.0 ",
 				},
 			});
 		if (!response.ok) return undefined;

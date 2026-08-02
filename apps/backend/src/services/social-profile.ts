@@ -212,7 +212,7 @@ export async function fetchSocialProfileHtml(
 						"text/html,application/xhtml+xml;q=0.9",
 					"user-agent":
 						options?.userAgent ??
-						"Mozilla/5.0 (compatible; Sinabro Link Metadata/1.0)",
+						"Mozilla/5.0 ",
 				},
 			});
 		if (

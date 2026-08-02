@@ -150,7 +150,7 @@ export function createGithubEnricher(
 							"Content-Type":
 								"application/json",
 							"User-Agent":
-								"sinabro-link-provider",
+								"Mozilla/5.0 ",
 						},
 						signal: controller.signal,
 						body: JSON.stringify({

@@ -354,7 +354,7 @@ async function enrichGenericWeb(
 						accept:
 							"text/html,application/xhtml+xml;q=0.9",
 						"user-agent":
-							"Sinabro Link Metadata/1.0",
+							"Mozilla/5.0 ",
 					},
 				},
 			);
@@ -384,10 +384,7 @@ async function enrichGenericWeb(
 				break;
 			requestUrl = redirectedUrl;
 		}
-		if (
-			!response.ok ||
-			!isHtmlResponse(response)
-		) {
+		if (!response.ok || !isHtmlResponse(response)) {
 			return {};
 		}
 
