@@ -406,6 +406,7 @@ export function GridSection({
 										breakpoint={effectiveBreakpoint}
 										preset={currentPreset}
 										mode={mode}
+										isDragging={draggingItemId === item.id}
 										isEnriching={enrichingItemIds.has(item.id)}
 										autoFocus={item.id === autoFocusItemId}
 										onAutoFocus={

@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 
 export type MapboxMapSurfaceHandle = {
 	flyTo(camera: MapCamera): void;
+	suspendInteractions(): void;
 };
 
 export type MapboxMapSurfaceProps = {
@@ -36,6 +37,12 @@ export type MapboxMapSurfaceProps = {
 	onGeolocate(camera: MapCamera): void;
 	onGeolocateError(error: unknown): void;
 	onError(error: unknown): void;
+};
+
+type MapboxMapWithHandlers = MapEvent["target"] & {
+	handlers?: {
+		destroy(): void;
+	};
 };
 
 function getFlyToDuration() {
@@ -78,6 +85,7 @@ export const MapboxMapSurface = forwardRef<
 	const mapErrorReportedRef = useRef(false);
 	const mapLoadedRef = useRef(false);
 	const pendingCameraRef = useRef<MapCamera | null>(null);
+	const interactionsSuspendedRef = useRef(false);
 	const [isContainerSized, setIsContainerSized] = useState(false);
 
 	useEffect(() => {
@@ -114,6 +122,13 @@ export const MapboxMapSurface = forwardRef<
 					zoom: nextCamera.zoom,
 					duration: getFlyToDuration(),
 				});
+			},
+			suspendInteractions() {
+				if (interactionsSuspendedRef.current || !mapRef.current) return;
+
+				const map = mapRef.current.getMap() as MapboxMapWithHandlers;
+				map.handlers?.destroy();
+				interactionsSuspendedRef.current = true;
 			},
 		}),
 		[],

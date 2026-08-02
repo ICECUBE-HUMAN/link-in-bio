@@ -73,6 +73,7 @@ export type ItemRendererProps<Item extends GridItem = GridItem> = {
 	breakpoint: Breakpoint;
 	preset: PresetName;
 	mode: PageMode;
+	isDragging?: boolean;
 	isEnriching?: boolean;
 	autoFocus?: boolean;
 	onAutoFocus?: () => void;

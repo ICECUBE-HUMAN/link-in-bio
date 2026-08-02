@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import {
+	type MouseEvent as ReactMouseEvent,
+	type PointerEvent as ReactPointerEvent,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import { ItemExternalAction } from "@/components/grid/item-external-action";
 import { MapFallback } from "@/components/grid/map/map-fallback";
 import { MapLocationSearch } from "@/components/grid/map/map-location-search";
@@ -23,17 +29,54 @@ import type { MapSearchResult } from "@/lib/map/mapbox-geocoding";
 export function MapItemRenderer({
 	item,
 	mode,
+	isDragging = false,
 	onCommand,
 }: ItemRendererProps<GridItemByType<"map">>) {
 	const [isLocationEditing, setIsLocationEditing] = useState(false);
 	const [mapError, setMapError] = useState<unknown>(null);
 	const [geolocationError, setGeolocationError] = useState<unknown>(null);
 	const [mapSurfaceKey, setMapSurfaceKey] = useState(0);
+	const [isGridDragPending, setIsGridDragPending] = useState(false);
+	const isGridDragPendingRef = useRef(false);
+	const needsMapRemountRef = useRef(false);
 	const mapSurfaceRef = useRef<MapboxMapSurfaceHandle>(null);
 	const accessToken = getMapboxAccessToken();
 	const normalizedCamera = normalizeMapCamera(item.data);
 	const interactive = mode === "edit" && isLocationEditing;
 	const showMapFallback = !accessToken || mapError !== null;
+
+	useEffect(() => {
+		if (isDragging || isGridDragPending || !needsMapRemountRef.current) return;
+
+		const frame = requestAnimationFrame(() => {
+			if (!needsMapRemountRef.current) return;
+			needsMapRemountRef.current = false;
+			setMapSurfaceKey((key) => key + 1);
+		});
+
+		return () => cancelAnimationFrame(frame);
+	}, [isDragging, isGridDragPending]);
+
+	useEffect(() => {
+		if (!isGridDragPending) return;
+
+		const releaseGridDrag = () => {
+			if (!isGridDragPendingRef.current) return;
+			isGridDragPendingRef.current = false;
+			setIsGridDragPending(false);
+		};
+		window.addEventListener("mouseup", releaseGridDrag, true);
+		window.addEventListener("pointerup", releaseGridDrag, true);
+		window.addEventListener("pointercancel", releaseGridDrag, true);
+		window.addEventListener("blur", releaseGridDrag);
+
+		return () => {
+			window.removeEventListener("mouseup", releaseGridDrag, true);
+			window.removeEventListener("pointerup", releaseGridDrag, true);
+			window.removeEventListener("pointercancel", releaseGridDrag, true);
+			window.removeEventListener("blur", releaseGridDrag);
+		};
+	}, [isGridDragPending]);
 
 	useEffect(() => {
 		if (mode !== "edit") {
@@ -90,8 +133,31 @@ export function MapItemRenderer({
 
 	const href = toGoogleMapsUrl(item.data.latitude, item.data.longitude);
 
+	function handleGridDragStart(
+		event: ReactMouseEvent<HTMLDivElement> | ReactPointerEvent<HTMLDivElement>,
+	) {
+		const target = event.target;
+		if (!(target instanceof Element)) return;
+		if (
+			target.closest(
+				"a,button,input,textarea,select,video,[contenteditable='true'],[data-grid-item-drag-cancel='true']",
+			)
+		)
+			return;
+
+		if (isGridDragPendingRef.current) return;
+		isGridDragPendingRef.current = true;
+		needsMapRemountRef.current = true;
+		mapSurfaceRef.current?.suspendInteractions();
+		setIsGridDragPending(true);
+	}
+
 	return (
-		<div className="relative size-full overflow-hidden rounded-[inherit] bg-muted surface-line">
+		<div
+			className="relative size-full overflow-hidden rounded-[inherit] bg-muted surface-line"
+			onMouseDownCapture={handleGridDragStart}
+			onPointerDownCapture={handleGridDragStart}
+		>
 			<div className="absolute inset-0">
 				{showMapFallback ? (
 					<MapFallback camera={normalizedCamera} onRetry={retryMap} />
