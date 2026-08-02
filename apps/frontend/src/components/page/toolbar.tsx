@@ -205,20 +205,15 @@ export default function Toolbar({
 						>
 							<div id="toolbar-content" className="flex items-center gap-1">
 								<div className="hidden items-center min-[90rem]:flex">
-									{isSaving ? (
-										<div className="flex justify-center items-center gap-1.5 text-muted-foreground w-28">
-											<Loader className="size-4 animate-spin" />
-											<span className="text-sm shimmer">Saving</span>
-										</div>
-									) : (
-										<Button
-											variant={"brand"}
-											size={"default"}
-											className={"px-8 surface-line w-28"}
-										>
-											Share
-										</Button>
-									)}
+									<Button
+										variant={"brand"}
+										size={"default"}
+										className={"px-8 surface-line w-28"}
+										disabled={isSaving}
+									>
+										{isSaving && <Loader className="size-4 animate-spin" />}
+										{isSaving ? "Saving" : "Share"}
+									</Button>
 								</div>
 								<div className="flex items-center gap-0 text-muted-foreground">
 									<ToolbarButton label="Link" onClick={() => setView("link")}>
