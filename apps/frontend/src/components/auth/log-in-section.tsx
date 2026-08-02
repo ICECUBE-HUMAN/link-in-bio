@@ -1,6 +1,6 @@
 import { SpinnerGapIcon } from "@phosphor-icons/react";
 import { IconGoogle, IconXTwitter } from "nucleo-social-media";
-import { type FormEvent, useRef, useState } from "react";
+import { type FormEvent, type ReactNode, useRef, useState } from "react";
 import { CheckCircle } from "reicon-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +24,36 @@ function SuccessCheck({ visible }: { visible: boolean }) {
 			aria-hidden="true"
 		>
 			<CheckCircle weight="Filled" className="size-12" />
+		</span>
+	);
+}
+
+function ButtonContentTransition({
+	idle,
+	isPending,
+	pending,
+}: {
+	idle: ReactNode;
+	isPending: boolean;
+	pending: ReactNode;
+}) {
+	return (
+		<span
+			className="t-button-content"
+			data-state={isPending ? "pending" : "idle"}
+		>
+			<span
+				className="t-button-content__item t-button-content__item--idle"
+				aria-hidden={isPending}
+			>
+				{idle}
+			</span>
+			<span
+				className="t-button-content__item t-button-content__item--pending"
+				aria-hidden={!isPending}
+			>
+				{pending}
+			</span>
 		</span>
 	);
 }
@@ -129,12 +159,12 @@ export default function LogInSection({ redirectTo }: LogInSectionProps) {
 	}
 
 	return (
-    <main className="relative mx-auto flex min-h-lvh w-full justify-center items-center overscroll-none px-5">
-      <img
-        src="/images/t.png"
-        alt=""
-        className="fixed -bottom-16 left-0 w-full h-96 md:h-165 object-cover -z-10"
-      />
+		<main className="relative mx-auto flex min-h-dvh w-full items-center justify-center overflow-y-auto overscroll-none px-5 py-6">
+			<img
+				src="/images/t.png"
+				alt=""
+				className="fixed -bottom-16 left-0 w-full h-96 md:h-165 object-cover -z-10"
+			/>
 			<section className="w-full max-w-xs flex flex-col gap-10 relative">
 				<form
 					className="t-page-slide t-login-page-slide"
@@ -145,7 +175,8 @@ export default function LogInSection({ redirectTo }: LogInSectionProps) {
 					<div className="t-page min-w-0" data-page-id="1">
 						<header className="flex flex-col gap-1 items-center">
 							<h1 className="text-2xl font-semibold">
-								Join <span className="text-brand">{env.VITE_APP_TITLE}</span>
+								Log in to{" "}
+								<span className="text-brand">{env.VITE_APP_TITLE}</span>
 							</h1>
 							<p className="text-sm text-muted-foreground">
 								Create your beautiful page in seconds.
@@ -180,11 +211,19 @@ export default function LogInSection({ redirectTo }: LogInSectionProps) {
 											className="h-10 rounded-md px-4 font-medium shadow-xs border-border/60 text-primary hover:bg-background"
 											disabled={pendingProvider !== null}
 										>
-											{pendingProvider === "magic-link" ? (
-												<SpinnerGapIcon className="size-5 animate-spin" />
-											) : (
-												"Send a link"
-											)}
+											<ButtonContentTransition
+												isPending={pendingProvider === "magic-link"}
+												idle="Send a link"
+												pending={
+													<>
+														<SpinnerGapIcon
+															className="size-5 animate-spin"
+															aria-hidden="true"
+														/>
+														<span className="sr-only">Sending…</span>
+													</>
+												}
+											/>
 										</InputGroupButton>
 									</InputGroupAddon>
 								</InputGroup>
@@ -207,14 +246,24 @@ export default function LogInSection({ redirectTo }: LogInSectionProps) {
 									disabled={pendingProvider !== null}
 									onClick={() => void handleSocialSignIn("google")}
 								>
-									{pendingProvider === "google" ? (
-										<SpinnerGapIcon className="size-5 animate-spin" />
-									) : (
-										<>
-											<IconGoogle className="size-5" />
-											Google
-										</>
-									)}
+									<ButtonContentTransition
+										isPending={pendingProvider === "google"}
+										idle={
+											<>
+												<IconGoogle className="size-5" />
+												Google
+											</>
+										}
+										pending={
+											<>
+												<SpinnerGapIcon
+													className="size-5 animate-spin"
+													aria-hidden="true"
+												/>
+												<span className="sr-only">Signing in with Google…</span>
+											</>
+										}
+									/>
 								</Button>
 								<Button
 									variant={"secondary"}
@@ -223,13 +272,23 @@ export default function LogInSection({ redirectTo }: LogInSectionProps) {
 									disabled={pendingProvider !== null}
 									onClick={() => void handleSocialSignIn("twitter")}
 								>
-									{pendingProvider === "twitter" ? (
-										<SpinnerGapIcon className="size-5 animate-spin" />
-									) : (
-										<>
-											<IconXTwitter />X
-										</>
-									)}
+									<ButtonContentTransition
+										isPending={pendingProvider === "twitter"}
+										idle={
+											<>
+												<IconXTwitter />X
+											</>
+										}
+										pending={
+											<>
+												<SpinnerGapIcon
+													className="size-5 animate-spin"
+													aria-hidden="true"
+												/>
+												<span className="sr-only">Signing in with X…</span>
+											</>
+										}
+									/>
 								</Button>
 							</div>
 						</div>
@@ -246,13 +305,17 @@ export default function LogInSection({ redirectTo }: LogInSectionProps) {
 							<div className="flex flex-col items-center gap-1 text-center">
 								<h1 className="text-2xl font-semibold">Check your email</h1>
 								<p className="text-sm text-muted-foreground">
-									We sent a sign-in link to <span className="text-primary">{email}</span>. It expires in 5 minutes.
+									We sent a sign-in link to{" "}
+									<span className="text-primary">{email}</span>. It expires in 5
+									minutes.
 								</p>
-								{error ? (
-									<p className="text-xs text-destructive/80" role="alert">
-										{error}
-									</p>
-								) : null}
+								<p
+									className="t-success-error min-h-4 text-xs text-destructive/80"
+									data-state={error ? "visible" : "hidden"}
+									role="alert"
+								>
+									{error}
+								</p>
 							</div>
 						</div>
 
@@ -264,14 +327,19 @@ export default function LogInSection({ redirectTo }: LogInSectionProps) {
 								className="w-full max-w-2xs rounded-md font-medium text-muted-foreground"
 								disabled={pendingProvider !== null}
 							>
-								{pendingProvider === "magic-link" ? (
-									<>
-										<SpinnerGapIcon className="size-4 animate-spin" />
-										Sending…
-									</>
-								) : (
-									"Resend link"
-								)}
+								<ButtonContentTransition
+									isPending={pendingProvider === "magic-link"}
+									idle="Resend link"
+									pending={
+										<>
+											<SpinnerGapIcon
+												className="size-4 animate-spin"
+												aria-hidden="true"
+											/>
+											Sending…
+										</>
+									}
+								/>
 							</Button>
 							<Button
 								type="button"
