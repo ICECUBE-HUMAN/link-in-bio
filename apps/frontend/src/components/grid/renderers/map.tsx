@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+	type PointerEvent as ReactPointerEvent,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import { ItemCaption } from "@/components/grid/item-caption";
 import { ItemExternalAction } from "@/components/grid/item-external-action";
 import { MapFallback } from "@/components/grid/map/map-fallback";
@@ -34,6 +40,21 @@ export function MapItemRenderer({
 	const normalizedCamera = normalizeMapCamera(item.data);
 	const interactive = mode === "edit" && isLocationEditing;
 	const showMapFallback = !accessToken || mapError !== null;
+
+	useEffect(() => {
+		const releaseGridDrag = () => mapSurfaceRef.current?.resumeInteractions();
+		window.addEventListener("mouseup", releaseGridDrag, true);
+		window.addEventListener("pointerup", releaseGridDrag, true);
+		window.addEventListener("pointercancel", releaseGridDrag, true);
+		window.addEventListener("blur", releaseGridDrag);
+
+		return () => {
+			window.removeEventListener("mouseup", releaseGridDrag, true);
+			window.removeEventListener("pointerup", releaseGridDrag, true);
+			window.removeEventListener("pointercancel", releaseGridDrag, true);
+			window.removeEventListener("blur", releaseGridDrag);
+		};
+	}, []);
 
 	useEffect(() => {
 		if (mode !== "edit") {
@@ -112,8 +133,24 @@ export function MapItemRenderer({
 
 	const href = toGoogleMapsUrl(item.data.latitude, item.data.longitude);
 
+	function handleGridDragStart(event: ReactPointerEvent<HTMLDivElement>) {
+		const target = event.target;
+		if (!(target instanceof Element)) return;
+		if (
+			target.closest(
+				"a,button,input,textarea,select,video,[contenteditable='true'],[data-grid-item-drag-cancel='true']",
+			)
+		)
+			return;
+
+		mapSurfaceRef.current?.suspendInteractions();
+	}
+
 	return (
-		<div className="relative size-full overflow-hidden rounded-[inherit] bg-muted/30 surface-line">
+		<div
+			className="relative size-full overflow-hidden rounded-[inherit] bg-muted/30 surface-line"
+			onPointerDownCapture={handleGridDragStart}
+		>
 			<div className="absolute inset-0">
 				{showMapFallback ? (
 					<MapFallback camera={normalizedCamera} onRetry={retryMap} />

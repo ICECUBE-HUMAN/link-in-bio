@@ -26,6 +26,8 @@ import { cn } from "@/lib/utils";
 
 export type MapboxMapSurfaceHandle = {
 	flyTo(camera: MapCamera): void;
+	suspendInteractions(): void;
+	resumeInteractions(): void;
 	zoomIn(): void;
 	zoomOut(): void;
 	locate(): void;
@@ -39,6 +41,22 @@ export type MapboxMapSurfaceProps = {
 	onGeolocate(camera: MapCamera): void;
 	onGeolocateError(error: unknown): void;
 	onError(error: unknown): void;
+};
+
+type MapboxMapWithHandlers = MapEvent["target"] & {
+	dragPan?: MapboxInteractionHandler;
+	scrollZoom?: MapboxInteractionHandler;
+	boxZoom?: MapboxInteractionHandler;
+	doubleClickZoom?: MapboxInteractionHandler;
+	keyboard?: MapboxInteractionHandler;
+	touchZoomRotate?: MapboxInteractionHandler & {
+		disableRotation(): void;
+	};
+};
+
+type MapboxInteractionHandler = {
+	disable(): void;
+	enable(): void;
 };
 
 function getFlyToDuration() {
@@ -58,6 +76,24 @@ function removeMapboxControls(map: MapEvent["target"]) {
 		.forEach((control) => {
 			control.remove();
 		});
+}
+
+function setMapInteractions(map: MapboxMapWithHandlers, enabled: boolean) {
+	const handlers = [
+		map.dragPan,
+		map.scrollZoom,
+		map.boxZoom,
+		map.doubleClickZoom,
+		map.keyboard,
+		map.touchZoomRotate,
+	];
+
+	for (const handler of handlers) {
+		if (enabled) handler?.enable();
+		else handler?.disable();
+	}
+
+	map.touchZoomRotate?.disableRotation();
 }
 
 export const MapboxMapSurface = forwardRef<
@@ -81,6 +117,7 @@ export const MapboxMapSurface = forwardRef<
 	const mapErrorReportedRef = useRef(false);
 	const mapLoadedRef = useRef(false);
 	const pendingCameraRef = useRef<MapCamera | null>(null);
+	const interactionsSuspendedRef = useRef(false);
 	const [isContainerSized, setIsContainerSized] = useState(false);
 
 	useEffect(() => {
@@ -117,6 +154,20 @@ export const MapboxMapSurface = forwardRef<
 					zoom: nextCamera.zoom,
 					duration: getFlyToDuration(),
 				});
+			},
+			suspendInteractions() {
+				if (interactionsSuspendedRef.current || !mapRef.current) return;
+
+				const map = mapRef.current.getMap() as MapboxMapWithHandlers;
+				setMapInteractions(map, false);
+				interactionsSuspendedRef.current = true;
+			},
+			resumeInteractions() {
+				if (!interactionsSuspendedRef.current || !mapRef.current) return;
+
+				const map = mapRef.current.getMap() as MapboxMapWithHandlers;
+				setMapInteractions(map, interactive);
+				interactionsSuspendedRef.current = false;
 			},
 			zoomIn() {
 				if (!interactive) return;
@@ -172,7 +223,7 @@ export const MapboxMapSurface = forwardRef<
 	}
 
 	function handleMapLoad(event: MapEvent) {
-		event.target.touchZoomRotate.disableRotation();
+		setMapInteractions(event.target as MapboxMapWithHandlers, interactive);
 		removeMapboxControls(event.target);
 		mapLoadedRef.current = true;
 

@@ -38,8 +38,11 @@
 .sinabro-grid-layout .react-grid-item.react-draggable-dragging {
 	cursor: grabbing;
 	opacity: 1 !important;
-	transition: transform var(--grid-drag-follow-duration)
-		var(--grid-drag-follow-ease) !important;
+	transition:
+		transform var(--grid-drag-follow-duration) var(--grid-drag-follow-ease),
+		translate var(--grid-drag-lift-duration) var(--grid-drag-lift-ease),
+		scale var(--grid-drag-lift-duration) var(--grid-drag-lift-ease),
+		rotate var(--grid-drag-lift-duration) var(--grid-drag-lift-ease) !important;
 	will-change: transform;
 }
 
@@ -155,14 +158,6 @@
 	backface-visibility: hidden;
 }
 
-.grid-item-card.map-item-card {
-	transition:
-		transform var(--grid-drag-lift-duration) var(--grid-drag-lift-ease),
-		scale 280ms cubic-bezier(0.22, 1, 0.36, 1),
-		box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1),
-		border-color 280ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
 .grid-item-pop-in.is-entering:not(.grid-item-initial-enter) {
 	will-change: transform, opacity, filter;
 }
@@ -195,14 +190,6 @@
 		rotateX(calc(1deg + var(--grid-drag-rotate-x)))
 		rotateZ(calc(0.35deg + var(--grid-drag-rotate-z)));
 	will-change: transform;
-}
-
-/* WebGL-backed map canvases must keep a flat paint surface while RGL moves their shell. */
-.react-grid-item.react-draggable-dragging
-	[data-grid-item-type="map"]
-	.grid-item-card {
-	transform: none !important;
-	will-change: auto;
 }
 
 /* Drop target: an inset shadow reads as a slot waiting for the dragged block. */

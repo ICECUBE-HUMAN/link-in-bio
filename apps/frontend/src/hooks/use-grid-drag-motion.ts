@@ -98,15 +98,14 @@ function setDragRotation(
 	element: HTMLElement | null,
 	rotation: { x: string; z: string },
 ) {
-	const card = element?.querySelector<HTMLElement>("[data-grid-item-card]");
-	if (!card) return;
+	if (!element) return;
 
 	const scale = getDragRotationScale(element);
-	card.style.setProperty(
+	element.style.setProperty(
 		"--grid-drag-rotate-x",
 		`${Number.parseFloat(rotation.x) * scale}deg`,
 	);
-	card.style.setProperty(
+	element.style.setProperty(
 		"--grid-drag-rotate-z",
 		`${Number.parseFloat(rotation.z) * scale}deg`,
 	);
