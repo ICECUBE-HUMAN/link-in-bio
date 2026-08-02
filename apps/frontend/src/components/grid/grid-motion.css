@@ -179,7 +179,7 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-	.sinabro-grid-layout:not(:has(.react-grid-item.react-draggable-dragging))
+	.sinabro-grid-layout.is-edit-mode:not(:has(.react-grid-item.react-draggable-dragging))
 		.react-grid-item:not(.react-draggable-dragging)
 		[data-grid-item-type="section"]:hover
 		.grid-item-card {
@@ -195,6 +195,14 @@
 		rotateX(calc(1deg + var(--grid-drag-rotate-x)))
 		rotateZ(calc(0.35deg + var(--grid-drag-rotate-z)));
 	will-change: transform;
+}
+
+/* WebGL-backed map canvases must keep a flat paint surface while RGL moves their shell. */
+.react-grid-item.react-draggable-dragging
+	[data-grid-item-type="map"]
+	.grid-item-card {
+	transform: none !important;
+	will-change: auto;
 }
 
 /* Drop target: an inset shadow reads as a slot waiting for the dragged block. */

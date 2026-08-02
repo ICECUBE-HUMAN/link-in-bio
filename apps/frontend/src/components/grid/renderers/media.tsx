@@ -1,5 +1,5 @@
+import { ItemCaption } from "@/components/grid/item-caption";
 import { ItemExternalAction } from "@/components/grid/item-external-action";
-import { Input } from "@/components/ui/input";
 import type { ItemRendererProps } from "@/lib/grid/item-registry";
 import type { GridItemByType } from "@/lib/grid/types";
 import { DEFAULT_IMAGE_DATA_URL } from "@/lib/shared/default-image";
@@ -41,30 +41,21 @@ export function MediaItemRenderer({
 			)}
 			<div
 				className={cn(
-					"pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 p-4 text-white",
+					"pointer-events-none absolute inset-x-0 bottom-0 flex min-w-0 items-center justify-between gap-3 p-4 text-white",
 					// preset === "squareSmall" ? "min-h-24" : "min-h-28",
 				)}
 			>
-				{mode === "edit" ? (
-					<Input
-						// Prevent password-manager content scripts from mutating SSR markup before hydration.
-						data-bro-ignore="true"
-						value={item.data.caption ?? ""}
-						placeholder="Caption"
-						onChange={(event) =>
-							onCommand?.({
-								type: "update-data",
-								itemId: item.id,
-								data: { ...item.data, caption: event.target.value },
-							})
-						}
-						className="pointer-events-auto field-sizing-content h-7.5 w-fit max-w-full min-w-24 truncate rounded-sm ring ring-border bg-white/100 px-2 py-0 text-xs font-medium text-foreground shadow-xs placeholder:text-gray-bright/60"
-					/>
-				) : (
-					<p className="min-w-0 max-w-full truncate text-xs font-medium ring ring-border bg-white/100">
-						{item.data.caption?.trim()}
-					</p>
-				)}
+				<ItemCaption
+					mode={mode}
+					value={item.data.caption}
+					onChange={(caption) =>
+						onCommand?.({
+							type: "update-data",
+							itemId: item.id,
+							data: { ...item.data, caption },
+						})
+					}
+				/>
 				{linkedUrl ? (
 					<div className="pointer-events-auto flex h-fit shrink-0 items-center">
 						<MediaAction href={linkedUrl} />
