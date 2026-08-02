@@ -1,5 +1,5 @@
-import { ExternalLink } from "lucide-react";
 import { useLayoutEffect, useRef } from "react";
+import { ItemExternalAction } from "@/components/grid/item-external-action";
 import type { ItemRendererProps } from "@/lib/grid/item-registry";
 import type { GridItemByType } from "@/lib/grid/types";
 import { cn } from "@/lib/utils";
@@ -111,7 +111,7 @@ export function TextItemRenderer({
 	}, [autoFocus, isEditing, onAutoFocus]);
 
 	return (
-		<div className="flex size-full min-h-0 flex-col gap-3 p-3">
+		<div className="relative flex size-full min-h-0 flex-col gap-3 p-3">
 			<div className="flex min-h-0 flex-1 items-stretch justify-between gap-3">
 				<div
 					className={cn(
@@ -158,18 +158,15 @@ export function TextItemRenderer({
 						</div>
 					)}
 				</div>
-				{item.data.link ? (
-					<a
-						href={item.data.link}
-						target="_blank"
-						rel="noreferrer"
-						aria-label="Open text link"
-						className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-border/60 bg-background/90 text-muted-foreground transition-colors hover:text-foreground"
-					>
-						<ExternalLink className="size-4" />
-					</a>
-				) : null}
 			</div>
+			{item.data.link ? (
+				<div className="absolute right-4 bottom-4 flex h-fit items-center">
+					<ItemExternalAction
+						href={item.data.link}
+						ariaLabel="Open text link"
+					/>
+				</div>
+			) : null}
 		</div>
 	);
 }

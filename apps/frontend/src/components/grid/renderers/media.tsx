@@ -22,7 +22,7 @@ export function MediaItemRenderer({
 	const linkedUrl = item.data.link;
 
 	return (
-		<div className="relative size-full overflow-hidden rounded-[inherit] bg-muted surface-line">
+		<div className="relative size-full overflow-hidden rounded-[inherit] bg-muted/30 surface-line">
 			{isVideo ? (
 				<video
 					src={item.data.mediaUrl ?? DEFAULT_IMAGE_DATA_URL}
@@ -41,7 +41,7 @@ export function MediaItemRenderer({
 			)}
 			<div
 				className={cn(
-					"pointer-events-none absolute inset-x-0 bottom-0 flex items-end gap-3 p-4 text-white",
+					"pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 p-4 text-white",
 					// preset === "squareSmall" ? "min-h-24" : "min-h-28",
 				)}
 			>
@@ -65,12 +65,12 @@ export function MediaItemRenderer({
 						{item.data.caption?.trim()}
 					</p>
 				)}
+				{linkedUrl ? (
+					<div className="pointer-events-auto flex h-fit shrink-0 items-center">
+						<MediaAction href={linkedUrl} />
+					</div>
+				) : null}
 			</div>
-			{linkedUrl ? (
-				<div className="absolute top-4 right-4">
-					<MediaAction href={linkedUrl} />
-				</div>
-			) : null}
 		</div>
 	);
 }

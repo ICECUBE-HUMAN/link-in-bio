@@ -154,7 +154,7 @@ export function MapItemRenderer({
 
 	return (
 		<div
-			className="relative size-full overflow-hidden rounded-[inherit] bg-muted surface-line"
+			className="relative size-full overflow-hidden rounded-[inherit] bg-muted/30 surface-line"
 			onMouseDownCapture={handleGridDragStart}
 			onPointerDownCapture={handleGridDragStart}
 		>
@@ -167,7 +167,7 @@ export function MapItemRenderer({
 						placeholder={
 							<div
 								aria-hidden="true"
-								className="size-full min-h-0 bg-muted/50"
+								className="size-full min-h-0 bg-muted/30"
 							/>
 						}
 					>
@@ -197,8 +197,7 @@ export function MapItemRenderer({
 			</div>
 
 			<div className="pointer-events-none relative size-full">
-				<div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
-					<div />
+				<div className="absolute inset-x-0 top-0 flex items-start justify-end gap-3 p-4">
 					<div className="pointer-events-auto flex items-center gap-2">
 						{mode === "edit" ? (
 							<div data-grid-item-drag-cancel="true">
@@ -223,9 +222,6 @@ export function MapItemRenderer({
 								</Button>
 							</div>
 						) : null}
-						{showMapFallback ? null : (
-							<ItemExternalAction href={href} ariaLabel="Open Google Maps" />
-						)}
 					</div>
 				</div>
 
@@ -252,7 +248,7 @@ export function MapItemRenderer({
 				) : null}
 			</div>
 
-			<div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end gap-3 p-4 text-white">
+			<div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 p-4 text-white">
 				{mode === "edit" ? (
 					<Input
 						data-bro-ignore="true"
@@ -271,6 +267,11 @@ export function MapItemRenderer({
 					<p className="min-w-0 max-w-full truncate text-xs font-medium ring ring-border bg-white/100">
 						{item.data.caption?.trim()}
 					</p>
+				)}
+				{showMapFallback ? null : (
+					<div className="pointer-events-auto flex h-fit shrink-0 items-center">
+						<ItemExternalAction href={href} ariaLabel="Open Google Maps" />
+					</div>
 				)}
 			</div>
 		</div>
