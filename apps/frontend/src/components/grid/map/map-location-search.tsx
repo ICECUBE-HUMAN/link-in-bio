@@ -1,11 +1,6 @@
-import {
-	Loader2Icon,
-	MapPinIcon,
-	RefreshCwIcon,
-	SearchIcon,
-} from "lucide-react";
+import { RefreshCwIcon, SearchIcon } from "lucide-react";
 import * as React from "react";
-
+import { Loader } from "reicon-react";
 import { Command } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import {
@@ -228,29 +223,29 @@ export function MapLocationSearch({
 						}}
 						disabled={disabled}
 						aria-autocomplete="list"
-						aria-label="Search locations"
+						aria-label="Search Location"
 						aria-controls={hasListbox ? listboxId : undefined}
 						aria-expanded={showPanel}
 						aria-haspopup="listbox"
 						aria-activedescendant={hasListbox ? activeOptionId : undefined}
 						aria-busy={status === "loading"}
 						placeholder="Search locations"
-						className="pr-9"
+						className="h-8 border-0! bg-white/20 pr-9 text-white placeholder:text-white/60 focus-visible:ring-0 rounded-md"
 					/>
 					<SearchIcon
 						aria-hidden="true"
-						className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground"
+						className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-white"
 					/>
 				</div>
 
 				{showPanel ? (
-					<div className="absolute inset-x-0 top-full z-20 mt-2 overflow-hidden rounded-2xl border bg-popover text-popover-foreground shadow-lg">
+					<div className="mt-1.5 overflow-hidden bg-black text-white">
 						{status === "ready" ? (
 							<div
 								id={listboxId}
 								role="listbox"
 								aria-label="Location results"
-								className="no-scrollbar max-h-72 scroll-py-1 overflow-x-hidden overflow-y-auto p-1 outline-none"
+								className="no-scrollbar max-h-72 scroll-py-1 overflow-x-hidden overflow-y-auto outline-none"
 							>
 								{results.map((result, index) => (
 									<div
@@ -267,26 +262,17 @@ export function MapLocationSearch({
 											event.preventDefault();
 											selectResult(result);
 										}}
-										className="group/command-item relative flex cursor-default items-start gap-2 rounded-2xl px-3 py-2 text-left text-sm font-medium outline-hidden select-none hover:bg-muted data-[active=true]:bg-muted [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+										className="group/command-item relative flex cursor-default items-start gap-2 rounded-sm px-3 py-2 text-left text-sm text-white outline-hidden select-none hover:bg-white/20 data-[active=true]:bg-white/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
 									>
-										<MapPinIcon className="mt-0.5" aria-hidden="true" />
 										<span className="min-w-0">
 											<span className="block truncate">{result.name}</span>
-											{result.address ? (
-												<span className="block truncate text-xs font-normal text-muted-foreground">
-													{result.address}
-												</span>
-											) : null}
 										</span>
 									</div>
 								))}
 							</div>
 						) : status === "loading" ? (
 							<div className="flex items-center gap-2 px-3 py-3 text-sm text-muted-foreground">
-								<Loader2Icon
-									aria-hidden="true"
-									className="size-4 animate-spin"
-								/>
+								<Loader aria-hidden="true" className="size-4 animate-spin" />
 								Searching locations…
 							</div>
 						) : status === "empty" ? (
@@ -294,13 +280,13 @@ export function MapLocationSearch({
 								No locations found.
 							</div>
 						) : status === "error" ? (
-							<div className="flex items-center justify-between gap-3 px-3 py-3 text-sm text-destructive">
+							<div className="flex items-center justify-between gap-3 px-3 py-3 text-sm text-muted-foreground">
 								<span>
 									{errorMessage ?? "Couldn’t load locations. Try again."}
 								</span>
 								<button
 									type="button"
-									className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+									className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
 									onClick={() => setRetryNonce((value) => value + 1)}
 								>
 									<RefreshCwIcon aria-hidden="true" className="size-3.5" />

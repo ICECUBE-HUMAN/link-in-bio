@@ -7,6 +7,10 @@ import {
 	useState,
 } from "react";
 import { ItemDeleteButton } from "@/components/grid/item-controls";
+import {
+	MapItemInteractionProvider,
+	useOptionalMapItemInteraction,
+} from "@/components/grid/map/map-item-interaction-context";
 import type {
 	GridItemCommandHandler,
 	ItemCapabilities,
@@ -54,7 +58,17 @@ function getCardThemeStyle(item: GridItem): CSSProperties | undefined {
 	return getLinkCardThemeStyle(provider);
 }
 
-export function GridItemShell({
+export function GridItemShell(props: GridItemShellProps) {
+	return props.item.type === "map" ? (
+		<MapItemInteractionProvider key={props.item.id}>
+			<GridItemShellContent {...props} />
+		</MapItemInteractionProvider>
+	) : (
+		<GridItemShellContent {...props} />
+	);
+}
+
+function GridItemShellContent({
 	item,
 	layout,
 	isEntering = false,
@@ -66,6 +80,10 @@ export function GridItemShell({
 	onCommand,
 	children,
 }: GridItemShellProps) {
+	const mapInteraction = useOptionalMapItemInteraction();
+	const keepControlsVisible =
+		item.type === "map" &&
+		Boolean(mapInteraction?.isLocationEditing || mapInteraction?.isSearchOpen);
 	const hasContent = children !== null && children !== undefined;
 	const hasControls =
 		capabilities.controls.some(
@@ -137,7 +155,7 @@ export function GridItemShell({
 		setControlsOpen(true);
 	}, [isAnyItemDragging]);
 
-	return (
+	const shell = (
 		<div
 			ref={shellRef}
 			data-grid-item-shell="true"
@@ -175,6 +193,9 @@ export function GridItemShell({
 					"grid-item-card relative size-full overflow-hidden bg-background rounded-2xl shadow-sm",
 					cardThemeStyle && "link-card-themed",
 					item.type === "media" ? "ring-0! border-0!" : "ring-1 ring-black/5",
+					item.type === "map" &&
+						mapInteraction?.isLocationEditing &&
+						"scale-[1.02] ring-2 ring-black",
 				)}
 				style={cardThemeStyle}
 			>
@@ -191,7 +212,8 @@ export function GridItemShell({
 					className={cn(
 						"absolute top-full left-1/2 z-99999 mt-2 -translate-x-1/2 -translate-y-1/2",
 						"transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]",
-						controlsOpen
+						"focus-within:pointer-events-auto focus-within:opacity-100",
+						controlsOpen || keepControlsVisible
 							? "pointer-events-auto opacity-100"
 							: "pointer-events-none opacity-0",
 					)}
@@ -217,4 +239,6 @@ export function GridItemShell({
 			) : null}
 		</div>
 	);
+
+	return shell;
 }

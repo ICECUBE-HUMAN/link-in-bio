@@ -27,6 +27,9 @@ import { cn } from "@/lib/utils";
 export type MapboxMapSurfaceHandle = {
 	flyTo(camera: MapCamera): void;
 	suspendInteractions(): void;
+	zoomIn(): void;
+	zoomOut(): void;
+	locate(): void;
 };
 
 export type MapboxMapSurfaceProps = {
@@ -130,8 +133,20 @@ export const MapboxMapSurface = forwardRef<
 				map.handlers?.destroy();
 				interactionsSuspendedRef.current = true;
 			},
+			zoomIn() {
+				if (!interactive) return;
+				mapRef.current?.getMap().zoomIn();
+			},
+			zoomOut() {
+				if (!interactive) return;
+				mapRef.current?.getMap().zoomOut();
+			},
+			locate() {
+				if (!interactive) return;
+				geolocateControlRef.current?.trigger();
+			},
 		}),
-		[],
+		[interactive],
 	);
 
 	useEffect(() => {
@@ -249,37 +264,6 @@ export const MapboxMapSurface = forwardRef<
 					<span className="block size-full rounded-full bg-brand" />
 				</span>
 			</div>
-			{interactive ? (
-				<div
-					data-grid-item-drag-cancel="true"
-					className="pointer-events-auto absolute right-3 bottom-3 z-20 flex overflow-hidden rounded-lg bg-white/90 text-foreground shadow-sm"
-				>
-					<button
-						type="button"
-						aria-label="Zoom out"
-						className="grid size-8 place-items-center text-lg leading-none transition-colors hover:bg-black/5"
-						onClick={() => mapRef.current?.getMap().zoomOut()}
-					>
-						−
-					</button>
-					<button
-						type="button"
-						aria-label="Zoom in"
-						className="grid size-8 place-items-center border-l border-black/10 text-lg leading-none transition-colors hover:bg-black/5"
-						onClick={() => mapRef.current?.getMap().zoomIn()}
-					>
-						+
-					</button>
-					<button
-						type="button"
-						aria-label="Go to current location"
-						className="grid size-8 place-items-center border-l border-black/10 text-sm transition-colors hover:bg-black/5"
-						onClick={() => geolocateControlRef.current?.trigger()}
-					>
-						⌖
-					</button>
-				</div>
-			) : null}
 		</div>
 	);
 });

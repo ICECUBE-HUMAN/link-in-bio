@@ -1,19 +1,36 @@
 import {
 	ChevronLeftIcon,
+	Gps01Icon,
 	Link02Icon,
+	Maximize01Icon,
+	MinusSignIcon,
+	PlusSignIcon,
+	Search01Icon,
 	Unlink02Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { TrashIcon } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
+import {
+	useMapItemInteraction,
+	useOptionalMapItemInteraction,
+} from "@/components/grid/map/map-item-interaction-context";
+import { MapLocationSearch } from "@/components/grid/map/map-location-search";
 import { PresetIcon } from "@/components/grid/preset-icon";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 import type {
 	GridItemCommandHandler,
 	ItemControlsProps,
 } from "@/lib/grid/item-registry";
+import { getMapboxAccessToken } from "@/lib/map/map-config";
 import { cn } from "@/lib/utils";
 
 type ItemDeleteButtonProps = {
@@ -37,6 +54,142 @@ export function ItemDeleteButton({ itemId, onCommand }: ItemDeleteButtonProps) {
 	);
 }
 
+function MapItemExtraControls() {
+	const {
+		isLocationEditing,
+		setLocationEditing,
+		isSearchOpen,
+		setSearchOpen,
+		zoomIn,
+		zoomOut,
+		locate,
+		selectLocation,
+	} = useMapItemInteraction();
+
+	return (
+		<>
+			<Popover open={isLocationEditing} onOpenChange={setLocationEditing}>
+				<PopoverTrigger
+					render={
+						<Button
+							type="button"
+							size="icon-sm"
+							variant="ghost"
+							aria-label={
+								isLocationEditing ? "Stop editing location" : "Edit location"
+							}
+							aria-pressed={isLocationEditing}
+							aria-expanded={isLocationEditing}
+							className={cn(
+								"cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white",
+								isLocationEditing &&
+									"bg-brand! text-white! hover:bg-brand! hover:text-white!",
+							)}
+						>
+							<HugeiconsIcon
+								icon={Maximize01Icon}
+								strokeWidth={2.25}
+								className="size-4"
+							/>
+						</Button>
+					}
+				/>
+				<PopoverContent
+					side="bottom"
+					sideOffset={8}
+					data-grid-item-drag-cancel="true"
+					className="h-10 w-auto flex-row gap-0.5 rounded-lg bg-black p-1 shadow-lg"
+				>
+					<Button
+						type="button"
+						size="icon-sm"
+						variant="ghost"
+						aria-label="Zoom out"
+						title="Zoom out"
+						onClick={zoomOut}
+						className="cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white"
+					>
+						<HugeiconsIcon
+							icon={MinusSignIcon}
+							strokeWidth={2.25}
+							className="size-4"
+						/>
+					</Button>
+					<Button
+						type="button"
+						size="icon-sm"
+						variant="ghost"
+						aria-label="Zoom in"
+						title="Zoom in"
+						onClick={zoomIn}
+						className="cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white"
+					>
+						<HugeiconsIcon
+							icon={PlusSignIcon}
+							strokeWidth={2.25}
+							className="size-4"
+						/>
+					</Button>
+					<Button
+						type="button"
+						size="icon-sm"
+						variant="ghost"
+						aria-label="Go to current location"
+						title="Go to current location"
+						onClick={locate}
+						className="cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white"
+					>
+						<HugeiconsIcon
+							icon={Gps01Icon}
+							strokeWidth={2.25}
+							className="size-4"
+						/>
+					</Button>
+				</PopoverContent>
+			</Popover>
+			<Popover open={isSearchOpen} onOpenChange={setSearchOpen}>
+				<PopoverTrigger
+					render={
+						<Button
+							type="button"
+							size="icon-sm"
+							variant="ghost"
+							aria-label="Search locations"
+							aria-expanded={isSearchOpen}
+							className={cn(
+								"cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white",
+								isSearchOpen &&
+									"bg-white! text-black! hover:bg-white! hover:text-black!",
+							)}
+						>
+							<HugeiconsIcon
+								icon={Search01Icon}
+								strokeWidth={2.25}
+								className="size-4"
+							/>
+						</Button>
+					}
+				/>
+				<PopoverContent
+					side="bottom"
+					sideOffset={8}
+					data-grid-item-drag-cancel="true"
+					className="h-auto min-h-10 w-64 gap-0 rounded-lg bg-black p-1 text-white shadow-lg"
+				>
+					<MapLocationSearch
+						accessToken={getMapboxAccessToken()}
+						onSelect={(result) => {
+							setLocationEditing(true);
+							selectLocation(result);
+							setSearchOpen(false);
+						}}
+					/>
+				</PopoverContent>
+			</Popover>
+		</>
+	);
+}
+
 export function ItemControls({
 	item,
 	capabilities,
@@ -45,11 +198,24 @@ export function ItemControls({
 	const [view, setView] = useState<"toolbar" | "link">("toolbar");
 	const [linkUrl, setLinkUrl] = useState("");
 	const shouldReduceMotion = useReducedMotion();
+	const mapInteraction = useOptionalMapItemInteraction();
+	const isMapItem = item.type === "map" && mapInteraction !== null;
 	const menuControls = capabilities.controls.filter(
 		(control) => control.command !== "delete-item",
 	);
 	const linkItem = item.type === "text" || item.type === "media" ? item : null;
-	const controlsWidth = menuControls.length * 32 + 8;
+	const hasPresetControls = menuControls.some(
+		(control) => control.command === "apply-preset",
+	);
+	const firstAdditionalControlIndex = menuControls.findIndex(
+		(control) => control.command !== "apply-preset",
+	);
+	const hasSeparator =
+		isMapItem || (hasPresetControls && firstAdditionalControlIndex >= 0);
+	const controlsWidth =
+		(menuControls.length + (isMapItem ? 2 : 0)) * 32 +
+		8 +
+		(hasSeparator ? 10 : 0);
 	const viewTransition = shouldReduceMotion
 		? { duration: 0 }
 		: { duration: 0.2, ease: [0.23, 1, 0.32, 1] as const };
@@ -72,7 +238,7 @@ export function ItemControls({
 		});
 	}
 
-	if (menuControls.length === 0) {
+	if (menuControls.length === 0 && !isMapItem) {
 		return null;
 	}
 
@@ -132,68 +298,86 @@ export function ItemControls({
 						transition={viewTransition}
 						className="flex items-center gap-0"
 					>
-						{menuControls.map((control) => (
-							<Button
+						{menuControls.map((control, index) => (
+							<Fragment
 								key={`${item.id}:${control.command}:${control.preset ?? control.label}`}
-								type="button"
-								size={
-									control.command === "apply-preset" ||
-									control.command === "manage-link"
-										? "icon-sm"
-										: "xs"
-								}
-								className={cn(
-									control.command === "apply-preset" ||
-										control.command === "manage-link"
-										? "cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white"
-										: "cursor-pointer! rounded-full",
-									control.isActive && "bg-white text-black hover:bg-white/90",
-								)}
-								variant={
-									control.command === "apply-preset" ||
-									control.command === "manage-link"
-										? "ghost"
-										: "secondary"
-								}
-								aria-label={control.label}
-								aria-pressed={
-									control.command === "apply-preset"
-										? control.isActive
-										: undefined
-								}
-								title={control.label}
-								onClick={() => {
-									if (control.command === "apply-preset" && control.preset) {
-										onCommand?.({
-											type: "apply-preset",
-											itemId: item.id,
-											preset: control.preset,
-										});
-										return;
-									}
-
-									if (control.command === "manage-link") {
-										setLinkUrl(linkItem?.data.link ?? "");
-										setView("link");
-									}
-								}}
 							>
-								{control.command === "apply-preset" && control.preset ? (
-									<PresetIcon
-										preset={control.preset}
-										className={control.isActive ? "text-black" : "text-white"}
+								{index === firstAdditionalControlIndex && hasPresetControls ? (
+									<Separator
+										orientation="vertical"
+										className="mx-1 my-2 rounded-2xl bg-muted-foreground/60 data-vertical:w-0.5"
 									/>
-								) : control.command === "manage-link" ? (
-									<HugeiconsIcon
-										icon={linkItem?.data.link ? Link02Icon : Unlink02Icon}
-										strokeWidth={2.5}
-										className="size-4 text-white"
-									/>
-								) : (
-									control.label
-								)}
-							</Button>
+								) : null}
+								<Button
+									type="button"
+									size={
+										control.command === "apply-preset" ||
+										control.command === "manage-link"
+											? "icon-sm"
+											: "xs"
+									}
+									className={cn(
+										control.command === "apply-preset" ||
+											control.command === "manage-link"
+											? "cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white"
+											: "cursor-pointer! rounded-full",
+										control.isActive && "bg-white text-black hover:bg-white/90",
+									)}
+									variant={
+										control.command === "apply-preset" ||
+										control.command === "manage-link"
+											? "ghost"
+											: "secondary"
+									}
+									aria-label={control.label}
+									aria-pressed={
+										control.command === "apply-preset"
+											? control.isActive
+											: undefined
+									}
+									title={control.label}
+									onClick={() => {
+										if (control.command === "apply-preset" && control.preset) {
+											onCommand?.({
+												type: "apply-preset",
+												itemId: item.id,
+												preset: control.preset,
+											});
+											return;
+										}
+
+										if (control.command === "manage-link") {
+											setLinkUrl(linkItem?.data.link ?? "");
+											setView("link");
+										}
+									}}
+								>
+									{control.command === "apply-preset" && control.preset ? (
+										<PresetIcon
+											preset={control.preset}
+											className={control.isActive ? "text-black" : "text-white"}
+										/>
+									) : control.command === "manage-link" ? (
+										<HugeiconsIcon
+											icon={linkItem?.data.link ? Link02Icon : Unlink02Icon}
+											strokeWidth={2.5}
+											className="size-4 text-white"
+										/>
+									) : (
+										control.label
+									)}
+								</Button>
+							</Fragment>
 						))}
+						{isMapItem ? (
+							<>
+								<Separator
+									orientation="vertical"
+									className="mx-1 my-2 rounded-2xl bg-muted-foreground/60 data-vertical:w-0.5"
+								/>
+								<MapItemExtraControls />
+							</>
+						) : null}
 					</motion.div>
 				)}
 			</AnimatePresence>

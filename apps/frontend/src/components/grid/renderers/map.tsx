@@ -1,19 +1,19 @@
 import {
 	type MouseEvent as ReactMouseEvent,
 	type PointerEvent as ReactPointerEvent,
+	useCallback,
 	useEffect,
 	useRef,
 	useState,
 } from "react";
 import { ItemExternalAction } from "@/components/grid/item-external-action";
 import { MapFallback } from "@/components/grid/map/map-fallback";
-import { MapLocationSearch } from "@/components/grid/map/map-location-search";
+import { useMapItemInteraction } from "@/components/grid/map/map-item-interaction-context";
 import { MapViewportGate } from "@/components/grid/map/map-viewport-gate";
 import {
 	MapboxMapSurface,
 	type MapboxMapSurfaceHandle,
 } from "@/components/grid/map/mapbox-map-surface";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { ItemRendererProps } from "@/lib/grid/item-registry";
 import { toGoogleMapsUrl } from "@/lib/grid/item-registry";
@@ -32,7 +32,12 @@ export function MapItemRenderer({
 	isDragging = false,
 	onCommand,
 }: ItemRendererProps<GridItemByType<"map">>) {
-	const [isLocationEditing, setIsLocationEditing] = useState(false);
+	const {
+		isLocationEditing,
+		setLocationEditing,
+		setSearchOpen,
+		registerController,
+	} = useMapItemInteraction();
 	const [mapError, setMapError] = useState<unknown>(null);
 	const [geolocationError, setGeolocationError] = useState<unknown>(null);
 	const [mapSurfaceKey, setMapSurfaceKey] = useState(0);
@@ -80,51 +85,74 @@ export function MapItemRenderer({
 
 	useEffect(() => {
 		if (mode !== "edit") {
-			setIsLocationEditing(false);
+			setLocationEditing(false);
+			setSearchOpen(false);
 			setGeolocationError(null);
 		}
-	}, [mode]);
+	}, [mode, setLocationEditing, setSearchOpen]);
 
-	function commitCamera(
-		nextCamera: MapCamera,
-		nextCaption = item.data.caption,
-	) {
-		if (!interactive || !onCommand) return;
-		if (
-			isSameMapCamera(normalizedCamera, nextCamera) &&
-			nextCaption === item.data.caption
-		)
-			return;
+	const commitCamera = useCallback(
+		function commitCamera(
+			nextCamera: MapCamera,
+			nextCaption = item.data.caption,
+			allowWhenLocked = false,
+		) {
+			if (mode !== "edit" || (!interactive && !allowWhenLocked) || !onCommand)
+				return;
+			if (
+				isSameMapCamera(normalizedCamera, nextCamera) &&
+				nextCaption === item.data.caption
+			)
+				return;
 
-		onCommand({
-			type: "update-data",
-			itemId: item.id,
-			data: {
-				...item.data,
-				latitude: nextCamera.latitude,
-				longitude: nextCamera.longitude,
-				zoom: nextCamera.zoom,
-				caption: nextCaption,
+			onCommand({
+				type: "update-data",
+				itemId: item.id,
+				data: {
+					...item.data,
+					latitude: nextCamera.latitude,
+					longitude: nextCamera.longitude,
+					zoom: nextCamera.zoom,
+					caption: nextCaption,
+				},
+			});
+		},
+		[item.data, item.id, interactive, mode, normalizedCamera, onCommand],
+	);
+
+	const handleLocationSelect = useCallback(
+		(result: MapSearchResult) => {
+			if (mode !== "edit") return;
+
+			const nextCamera = {
+				...normalizedCamera,
+				latitude: result.latitude,
+				longitude: result.longitude,
+			};
+			const nextCaption = item.data.caption?.trim()
+				? item.data.caption
+				: result.name || result.address;
+
+			setGeolocationError(null);
+			commitCamera(nextCamera, nextCaption, true);
+			mapSurfaceRef.current?.flyTo(nextCamera);
+		},
+		[commitCamera, item.data.caption, mode, normalizedCamera],
+	);
+
+	useEffect(() => {
+		registerController({
+			zoomIn: () => mapSurfaceRef.current?.zoomIn(),
+			zoomOut: () => mapSurfaceRef.current?.zoomOut(),
+			locate: () => {
+				setGeolocationError(null);
+				mapSurfaceRef.current?.locate();
 			},
+			selectLocation: handleLocationSelect,
 		});
-	}
 
-	function handleLocationSelect(result: MapSearchResult) {
-		if (!interactive) return;
-
-		const nextCamera = {
-			...normalizedCamera,
-			latitude: result.latitude,
-			longitude: result.longitude,
-		};
-		const nextCaption = item.data.caption?.trim()
-			? item.data.caption
-			: result.name || result.address;
-
-		setGeolocationError(null);
-		commitCamera(nextCamera, nextCaption);
-		mapSurfaceRef.current?.flyTo(nextCamera);
-	}
+		return () => registerController(null);
+	}, [registerController, handleLocationSelect]);
 
 	function retryMap() {
 		setMapError(null);
@@ -197,51 +225,10 @@ export function MapItemRenderer({
 			</div>
 
 			<div className="pointer-events-none relative size-full">
-				<div className="absolute inset-x-0 top-0 flex items-start justify-end gap-3 p-4">
-					<div className="pointer-events-auto flex items-center gap-2">
-						{mode === "edit" ? (
-							<div data-grid-item-drag-cancel="true">
-								<Button
-									type="button"
-									variant={isLocationEditing ? "default" : "outline"}
-									size="sm"
-									aria-pressed={isLocationEditing}
-									aria-label={
-										isLocationEditing
-											? "Stop editing location"
-											: "Edit location"
-									}
-									onClick={() => {
-										setIsLocationEditing((editing) => !editing);
-										setGeolocationError(null);
-									}}
-								>
-									{isLocationEditing
-										? "Stop editing location"
-										: "Edit location"}
-								</Button>
-							</div>
-						) : null}
-					</div>
-				</div>
-
-				{interactive ? (
-					<div
-						data-grid-item-drag-cancel="true"
-						className="pointer-events-auto absolute inset-x-0 top-12 z-20 space-y-2"
-					>
-						<MapLocationSearch
-							accessToken={accessToken}
-							disabled={!interactive}
-							onSelect={handleLocationSelect}
-						/>
-					</div>
-				) : null}
-
 				{geolocationError ? (
 					<output
 						aria-live="polite"
-						className="pointer-events-auto absolute inset-x-0 top-12 z-20 mx-4 rounded-full bg-background/90 px-3 py-1 text-center text-xs font-medium text-destructive shadow-sm"
+						className="pointer-events-auto absolute inset-x-0 top-4 z-20 mx-4 rounded-full bg-background/90 px-3 py-1 text-center text-xs font-medium text-destructive shadow-sm"
 					>
 						Couldn’t determine your location. Try again.
 					</output>
