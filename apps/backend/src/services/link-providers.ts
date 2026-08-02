@@ -4,6 +4,7 @@ import {
 } from "@sinabro/api";
 import { createChzzkEnricher } from "./chzzk-link-provider";
 import { createDiscordEnricher } from "./discord-link-provider";
+import { createGithubEnricher } from "./github-link-provider";
 import { createInstagramEnricher } from "./instagram-link-provider";
 import { createThreadsEnricher } from "./threads-link-provider";
 import { createTikTokEnricher } from "./tiktok-link-provider";
@@ -33,6 +34,7 @@ export type LinkProviderEnvironment = {
 	TWITCH_USER_ACCESS_TOKEN?: string;
 	TWITCH_USER_REFRESH_TOKEN?: string;
 	DISCORD_BOT_TOKEN?: string;
+	GITHUB_TOKEN?: string;
 };
 
 export type TwitchUserToken = {
@@ -480,6 +482,10 @@ const tiktokEnricher =
 const xEnricher = createXEnricher(
 	enrichGenericWeb,
 );
+const githubEnricher =
+	createGithubEnricher(
+		enrichGenericWeb,
+	);
 
 const providerEnrichers: Readonly<
 	Record<string, LinkProvider["enrich"]>
@@ -495,6 +501,7 @@ const providerEnrichers: Readonly<
 	instagram: instagramEnricher,
 	tiktok: tiktokEnricher,
 	x: xEnricher,
+	github: githubEnricher,
 };
 
 const sharedProviders: readonly LinkProvider[] =

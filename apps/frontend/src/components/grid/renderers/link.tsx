@@ -1,6 +1,6 @@
 import { getLinkProviderPresentation } from "@sinabro/api";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Envelope } from "reicon-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -68,9 +68,124 @@ function getProviderCount(
 			youtube: "subscriberCount",
 			twitch: "followerCount",
 			x: "followerCount",
+			github: "followers",
 		} as Record<string, string>
 	)[provider];
-	return countKey ? formatProviderCount(providerData?.[countKey]) : undefined;
+	const formatted = countKey
+		? formatProviderCount(providerData?.[countKey])
+		: undefined;
+	return formatted;
+}
+
+type GithubContributionGraphData = {
+	totalContributions: number;
+	weeks: Array<{
+		days: Array<{
+			count: number;
+			level: number;
+			color: string;
+		}>;
+	}>;
+};
+
+function parseGithubContributionGraph(
+	value: unknown,
+): GithubContributionGraphData | undefined {
+	if (typeof value !== "string") return undefined;
+	try {
+		const parsed = JSON.parse(value) as GithubContributionGraphData;
+		if (!parsed || !Array.isArray(parsed.weeks)) return undefined;
+		return parsed;
+	} catch {
+		return undefined;
+	}
+}
+
+const githubGraphWeekCount = {
+	landscape: 16,
+	portrait: 12,
+	squareLarge: 26,
+} as const;
+
+function GithubContributionGraph({
+	data,
+	preset,
+}: {
+	data: GithubContributionGraphData;
+	preset: "landscape" | "portrait" | "squareLarge";
+}) {
+	const containerRef = useRef<HTMLDivElement>(null);
+	const [size, setSize] = useState({ width: 0, height: 0 });
+	useEffect(() => {
+		const container = containerRef.current;
+		if (!container) return;
+		const updateSize = () =>
+			setSize({
+				width: container.clientWidth,
+				height: container.clientHeight,
+			});
+		updateSize();
+		const observer = new ResizeObserver(updateSize);
+		observer.observe(container);
+		return () => observer.disconnect();
+	}, []);
+
+	const gap = 8;
+	const availableCellHeight = (size.height - gap * 6) / 7;
+	const fittingWeekCount =
+		availableCellHeight > 0
+			? Math.floor((size.width + gap) / (availableCellHeight + gap))
+			: 0;
+	const weekCount = Math.min(
+		githubGraphWeekCount[preset],
+		data.weeks.length,
+		Math.max(0, fittingWeekCount),
+	);
+	const weeks = data.weeks.slice(-weekCount);
+	const cellSize =
+		weekCount > 0 && size.height > 0
+			? Math.min(
+					(size.width - gap * (weekCount - 1)) / weekCount,
+					availableCellHeight,
+				)
+			: 0;
+	const cells = weeks.flatMap((week, weekIndex) =>
+		Array.from({ length: 7 }, (_, dayIndex) => ({
+			day: week.days[dayIndex],
+			key: `${weekIndex}-${dayIndex}`,
+		})),
+	);
+	return (
+		<div
+			role="img"
+			aria-label="GitHub contribution graph"
+			className="size-full min-h-0 min-w-0 overflow-hidden rounded-lg p-1"
+		>
+			<div
+				ref={containerRef}
+				className="flex size-full min-h-0 min-w-0 items-center justify-center"
+			>
+				<div
+					className="grid"
+					style={{
+						gridTemplateColumns: `repeat(${weeks.length}, ${cellSize}px)`,
+						gridTemplateRows: `repeat(7, ${cellSize}px)`,
+						gridAutoFlow: "column",
+						gap,
+					}}
+				>
+					{cells.map(({ day, key }) => (
+						<span
+							key={key}
+							aria-hidden="true"
+							className="size-full min-w-0 rounded-[2px]"
+							style={{ backgroundColor: day?.color ?? "transparent" }}
+						/>
+					))}
+				</div>
+			</div>
+		</div>
+	);
 }
 
 function LinkAction({
@@ -379,6 +494,16 @@ export function LinkItemRenderer({
 			: imageUrl
 				? [imageUrl]
 				: [];
+	const githubGraph =
+		provider === "github"
+			? parseGithubContributionGraph(providerData?.githubContributionGraph)
+			: undefined;
+	const isGithubGraphPreset =
+		provider === "github" &&
+		(preset === "landscape" ||
+			preset === "portrait" ||
+			preset === "squareLarge") &&
+		Boolean(githubGraph);
 	const providerPresentation = getConfiguredLinkProviderPresentation(provider);
 	const shouldShowLinkAction = provider !== "generic-web";
 	const providerCount = getProviderCount(provider, providerData);
@@ -512,14 +637,20 @@ export function LinkItemRenderer({
 					)}
 					style={cardStyle}
 				>
-					{imageUrls.length > 0 && (
-						<div className="relative min-h-0 min-w-0 flex-4 overflow-hidden rounded-lg bg-muted/30">
-							<LinkPreview
-								imageUrls={imageUrls}
-								url={item.data.url}
-								isLoading={isEnriching}
-							/>
+					{isGithubGraphPreset && githubGraph ? (
+						<div className="relative min-h-0 min-w-0 flex-4 overflow-hidden rounded-lg">
+							<GithubContributionGraph data={githubGraph} preset="landscape" />
 						</div>
+					) : (
+						imageUrls.length > 0 && (
+							<div className="relative min-h-0 min-w-0 flex-4 overflow-hidden rounded-lg bg-muted/30">
+								<LinkPreview
+									imageUrls={imageUrls}
+									url={item.data.url}
+									isLoading={isEnriching}
+								/>
+							</div>
+						)
 					)}
 					{content}
 				</div>
@@ -536,14 +667,23 @@ export function LinkItemRenderer({
 					style={cardStyle}
 				>
 					{content}
-					{imageUrls.length > 0 && (
-						<div className="relative min-h-0 flex-3 overflow-hidden rounded-lg bg-muted/30">
-							<LinkPreview
-								imageUrls={imageUrls}
-								url={item.data.url}
-								isLoading={isEnriching}
+					{isGithubGraphPreset && githubGraph ? (
+						<div className="relative min-h-0 flex-3 overflow-hidden rounded-lg">
+							<GithubContributionGraph
+								data={githubGraph}
+								preset={preset as "portrait" | "squareLarge"}
 							/>
 						</div>
+					) : (
+						imageUrls.length > 0 && (
+							<div className="relative min-h-0 flex-3 overflow-hidden rounded-lg bg-muted/30">
+								<LinkPreview
+									imageUrls={imageUrls}
+									url={item.data.url}
+									isLoading={isEnriching}
+								/>
+							</div>
+						)
 					)}
 				</div>
 			);
