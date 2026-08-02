@@ -284,7 +284,6 @@ function HandlePageContent({
 					>
 						<div className="t-stagger-line t-stagger-line--1">
 							<PageImageEditor
-								pageId={page.id}
 								initialImage={draft.image}
 								initialImageUpdatedAt={page.updatedAt}
 								initialImageSource={draft.imageSource}

@@ -1,7 +1,16 @@
+import { CircleArrowOutUpRightIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { MAX_PROFILE_IMAGE_SIZE, type ProfileImageCrop } from "@sinabro/api";
 import { CropIcon, TrashIcon } from "lucide-react";
-import { LayoutGroup, motion } from "motion/react";
-import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import {
+	type ChangeEvent,
+	type MouseEvent,
+	type PointerEvent,
+	type SyntheticEvent,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import { CropProfileImageDialog } from "@/components/page/crop-profile-image-dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,14 +19,16 @@ import {
 } from "@/lib/api/profile-image-api";
 import type { Breakpoint } from "@/lib/grid/types";
 import {
+	getCenteredProfileImageCrop,
+	getProfileImageCropImageStyle,
+	isSquareProfileImageCrop,
 	normalizeProfileImageDisplayFile,
 	type ProfileImageCropExport,
+	type ProfileImageSourceSize,
 } from "@/lib/image/crop-image";
 import { getPageLayoutClasses } from "@/lib/page/page-layout";
 import type { EditablePageFields } from "@/lib/page/page-update";
 import { DEFAULT_IMAGE_DATA_URL } from "@/lib/shared/default-image";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { CircleArrowOutUpRightIcon } from "@hugeicons/core-free-icons";
 
 type ProfileImageChange = Pick<
 	EditablePageFields,
@@ -39,8 +50,11 @@ const FULL_IMAGE_CROP = {
 	height: 100,
 } satisfies ProfileImageCrop;
 
+function clamp(value: number, min: number, max: number) {
+	return Math.min(Math.max(value, min), max);
+}
+
 type PageImageEditorProps = {
-	pageId: string;
 	initialImage: string | null;
 	initialImageUpdatedAt: string;
 	initialImageSource: string | null;
@@ -53,7 +67,6 @@ type PageImageEditorProps = {
 };
 
 export function PageImageEditor({
-	pageId,
 	initialImage,
 	initialImageUpdatedAt,
 	initialImageSource,
@@ -90,14 +103,24 @@ export function PageImageEditor({
 	const [cropSourceFile, setCropSourceFile] = useState<File | null>(null);
 	const [cropSourceKey, setCropSourceKey] = useState<string | null>(null);
 	const [isCropOpen, setIsCropOpen] = useState(false);
+	const [crop, setCrop] = useState<ProfileImageCrop>(FULL_IMAGE_CROP);
+	const [sourceImageSize, setSourceImageSize] =
+		useState<ProfileImageSourceSize | null>(null);
+	const [isCropApplying, setIsCropApplying] = useState(false);
 	const [pendingDisplayUrl, setPendingDisplayUrl] = useState<string | null>(
 		null,
 	);
 	const [isUploading, setIsUploading] = useState(false);
 	const [imageFrameSize, setImageFrameSize] = useState(112);
 	const [error, setError] = useState<string | null>(null);
+	const cropDragRef = useRef<{
+		pointerId: number;
+		startX: number;
+		startY: number;
+		startCrop: ProfileImageCrop;
+	} | null>(null);
+	const didCropDragRef = useRef(false);
 	const layoutClasses = getPageLayoutClasses(breakpoint);
-	const layoutId = `profile-image-${pageId}`;
 
 	useEffect(() => {
 		const imageFrame = imageFrameRef.current;
@@ -201,6 +224,20 @@ export function PageImageEditor({
 		}, 180);
 	}
 
+	function getInitialCrop(sourceSize: ProfileImageSourceSize | null) {
+		if (
+			imageCrop &&
+			sourceSize &&
+			isSquareProfileImageCrop(imageCrop, sourceSize)
+		) {
+			return imageCrop;
+		}
+		if (imageCrop && !sourceSize) return imageCrop;
+		return sourceSize
+			? getCenteredProfileImageCrop(sourceSize)
+			: FULL_IMAGE_CROP;
+	}
+
 	function openExistingCrop() {
 		if (closeCleanupTimerRef.current) {
 			clearTimeout(closeCleanupTimerRef.current);
@@ -213,6 +250,8 @@ export function PageImageEditor({
 		setCropSourceKey(sourceKey);
 		setCropSourceUrl(sourceUrl);
 		setCropSourceFile(null);
+		setSourceImageSize(null);
+		setCrop(getInitialCrop(sourceImageSize));
 		setIsCropOpen(true);
 	}
 
@@ -249,6 +288,8 @@ export function PageImageEditor({
 		setCropSourceKey(null);
 		setImageSource(null);
 		setImageCrop(null);
+		setSourceImageSize(null);
+		setCrop(FULL_IMAGE_CROP);
 		setError(null);
 		setIsCropOpen(true);
 	}
@@ -362,10 +403,107 @@ export function PageImageEditor({
 		setImage(null);
 		setImageSource(null);
 		setImageCrop(null);
+		setSourceImageSize(null);
 		setError(null);
 		onImageChange(nextChange);
 	}
 
+	function handleSourceImageLoad(event: SyntheticEvent<HTMLImageElement>) {
+		const nextSize = {
+			width: event.currentTarget.naturalWidth,
+			height: event.currentTarget.naturalHeight,
+		};
+		if (!nextSize.width || !nextSize.height) return;
+		setSourceImageSize(nextSize);
+		if (!isCropOpen) return;
+		setCrop((currentCrop) =>
+			isSquareProfileImageCrop(currentCrop, nextSize)
+				? currentCrop
+				: getCenteredProfileImageCrop(nextSize),
+		);
+	}
+
+	function handleCropPointerDown(event: PointerEvent<HTMLButtonElement>) {
+		if (!isCropOpen || isCropApplying) return;
+		if (event.pointerType === "mouse" && event.button !== 0) return;
+		const startCrop = crop;
+		event.preventDefault();
+		event.currentTarget.setPointerCapture(event.pointerId);
+		cropDragRef.current = {
+			pointerId: event.pointerId,
+			startX: event.clientX,
+			startY: event.clientY,
+			startCrop,
+		};
+		didCropDragRef.current = false;
+	}
+
+	function handleCropPointerMove(event: PointerEvent<HTMLButtonElement>) {
+		const drag = cropDragRef.current;
+		if (!drag || drag.pointerId !== event.pointerId || !isCropOpen) return;
+		const frameSize = Math.max(imageFrameSize, 1);
+		const deltaX = event.clientX - drag.startX;
+		const deltaY = event.clientY - drag.startY;
+		if (deltaX === 0 && deltaY === 0) return;
+		didCropDragRef.current = true;
+		event.preventDefault();
+		setCrop({
+			...drag.startCrop,
+			x: clamp(
+				drag.startCrop.x - (deltaX / frameSize) * drag.startCrop.width,
+				0,
+				100 - drag.startCrop.width,
+			),
+			y: clamp(
+				drag.startCrop.y - (deltaY / frameSize) * drag.startCrop.height,
+				0,
+				100 - drag.startCrop.height,
+			),
+		});
+	}
+
+	function handleCropPointerEnd(event: PointerEvent<HTMLButtonElement>) {
+		const drag = cropDragRef.current;
+		if (!drag || drag.pointerId !== event.pointerId) return;
+		cropDragRef.current = null;
+		if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+			event.currentTarget.releasePointerCapture(event.pointerId);
+		}
+	}
+
+	function handleImageButtonClick(event: MouseEvent<HTMLButtonElement>) {
+		if (isCropOpen) {
+			event.preventDefault();
+			return;
+		}
+		if (didCropDragRef.current) {
+			event.preventDefault();
+			didCropDragRef.current = false;
+			return;
+		}
+		inputRef.current?.click();
+	}
+
+	const sourceImageUrl = imageSource
+		? getProfileImageUrl(imageSource, imageVersion)
+		: image;
+	const renderedImageUrl = pendingDisplayUrl
+		? pendingDisplayUrl
+		: isCropOpen
+			? (cropSourceUrl ?? sourceImageUrl)
+			: sourceImageUrl;
+	const renderedCrop = isCropOpen ? crop : imageCrop;
+	const canRenderCropGeometry = Boolean(
+		renderedImageUrl &&
+			!pendingDisplayUrl &&
+			sourceImageSize &&
+			renderedCrop &&
+			isSquareProfileImageCrop(renderedCrop, sourceImageSize),
+	);
+	const imageStyle =
+		canRenderCropGeometry && renderedCrop
+			? getProfileImageCropImageStyle(renderedCrop)
+			: undefined;
 	const imageContent =
 		image || mode === "view" ? (
 			<img
@@ -376,7 +514,11 @@ export function PageImageEditor({
 			/>
 		) : mode === "edit" ? (
 			<div>
-			  <HugeiconsIcon icon={CircleArrowOutUpRightIcon} className="2xl:size-9 text-gray-bright" strokeWidth={2.5}/>
+				<HugeiconsIcon
+					icon={CircleArrowOutUpRightIcon}
+					className="2xl:size-9 text-gray-bright"
+					strokeWidth={2.5}
+				/>
 			</div>
 		) : null;
 	const imageFrameClassName = `flex size-28 items-center justify-center rounded-full bg-secondary/80 text-sm font-medium text-muted-foreground/60 ${layoutClasses.image}`;
@@ -395,79 +537,110 @@ export function PageImageEditor({
 				hidden
 				onChange={handleImageChange}
 			/>
-			<LayoutGroup id={layoutId}>
-				<div
-					className={`group/image relative isolate ${isCropOpen ? "z-50" : "z-0"}`}
-					data-profile-crop-open={isCropOpen ? "true" : undefined}
+			<div
+				className={`group/image relative isolate ${isCropOpen ? "z-50" : "z-0"}`}
+				data-profile-crop-open={isCropOpen ? "true" : undefined}
+			>
+				<button
+					ref={imageFrameRef}
+					type="button"
+					aria-label="Change profile image"
+					disabled={isUploading}
+					className={`${imageFrameClassName} relative overflow-visible transition-[transform,scale,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] ${isUploading ? "cursor-default" : isCropOpen ? "cursor-grab touch-none" : "hover:bg-muted active:scale-[0.97]"} focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring`}
+					onClick={handleImageButtonClick}
+					onPointerDown={handleCropPointerDown}
+					onPointerMove={handleCropPointerMove}
+					onPointerUp={handleCropPointerEnd}
+					onPointerCancel={handleCropPointerEnd}
 				>
-					<button
-						ref={imageFrameRef}
-						type="button"
-						aria-label="Change profile image"
-						disabled={isUploading}
-						className={`${imageFrameClassName} relative overflow-visible transition-[transform,scale,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] ${isUploading ? "cursor-default" : "hover:bg-muted active:scale-[0.97]"} focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring ${isCropOpen ? "pointer-events-none opacity-0" : "opacity-100"}`}
-						onClick={() => inputRef.current?.click()}
+					<div
+						className={`absolute inset-0 rounded-full ${isCropOpen ? "overflow-visible" : "overflow-hidden"}`}
 					>
-						{image ? (
-							<motion.img
-								layoutId={layoutId}
-								className="size-full rounded-full object-cover"
-								src={image}
+						{renderedImageUrl ? (
+							<img
+								className={`${imageStyle ? "" : "size-full object-cover"} rounded-lg ${isCropOpen ? "smooth-shadow-lg" : ""}`}
+								style={imageStyle}
+								src={renderedImageUrl}
 								alt="Profile"
 								loading="eager"
+								onLoad={handleSourceImageLoad}
 							/>
 						) : (
 							<div>
-                <HugeiconsIcon icon={CircleArrowOutUpRightIcon} className="2xl:size-9 text-gray-bright" strokeWidth={2.5}/>
+								<HugeiconsIcon
+									icon={CircleArrowOutUpRightIcon}
+									className="text-gray-bright 2xl:size-9"
+									strokeWidth={2.5}
+								/>
 							</div>
 						)}
-						{image ? (
-							<span className="pointer-events-none absolute inset-0 rounded-full bg-black/25 opacity-0 transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover/image:opacity-100 motion-reduce:transition-none" />
-						) : null}
-					</button>
-					{image && !isUploading ? (
-						<>
-							<Button
-								ref={cropButtonRef}
-								type="button"
-								variant="ghost"
-								size="icon-sm"
-								aria-label="Crop profile image"
-								onClick={openExistingCrop}
-								aria-hidden={isCropOpen}
-								className={`absolute top-0 left-0 inline-flex size-10 items-center justify-center rounded-full border border-border/60 bg-background shadow-md transition-[opacity,transform,scale,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:scale-100 focus-visible:opacity-100 motion-reduce:transition-none ${isCropOpen ? "pointer-events-none opacity-0" : "opacity-0 group-hover/image:scale-100 group-hover/image:opacity-100"} ${layoutClasses.imageCrop}`}
-							>
-								<CropIcon className="size-5 stroke-3" />
-							</Button>
-							<Button
-								type="button"
-								variant="ghost"
-								size="icon-sm"
-								aria-label="Remove profile image"
-								disabled={isUploading}
-								onClick={handleImageRemove}
-								className={`absolute top-0 right-0 inline-flex size-10 items-center justify-center rounded-full border border-border/60 bg-background opacity-0 shadow-md transition-[opacity,transform,scale,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:scale-100 focus-visible:opacity-100 group-hover/image:scale-100 group-hover/image:opacity-100 motion-reduce:transition-none ${layoutClasses.imageRemove}`}
-							>
-								<TrashIcon className="size-5 stroke-3" />
-							</Button>
-						</>
-					) : null}
-					{cropSourceUrl ? (
-						<CropProfileImageDialog
-							open={isCropOpen}
-							sourceUrl={cropSourceUrl}
-							initialCrop={cropSourceFile ? null : imageCrop}
-							anchorRef={imageFrameRef}
-							cropButtonRef={cropButtonRef}
-							cropButtonClassName={layoutClasses.imageCrop}
-							cropSize={imageFrameSize}
-							applyRequestRef={cropApplyRequestRef}
-							onOpenChange={handleCropDialogChange}
-							onApply={handleCropApply}
+					</div>
+					{renderedImageUrl ? (
+						<span
+							className={`pointer-events-none absolute inset-0 rounded-full bg-black/25 transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none ${isCropOpen ? "opacity-0" : "opacity-0 group-hover/image:opacity-100"}`}
 						/>
-					) : null}
-				</div>
-			</LayoutGroup>
+					) : (
+						<div>
+							<HugeiconsIcon
+								icon={CircleArrowOutUpRightIcon}
+								className="text-gray-bright 2xl:size-9"
+								strokeWidth={2.5}
+							/>
+						</div>
+					)}
+				</button>
+				{image && !isUploading ? (
+					<>
+						<Button
+							ref={cropButtonRef}
+							type="button"
+							variant="ghost"
+							size="icon-sm"
+							data-profile-crop-apply="true"
+							aria-label={
+								isCropOpen ? "Apply profile image crop" : "Crop profile image"
+							}
+							disabled={isCropApplying || (isCropOpen && !sourceImageSize)}
+							onClick={() => {
+								if (isCropOpen) {
+									cropApplyRequestRef.current?.();
+									return;
+								}
+								openExistingCrop();
+							}}
+							className={`absolute top-0 left-0 inline-flex size-10 items-center justify-center rounded-full border border-border/60 bg-background shadow-md transition-[opacity,transform,scale,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:scale-100 focus-visible:opacity-100 motion-reduce:transition-none ${isCropOpen ? "z-[60] !border-0 !bg-profile-image-crop-action !text-white opacity-100 hover:!bg-profile-image-crop-action" : "opacity-0 group-hover/image:scale-100 group-hover/image:opacity-100"} ${layoutClasses.imageCrop}`}
+						>
+							<CropIcon className="size-5 stroke-3" />
+						</Button>
+						<Button
+							type="button"
+							variant="ghost"
+							size="icon-sm"
+							aria-label="Remove profile image"
+							disabled={isUploading || isCropOpen}
+							tabIndex={isCropOpen ? -1 : undefined}
+							onClick={handleImageRemove}
+							className={`absolute top-0 right-0 inline-flex size-10 items-center justify-center rounded-full border border-border/60 bg-background shadow-md transition-[opacity,transform,scale,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:scale-100 focus-visible:opacity-100 motion-reduce:transition-none ${isCropOpen ? "invisible pointer-events-none !opacity-0" : "opacity-0 group-hover/image:scale-100 group-hover/image:opacity-100"} ${layoutClasses.imageRemove}`}
+						>
+							<TrashIcon className="size-5 stroke-3" />
+						</Button>
+					</>
+				) : null}
+				{cropSourceUrl ? (
+					<CropProfileImageDialog
+						open={isCropOpen}
+						sourceUrl={cropSourceUrl}
+						crop={crop}
+						sourceSize={sourceImageSize}
+						anchorRef={imageFrameRef}
+						cropSize={imageFrameSize}
+						applyRequestRef={cropApplyRequestRef}
+						onOpenChange={handleCropDialogChange}
+						onApply={handleCropApply}
+						onApplyingChange={setIsCropApplying}
+					/>
+				) : null}
+			</div>
 			{error ? <p className="text-xs text-destructive">{error}</p> : null}
 		</div>
 	);
