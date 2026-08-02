@@ -248,6 +248,14 @@ function getTitle(item: GridItemByType<"link">) {
 	return item.data.metadata?.title?.trim() ?? getHostname(item.data.url);
 }
 
+const titleClampClassByPreset: Partial<Record<PresetName, string>> = {
+	fullBanner: "line-clamp-1",
+	squareSmall: "line-clamp-5",
+	landscape: "line-clamp-3",
+	squareLarge: "line-clamp-[10]",
+	portrait: "line-clamp-[12]",
+};
+
 function LinkTitle({
 	title,
 	preset,
@@ -269,9 +277,29 @@ function LinkTitle({
 		setValue(title);
 	}, [title]);
 
-	if (isHalfBanner && mode === "view") {
+	const titleClassName = cn(
+		"block min-h-0 w-full min-w-24 max-w-full rounded-sm px-1 py-0 text-sm font-normal wrap-break-word text-foreground",
+		(isHalfBanner || isLandscape || isSquareSmall || isTall) &&
+			"field-sizing-fixed",
+		isHalfBanner
+			? "h-8 max-h-8 overflow-hidden whitespace-nowrap leading-8"
+			: isTall
+				? "h-20 max-h-20 overflow-hidden leading-5"
+				: "max-h-full overflow-hidden leading-5",
+		isLandscape && "flex-1",
+		isSquareSmall && "flex-1",
+		isTall && "flex-1",
+	);
+
+	if (mode === "view") {
 		return (
-			<div className="min-w-0 truncate px-1 text-sm font-normal text-foreground">
+			<div
+				className={cn(
+					titleClassName,
+					"min-w-0",
+					isHalfBanner ? "truncate" : titleClampClassByPreset[preset],
+				)}
+			>
 				{title}
 			</div>
 		);
@@ -299,17 +327,9 @@ function LinkTitle({
 				if (nextValue) onCommit(nextValue);
 			}}
 			className={cn(
-				"link-title-input block min-h-0 w-full min-w-24 max-w-full resize-none rounded-sm border-0 bg-transparent px-1 py-0 text-sm font-normal wrap-break-wordtext-foreground outline-none focus-visible:ring-0",
-				(isHalfBanner || isLandscape || isSquareSmall || isTall) &&
-					"field-sizing-fixed",
-				isHalfBanner
-					? "h-8 max-h-8 overflow-hidden whitespace-nowrap leading-8"
-					: isTall
-						? "h-20 max-h-20 overflow-x-hidden overflow-y-auto leading-5"
-						: "max-h-full overflow-x-hidden overflow-y-auto leading-5",
-				isLandscape && "flex-1",
-				isSquareSmall && "flex-1",
-				isTall && "flex-1",
+				"link-title-input resize-none border-0 bg-transparent outline-none focus-visible:ring-0",
+				titleClassName,
+				"overflow-x-hidden overflow-y-auto",
 			)}
 		/>
 	);
@@ -393,7 +413,7 @@ export function LinkItemRenderer({
 	const renderPreset = () => {
 		if (preset === "squareSmall" || isHalfBannerPreset(preset)) {
 			const leadingContent = isSquareSmall ? (
-				<div className="flex w-full flex-1 flex-col gap-1">
+				<div className="flex min-h-0 w-full flex-1 flex-col gap-1">
 					<LinkBadge faviconUrl={faviconUrl} url={item.data.url} />
 					<div className="flex min-h-0 min-w-0 flex-1 flex-col">
 						<LinkTitle
