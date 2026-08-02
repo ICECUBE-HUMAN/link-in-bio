@@ -104,6 +104,7 @@ export function GridItemShell({
 	}, []);
 
 	function showControls() {
+		pointerInsideRef.current = true;
 		if (hideControlsTimer.current !== null) {
 			window.clearTimeout(hideControlsTimer.current);
 			hideControlsTimer.current = null;
@@ -112,6 +113,7 @@ export function GridItemShell({
 	}
 
 	function hideControls() {
+		pointerInsideRef.current = false;
 		if (hideControlsTimer.current !== null) {
 			window.clearTimeout(hideControlsTimer.current);
 		}
@@ -156,8 +158,13 @@ export function GridItemShell({
 				pointerInsideRef.current = true;
 				showControls();
 			}}
-			onPointerLeave={() => {
-				pointerInsideRef.current = false;
+			onPointerLeave={(event) => {
+				if (
+					event.relatedTarget instanceof Node &&
+					shellRef.current?.contains(event.relatedTarget)
+				) {
+					return;
+				}
 				hideControls();
 			}}
 			style={style}
@@ -184,14 +191,22 @@ export function GridItemShell({
 				<div
 					data-grid-item-drag-cancel="true"
 					className={cn(
-						"absolute top-full left-1/2 z-99999 mt-3 -translate-x-1/2",
+						"absolute top-full left-1/2 z-99999 mt-2 -translate-x-1/2 -translate-y-1/2",
 						"transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]",
 						controlsOpen
 							? "pointer-events-auto opacity-100"
 							: "pointer-events-none opacity-0",
 					)}
 					onPointerEnter={showControls}
-					onPointerLeave={hideControls}
+					onPointerLeave={(event) => {
+						if (
+							event.relatedTarget instanceof Node &&
+							shellRef.current?.contains(event.relatedTarget)
+						) {
+							return;
+						}
+						hideControls();
+					}}
 				>
 					<div className="w-max">
 						<ControlsView
