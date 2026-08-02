@@ -336,6 +336,38 @@ function HandlePageContent({
 						/>
 					</div>
 				</section>
+
+				{!isSignedIn ? (
+					<div className="flex w-full max-w-[28rem] flex-col items-center gap-3 px-6 pb-[calc(2rem+env(safe-area-inset-bottom))] min-[90rem]:hidden">
+						<Button
+							render={
+								<Link
+									to="/log-in"
+									search={{ redirect: `/${page.handle}` }}
+									className="inline-flex items-center justify-center gap-1.5 border-0 px-4 py-4.5 smooth-shadow-ring shadow-neutral-500 smooth-ring-brand"
+								>
+									Create your page
+								</Link>
+							}
+							variant="brand"
+							nativeButton={false}
+							size="sm"
+							className="rounded-md"
+						/>
+						<Button
+							render={
+								<Link to="/explore">
+									<StackPerspective weight="Filled" />
+								</Link>
+							}
+							variant="ghost"
+							nativeButton={false}
+							size="icon-sm"
+							aria-label="Explore"
+							className="rounded-md text-muted-foreground/80"
+						/>
+					</div>
+				) : null}
 			</motion.div>
 
 			<aside
@@ -370,15 +402,19 @@ function HandlePageContent({
 					) : isSignedIn ? null : (
 						<Button
 							render={
-								<Link to="/log-in" search={{ redirect: `/${page.handle}` }} />
+								<Link
+									to="/log-in"
+									search={{ redirect: `/${page.handle}` }}
+									className="inline-flex items-center gap-1.5 px-4 py-4.5 smooth-shadow-ring shadow-neutral-500 smooth-ring-brand border-0 mr-2 rounded-sm"
+								>
+									Create your page
+								</Link>
 							}
-							variant="ghost"
+							variant="brand"
 							nativeButton={false}
 							size="sm"
-							className="text-muted-foreground/80 rounded-md"
-						>
-							Log in
-						</Button>
+							className="rounded-md"
+						/>
 					)}
 					<Tooltip>
 						<TooltipTrigger

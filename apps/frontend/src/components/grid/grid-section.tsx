@@ -239,6 +239,12 @@ export function GridSection({
 	}, []);
 
 	const effectiveBreakpoint = isDesktopLayout ? breakpoint : "compact";
+	const hasBottomPadding = mode === "edit" || !isDesktopLayout;
+	const bottomPaddingClass = hasBottomPadding
+		? isDesktopLayout
+			? "pb-80"
+			: "pb-64"
+		: "";
 	const isAnyItemDragging = draggingItemId !== null;
 	const cols = getColumns(effectiveBreakpoint);
 	const gridWidth = getGridWidth(cols);
@@ -341,7 +347,7 @@ export function GridSection({
 
 	return (
 		<div
-			className={`grid-section-shell flex min-w-full max-w-full shrink-0 justify-center overflow-visible ${mode === "edit" ? "pb-80" : ""}`}
+			className={`grid-section-shell flex min-w-full max-w-full shrink-0 justify-center overflow-visible ${bottomPaddingClass}`}
 			style={{ width: gridWidth }}
 		>
 			<GridLayout

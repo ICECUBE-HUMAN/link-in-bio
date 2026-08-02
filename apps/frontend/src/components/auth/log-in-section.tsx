@@ -177,7 +177,7 @@ export default function LogInSection({ redirectTo }: LogInSectionProps) {
 											type="submit"
 											variant="outline"
 											size="sm"
-											className="h-10 rounded-md px-3 font-medium shadow-xs border-border/60 text-primary hover:bg-background"
+											className="h-10 rounded-md px-4 font-medium shadow-xs border-border/60 text-primary hover:bg-background"
 											disabled={pendingProvider !== null}
 										>
 											{pendingProvider === "magic-link" ? (
