@@ -10,6 +10,34 @@ Sinabro grid의 지도 아이템을 좌표 placeholder가 아니라 Mapbox 기�
 이 문서는 2026-08-02 기준으로 현재 Sinabro 코드와 Mapbox/react-map-gl 공식
 문서를 확인하고, 승인된 지도 아이템 요구사항을 구현 기준으로 정리한 것이다.
 
+## 2026-08-02 controls 재배치 수정
+
+지도 위치 편집의 진입점과 보조 조작을 지도 surface 위에 직접 배치하지 않고,
+grid item controls로 이동한다. 지도 item shell 안에서만 사용할 수 있는 작은
+interaction context가 controls와 renderer 사이의 UI 상태·Mapbox command
+bridge를 소유한다. 따라서 여러 지도 item의 editing 상태가 섞이지 않으며,
+기존 `update-data`와 RGL drag-cancel 경계도 유지된다.
+
+- controls에는 `Maximize01Icon` 토글과 인접한 `Search01Icon` 버튼을 둔다.
+- preset controls를 기본 그룹으로 먼저 표시하고, 텍스트·미디어의 link control과
+	지도 controls 같은 추가 controls는 `toolbar.tsx`의 vertical `Separator`
+	스타일로 구분한 뒤 오른쪽에 표시한다.
+- `Maximize01Icon`의 active 상태는 기존 preset control의 active 스타일
+  (`bg-white text-black`)을 사용한다. 토글이 켜진 동안에만 지도 drag/zoom과
+  current-location 조작이 활성화된다.
+- Maximize popover content 안에는 `MinusSignIcon`, `PlusSignIcon`,
+  `Gps01Icon` 버튼을 둔다. 이 버튼들은 지도 surface 위에 렌더링하지 않는다.
+- Search popover content 안에는 기존 `MapLocationSearch`를 둔다. 검색 결과
+  선택은 renderer의 기존 camera commit/flyTo 경계를 호출하며, 검색 선택 시
+  위치 편집을 자동으로 활성화한다.
+- 두 popover는 controls 아래에 열고, content는 controls와 동일한 `bg-black`,
+  `h-10`, `p-1`, `rounded-lg`, gap/density를 사용한다. 내부 icon button은
+  controls와 같은 `icon-sm` 크기와 `size-4` icon을 사용한다.
+- 지도 renderer에서는 기존 `Edit location` 버튼, 검색 UI, zoom/current-location
+  버튼을 제거한다. 중앙 pin만 시각적 overlay로 유지한다.
+- popover trigger/content는 기존 grid item drag-cancel selector에 포함되며,
+  `aria-pressed`/`aria-expanded`/accessible label을 제공한다.
+
 ## 현재 경계
 
 - `apps/frontend/src/components/grid/renderers/map.tsx`는 현재 좌표와 caption을
@@ -125,25 +153,25 @@ MapItemRenderer
 │  └─ visible placeholder / lazy Mapbox mount
 ├─ MapboxMapSurface
 │  ├─ Map from react-map-gl/mapbox
-│  ├─ fixed center pin overlay
-│  ├─ NavigationControl
-│  └─ GeolocateControl
-└─ MapLocationEditor (edit + location-edit toggle only)
-   ├─ search input
-   ├─ search results
-   └─ update-data command dispatch
+│  └─ fixed center pin overlay
+└─ MapItemInteractionContext bridge
+   ├─ ItemControls: Maximize/Search triggers and popover content
+   └─ update-data/flyTo/geolocate callbacks registered by renderer
 ```
 
 - `MapItemRenderer`는 현재 item registry의 renderer 경계를 유지한다.
 - `MapboxMapSurface`는 Mapbox 초기화, style, camera, 2D input 설정만 담당한다.
-- `MapLocationEditor`는 검색 요청, 검색 결과 선택, toggle 상태, 저장 command만
-  담당한다.
+- `MapItemInteractionContext`는 하나의 map item shell 안에서만 editing 상태와
+  renderer callback을 공유한다. global store나 item data persistence에는
+  사용하지 않는다.
+- `ItemControls`의 map branch는 Maximize/Search popover와 Hugeicons controls를
+  담당한다. 검색 요청과 결과 list는 기존 `MapLocationSearch`를 재사용한다.
 - fixed center pin은 지도 내부 좌표에 붙는 Mapbox `Marker`가 아니라 map container
   중앙에 놓이는 DOM overlay다. 지도 이동 중에도 핀은 화면 중앙에 고정한다.
-- `NavigationControl`은 zoom 버튼에만 사용하고 compass는 숨긴다.
-- `GeolocateControl`은 현재 사용자 위치 이동에 사용한다.
-- 지도 내부의 location-edit toggle은 item toolbar의 preset/delete command와
-  분리한다. toggle state는 persistence하지 않는 local UI state다.
+- zoom/current-location command는 Mapbox surface ref를 통해 controls popover에서
+  호출하며 Mapbox 기본 control DOM은 렌더링하지 않는다.
+- controls의 editing state는 item toolbar의 preset/delete command와 분리한다.
+  state는 persistence하지 않는 local UI state다.
 - location editing이 활성화되면 map surface wrapper에
   `data-grid-item-drag-cancel="true"`를 적용해 map gesture가 RGL item drag로
   해석되지 않게 한다. toggle button과 search controls도 기존 interactive target
@@ -167,9 +195,11 @@ MapItemRenderer
 
 ### 편집 모드: location editing 잠금
 
-- 지도는 기본적으로 잠긴다.
-- `위치 편집` toggle만 표시한다.
-- 검색, drag, zoom, current-location control은 표시하지 않는다.
+- 지도는 기본적으로 잠긴다. controls의 `Maximize01Icon` 토글과
+  `Search01Icon` 버튼만 표시한다.
+- `Maximize01Icon`을 켜기 전에는 검색 popover를 열 수 있지만, 지도를 직접
+  이동시키는 조작은 잠겨 있다.
+- zoom/current-location control은 Maximize popover가 열려 있을 때만 표시한다.
 - 기존 grid drag cancellation 규칙과 충돌하지 않도록 map canvas는 잠금 상태에서
   grid item drag를 방해하지 않는다.
 
@@ -179,9 +209,12 @@ toggle을 켜면 다음을 활성화한다.
 
 - fixed center pin
 - map drag pan과 zoom
-- Mapbox `NavigationControl`의 zoom buttons
-- Mapbox `GeolocateControl`
-- location search input과 result list
+- Maximize popover 안의 zoom in/out/current-location buttons
+
+Search popover를 열면 기존 location search input과 result list를 표시한다.
+검색 결과를 선택하면 renderer가 location editing을 활성화하고 camera를
+선택 좌표로 이동시킨다. Search popover 자체는 Maximize popover와 독립적으로
+열리고 닫힌다.
 
 지도 카메라 입력은 Mapbox map instance의 `dragPan`, `scrollZoom`,
 `doubleClickZoom`, `keyboard` handler를 toggle state에 맞춰 enable/disable한다.
@@ -191,8 +224,8 @@ pitch와 rotation handler는 항상 비활성화한다.
 
 ### 지도 드래그와 zoom
 
-1. 사용자가 location editing toggle을 켠다.
-2. 중앙 핀 아래로 지도를 이동하거나 NavigationControl로 zoom을 바꾼다.
+1. 사용자가 controls의 `Maximize01Icon` 토글을 켠다.
+2. 중앙 핀 아래로 지도를 이동하거나 Maximize popover의 zoom button을 누른다.
 3. Mapbox `moveend`에서 최종 camera center와 zoom을 읽는다.
 4. `update-data` command로 `latitude`, `longitude`, `zoom`을 한 번에 갱신한다.
 5. 기존 editor store가 변경된 map item만 autosave한다.
@@ -213,7 +246,7 @@ pitch와 rotation handler는 항상 비활성화한다.
 
 ### 현재 사용자 위치
 
-1. location editing toggle이 켜진 상태에서 GeolocateControl을 누른다.
+1. Maximize popover가 열린 상태에서 `Gps01Icon`을 누른다.
 2. 브라우저 Geolocation API의 권한 요청을 처리한다.
 3. 위치 조회가 성공하면 Mapbox가 카메라를 사용자 위치로 이동한다.
 4. 성공한 `longitude`, `latitude`와 현재 zoom을 map item에 저장한다.
@@ -261,7 +294,9 @@ provider 오류를 지도 renderer 전체 오류로 전파하지 않고 검색 �
 
 ## 접근성과 상호작용 세부 규칙
 
-- location-edit toggle은 `aria-pressed`와 명확한 label을 제공한다.
+- `Maximize01Icon` toggle은 `aria-pressed`, `aria-expanded`와 명확한 label을
+  제공한다.
+- `Search01Icon` trigger는 `aria-expanded`와 `aria-controls`를 제공한다.
 - search input은 label을 가지며, 결과 list는 keyboard arrow/Enter/Escape로
   조작할 수 있다.
 - 결과 loading, empty, error 상태는 polite live region으로 알린다.
@@ -299,12 +334,13 @@ provider 오류를 지도 renderer 전체 오류로 전파하지 않고 검색 �
 - When 지도 위에서 드래그·스크롤·더블클릭을 시도한다.
 - Then camera가 움직이지 않고 control/search UI도 보이지 않는다.
 
-#### MAP-003: 위치 편집 toggle
+#### MAP-003: controls 위치 편집 toggle
 
 - Given 편집 모드의 지도 item이 잠겨 있다.
-- When 위치 편집 toggle을 켠다.
-- Then 중앙 핀, search input, zoom control, current-location control이 표시되고
-  drag/zoom이 활성화된다.
+- When controls의 `Maximize01Icon`을 켠다.
+- Then active preset 스타일과 Maximize popover가 표시되고, 그 content 안에
+  `MinusSignIcon`, `PlusSignIcon`, `Gps01Icon`이 표시되며 drag/zoom이
+  활성화된다. 지도 위에는 해당 버튼이 표시되지 않는다.
 
 #### MAP-004: 지도 이동 저장
 
@@ -312,11 +348,12 @@ provider 오류를 지도 renderer 전체 오류로 전파하지 않고 검색 �
 - When 지도를 드래그하거나 zoom을 변경하고 손을 뗀다.
 - Then 최종 center와 zoom만 `update-data`로 반영되고 autosave된다.
 
-#### MAP-005: 장소 검색
+#### MAP-005: controls 장소 검색
 
-- Given 위치 편집과 검색 UI가 활성화되어 있다.
-- When `Seoul`을 검색하고 결과를 선택한다.
-- Then 선택한 좌표로 지도가 이동하고 latitude/longitude/zoom이 저장된다.
+- Given 편집 모드에서 controls가 표시되어 있다.
+- When `Search01Icon`을 누르고 `Seoul`을 검색한 뒤 결과를 선택한다.
+- Then Search popover 안에서 결과가 표시되고, 선택 시 위치 편집이 활성화되어
+  선택한 좌표로 지도가 이동하며 latitude/longitude/zoom이 저장된다.
 
 #### MAP-006: 검색 caption
 
