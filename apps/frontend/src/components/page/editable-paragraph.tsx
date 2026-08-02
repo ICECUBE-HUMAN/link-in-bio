@@ -21,7 +21,10 @@ export function EditableParagraph({
 
 	if (mode === "view") {
 		return (
-			<p className={sharedClassName} data-empty={!value?.trim()}>
+			<p
+				className={`${sharedClassName} cursor-default caret-transparent`}
+				data-empty={!value?.trim()}
+			>
 				{value}
 			</p>
 		);
