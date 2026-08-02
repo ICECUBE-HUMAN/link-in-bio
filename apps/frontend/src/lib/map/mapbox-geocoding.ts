@@ -120,7 +120,7 @@ export async function searchMapboxLocations(
 	url.searchParams.set("autocomplete", "true");
 	url.searchParams.set("limit", "5");
 	if (options?.language) url.searchParams.set("language", options.language);
-	url.searchParams.set("permanent", "true");
+	url.searchParams.set("permanent", "false");
 	url.searchParams.set("access_token", accessToken);
 
 	let response: Response;

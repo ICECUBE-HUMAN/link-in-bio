@@ -24,12 +24,8 @@ export function MapItemRenderer({
 	mode,
 	onCommand,
 }: ItemRendererProps<GridItemByType<"map">>) {
-	const {
-		isLocationEditing,
-		setLocationEditing,
-		setSearchOpen,
-		registerController,
-	} = useMapItemInteraction();
+	const { isLocationEditing, setLocationEditing, registerController } =
+		useMapItemInteraction();
 	const [mapError, setMapError] = useState<unknown>(null);
 	const [geolocationError, setGeolocationError] = useState<unknown>(null);
 	const [mapSurfaceKey, setMapSurfaceKey] = useState(0);
@@ -42,10 +38,9 @@ export function MapItemRenderer({
 	useEffect(() => {
 		if (mode !== "edit") {
 			setLocationEditing(false);
-			setSearchOpen(false);
 			setGeolocationError(null);
 		}
-	}, [mode, setLocationEditing, setSearchOpen]);
+	}, [mode, setLocationEditing]);
 
 	const commitCamera = useCallback(
 		function commitCamera(

@@ -5,7 +5,6 @@ import {
 	Maximize01Icon,
 	MinusSignIcon,
 	PlusSignIcon,
-	Search01Icon,
 	Unlink02Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -16,7 +15,6 @@ import {
 	useMapItemInteraction,
 	useOptionalMapItemInteraction,
 } from "@/components/grid/map/map-item-interaction-context";
-import { MapLocationSearch } from "@/components/grid/map/map-location-search";
 import { PresetIcon } from "@/components/grid/preset-icon";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
@@ -30,7 +28,6 @@ import type {
 	GridItemCommandHandler,
 	ItemControlsProps,
 } from "@/lib/grid/item-registry";
-import { getMapboxAccessToken } from "@/lib/map/map-config";
 import { cn } from "@/lib/utils";
 
 type ItemDeleteButtonProps = {
@@ -55,138 +52,89 @@ export function ItemDeleteButton({ itemId, onCommand }: ItemDeleteButtonProps) {
 }
 
 function MapItemExtraControls() {
-	const {
-		isLocationEditing,
-		setLocationEditing,
-		isSearchOpen,
-		setSearchOpen,
-		zoomIn,
-		zoomOut,
-		locate,
-		selectLocation,
-	} = useMapItemInteraction();
+	const { isLocationEditing, setLocationEditing, zoomIn, zoomOut, locate } =
+		useMapItemInteraction();
 
 	return (
-		<>
-			<Popover open={isLocationEditing} onOpenChange={setLocationEditing}>
-				<PopoverTrigger
-					render={
-						<Button
-							type="button"
-							size="icon-sm"
-							variant="ghost"
-							aria-label={
-								isLocationEditing ? "Stop editing location" : "Edit location"
-							}
-							aria-pressed={isLocationEditing}
-							aria-expanded={isLocationEditing}
-							className={cn(
-								"cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white",
-								isLocationEditing &&
-									"bg-brand! text-white! hover:bg-brand! hover:text-white!",
-							)}
-						>
-							<HugeiconsIcon
-								icon={Maximize01Icon}
-								strokeWidth={2.25}
-								className="size-4"
-							/>
-						</Button>
-					}
-				/>
-				<PopoverContent
-					side="bottom"
-					sideOffset={8}
-					data-grid-item-drag-cancel="true"
-					className="h-10 w-auto flex-row gap-0.5 rounded-lg bg-black p-1 shadow-lg"
+		<Popover open={isLocationEditing} onOpenChange={setLocationEditing}>
+			<PopoverTrigger
+				render={
+					<Button
+						type="button"
+						size="icon-sm"
+						variant="ghost"
+						aria-label={
+							isLocationEditing ? "Stop editing location" : "Edit location"
+						}
+						aria-pressed={isLocationEditing}
+						aria-expanded={isLocationEditing}
+						className={cn(
+							"cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white",
+							isLocationEditing &&
+								"bg-brand! text-white! hover:bg-brand! hover:text-white!",
+						)}
+					>
+						<HugeiconsIcon
+							icon={Maximize01Icon}
+							strokeWidth={2.25}
+							className="size-4"
+						/>
+					</Button>
+				}
+			/>
+			<PopoverContent
+				side="bottom"
+				sideOffset={8}
+				data-grid-item-drag-cancel="true"
+				className="h-10 w-auto flex-row gap-0.5 rounded-lg bg-black p-1 shadow-lg"
+			>
+				<Button
+					type="button"
+					size="icon-sm"
+					variant="ghost"
+					aria-label="Zoom out"
+					title="Zoom out"
+					onClick={zoomOut}
+					className="cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white"
 				>
-					<Button
-						type="button"
-						size="icon-sm"
-						variant="ghost"
-						aria-label="Zoom out"
-						title="Zoom out"
-						onClick={zoomOut}
-						className="cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white"
-					>
-						<HugeiconsIcon
-							icon={MinusSignIcon}
-							strokeWidth={2.25}
-							className="size-4"
-						/>
-					</Button>
-					<Button
-						type="button"
-						size="icon-sm"
-						variant="ghost"
-						aria-label="Zoom in"
-						title="Zoom in"
-						onClick={zoomIn}
-						className="cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white"
-					>
-						<HugeiconsIcon
-							icon={PlusSignIcon}
-							strokeWidth={2.25}
-							className="size-4"
-						/>
-					</Button>
-					<Button
-						type="button"
-						size="icon-sm"
-						variant="ghost"
-						aria-label="Go to current location"
-						title="Go to current location"
-						onClick={locate}
-						className="cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white"
-					>
-						<HugeiconsIcon
-							icon={Gps01Icon}
-							strokeWidth={2.25}
-							className="size-4"
-						/>
-					</Button>
-				</PopoverContent>
-			</Popover>
-			<Popover open={isSearchOpen} onOpenChange={setSearchOpen}>
-				<PopoverTrigger
-					render={
-						<Button
-							type="button"
-							size="icon-sm"
-							variant="ghost"
-							aria-label="Search locations"
-							aria-expanded={isSearchOpen}
-							className={cn(
-								"cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white",
-								isSearchOpen &&
-									"bg-white! text-black! hover:bg-white! hover:text-black!",
-							)}
-						>
-							<HugeiconsIcon
-								icon={Search01Icon}
-								strokeWidth={2.25}
-								className="size-4"
-							/>
-						</Button>
-					}
-				/>
-				<PopoverContent
-					side="bottom"
-					sideOffset={8}
-					data-grid-item-drag-cancel="true"
-					className="h-auto min-h-10 w-64 gap-0 rounded-lg bg-black p-1 text-white shadow-lg"
-				>
-					<MapLocationSearch
-						accessToken={getMapboxAccessToken()}
-						onSelect={(result) => {
-							setLocationEditing(true);
-							selectLocation(result);
-							setSearchOpen(false);
-						}}
+					<HugeiconsIcon
+						icon={MinusSignIcon}
+						strokeWidth={2.25}
+						className="size-4"
 					/>
-				</PopoverContent>
-			</Popover>
-		</>
+				</Button>
+				<Button
+					type="button"
+					size="icon-sm"
+					variant="ghost"
+					aria-label="Zoom in"
+					title="Zoom in"
+					onClick={zoomIn}
+					className="cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white"
+				>
+					<HugeiconsIcon
+						icon={PlusSignIcon}
+						strokeWidth={2.25}
+						className="size-4"
+					/>
+				</Button>
+				<Button
+					type="button"
+					size="icon-sm"
+					variant="ghost"
+					aria-label="Go to current location"
+					title="Go to current location"
+					onClick={locate}
+					className="cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white"
+				>
+					<HugeiconsIcon
+						icon={Gps01Icon}
+						strokeWidth={2.25}
+						className="size-4"
+					/>
+				</Button>
+			</PopoverContent>
+		</Popover>
 	);
 }
 
@@ -213,7 +161,7 @@ export function ItemControls({
 	const hasSeparator =
 		isMapItem || (hasPresetControls && firstAdditionalControlIndex >= 0);
 	const controlsWidth =
-		(menuControls.length + (isMapItem ? 2 : 0)) * 32 +
+		(menuControls.length + (isMapItem ? 1 : 0)) * 32 +
 		8 +
 		(hasSeparator ? 10 : 0);
 	const viewTransition = shouldReduceMotion

@@ -82,8 +82,7 @@ function GridItemShellContent({
 }: GridItemShellProps) {
 	const mapInteraction = useOptionalMapItemInteraction();
 	const keepControlsVisible =
-		item.type === "map" &&
-		Boolean(mapInteraction?.isLocationEditing || mapInteraction?.isSearchOpen);
+		item.type === "map" && Boolean(mapInteraction?.isLocationEditing);
 	const hasContent = children !== null && children !== undefined;
 	const hasControls =
 		capabilities.controls.some(

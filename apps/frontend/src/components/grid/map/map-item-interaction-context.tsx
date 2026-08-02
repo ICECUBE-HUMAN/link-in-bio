@@ -21,8 +21,6 @@ export type MapItemController = {
 type MapItemInteractionContextValue = {
 	isLocationEditing: boolean;
 	setLocationEditing: Dispatch<SetStateAction<boolean>>;
-	isSearchOpen: boolean;
-	setSearchOpen: Dispatch<SetStateAction<boolean>>;
 	registerController(controller: MapItemController | null): void;
 	zoomIn(): void;
 	zoomOut(): void;
@@ -39,7 +37,6 @@ export function MapItemInteractionProvider({
 	children: ReactNode;
 }): React.ReactElement {
 	const [isLocationEditing, setLocationEditing] = useState(false);
-	const [isSearchOpen, setSearchOpen] = useState(false);
 	const controllerRef = useRef<MapItemController | null>(null);
 
 	const registerController = useCallback(
@@ -59,8 +56,6 @@ export function MapItemInteractionProvider({
 		() => ({
 			isLocationEditing,
 			setLocationEditing,
-			isSearchOpen,
-			setSearchOpen,
 			registerController,
 			zoomIn,
 			zoomOut,
@@ -69,7 +64,6 @@ export function MapItemInteractionProvider({
 		}),
 		[
 			isLocationEditing,
-			isSearchOpen,
 			registerController,
 			zoomIn,
 			zoomOut,
