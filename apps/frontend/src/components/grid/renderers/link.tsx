@@ -149,7 +149,7 @@ function LinkBadge({
 	const fallback = getProviderFallback(url);
 	const isMailto = url.toLowerCase().startsWith("mailto:");
 	const className = cn(
-		"inline-flex size-8 shrink-0 cursor-pointer! items-center justify-center overflow-hidden rounded-md bg-muted transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+		"inline-flex size-8 shrink-0 cursor-pointer! items-center justify-center overflow-hidden rounded-md bg-muted/30 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
 		!faviconUrl && "size-11 rounded-2xl px-2 text-center text-xs font-semibold",
 		isMailto && "bg-brand text-primary-foreground",
 	);
@@ -211,7 +211,7 @@ function LinkPreview({
 	const fallback = getProviderFallback(url);
 
 	if (isLoading && imageUrls.length === 0) {
-		return <Skeleton className="size-full rounded-none" />;
+		return <Skeleton className="size-full rounded-none bg-muted/30" />;
 	}
 
 	if (imageUrls.length > 1) {
@@ -220,7 +220,7 @@ function LinkPreview({
 				{imageUrls.map((imageUrl) => (
 					<div
 						key={imageUrl}
-						className="min-h-0 min-w-0 overflow-hidden rounded-md bg-muted"
+						className="min-h-0 min-w-0 overflow-hidden rounded-md bg-muted/30"
 					>
 						<img src={imageUrl} alt="" className="size-full object-cover" />
 					</div>
@@ -493,7 +493,7 @@ export function LinkItemRenderer({
 					style={cardStyle}
 				>
 					{imageUrls.length > 0 && (
-						<div className="relative min-h-0 min-w-0 flex-4 overflow-hidden rounded-lg bg-muted">
+						<div className="relative min-h-0 min-w-0 flex-4 overflow-hidden rounded-lg bg-muted/30">
 							<LinkPreview
 								imageUrls={imageUrls}
 								url={item.data.url}
@@ -517,7 +517,7 @@ export function LinkItemRenderer({
 				>
 					{content}
 					{imageUrls.length > 0 && (
-						<div className="relative min-h-0 flex-3 overflow-hidden rounded-lg bg-muted">
+						<div className="relative min-h-0 flex-3 overflow-hidden rounded-lg bg-muted/30">
 							<LinkPreview
 								imageUrls={imageUrls}
 								url={item.data.url}

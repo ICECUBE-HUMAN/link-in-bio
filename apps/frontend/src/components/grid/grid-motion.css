@@ -182,18 +182,10 @@
 }
 
 .react-grid-item.react-draggable-dragging .grid-item-card {
-	border: 1px solid color-mix(in oklab, var(--border) 60%, transparent) !important;
-	box-shadow: var(--shadow-brand-small) !important;
 	transform: perspective(800px) translateY(-8px) scale(1.035)
 		rotateX(calc(1deg + var(--grid-drag-rotate-x)))
 		rotateZ(calc(0.35deg + var(--grid-drag-rotate-z)));
 	will-change: transform;
-}
-
-.react-grid-item.react-draggable-dragging
-	[data-grid-item-type="media"]
-	.grid-item-card {
-	box-shadow: var(--shadow-brand-small) !important;
 }
 
 /* Drop target: an inset shadow reads as a slot waiting for the dragged block. */

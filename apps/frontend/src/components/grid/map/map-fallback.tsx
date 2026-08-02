@@ -14,7 +14,7 @@ function formatCoordinate(value: number) {
 
 export function MapFallback({ camera, onRetry }: MapFallbackProps) {
 	return (
-		<div className="flex size-full min-h-0 items-center justify-center bg-muted/50 p-4 text-center">
+		<div className="flex size-full min-h-0 items-center justify-center bg-muted/30 p-4 text-center">
 			<div className="flex max-w-xs flex-col items-center gap-3">
 				<div className="space-y-1">
 					<p className="text-sm font-semibold text-foreground">

@@ -163,7 +163,6 @@
     --color-brand: var(--brand);
     --color-profile-image-crop-action: var(--profile-image-crop-action);
     --shadow-brand: var(--shadow-brand);
-    --shadow-brand-small: var(--shadow-brand-small);
     
     --color-sidebar-ring: var(--sidebar-ring);
 
@@ -317,7 +316,6 @@
     --sidebar-ring: oklch(0.708 0 0);
     
     --shadow-brand: 0px 40px 60px 0px rgba(0, 0, 0, 0.06);
-    --shadow-brand-small: 0px 20px 30px 1px rgba(0, 0, 0, 0.06);
 
     --shadow-xs: var(--smooth-shadow-xs);
     --shadow-sm: var(--smooth-shadow-sm);
