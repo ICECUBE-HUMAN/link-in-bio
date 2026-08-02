@@ -37,10 +37,10 @@ export function getGridWidth(cols: number): number {
 
 const allowedPresets: Record<ItemType, readonly PresetName[]> = {
 	section: ["fullBanner"],
-	media: ["squareSmall", "landscape", "squareLarge", "portrait"],
-	map: ["squareSmall", "landscape", "squareLarge", "portrait"],
-	link: ["halfBanner", "squareSmall", "landscape", "squareLarge", "portrait"],
-	text: ["halfBanner", "squareSmall", "landscape", "squareLarge", "portrait"],
+	media: ["squareSmall", "landscape", "portrait", "squareLarge"],
+	map: ["squareSmall", "landscape", "portrait", "squareLarge"],
+	link: ["squareSmall", "halfBanner", "landscape", "portrait", "squareLarge"],
+	text: ["squareSmall", "halfBanner", "landscape", "portrait", "squareLarge"],
 };
 
 const geometry: Record<PresetName, ItemLayout> = {

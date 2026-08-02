@@ -54,6 +54,7 @@ export type ItemControlCapability = {
 	command: GridItemControlCommand;
 	label: string;
 	preset?: PresetName;
+	isActive?: boolean;
 };
 
 export type ItemCapabilities = {
@@ -167,11 +168,11 @@ export function getItemCapabilities(
 
 	if (canRender && context.mode === "edit" && allowedPresets.length > 1) {
 		for (const nextPreset of allowedPresets) {
-			if (nextPreset === preset) continue;
 			controls.push({
 				command: "apply-preset",
 				label: getPresetControlLabel(nextPreset),
 				preset: nextPreset,
+				isActive: nextPreset === preset,
 			});
 		}
 	}
@@ -201,17 +202,17 @@ export function getItemCapabilities(
 function getPresetControlLabel(preset: PresetName): string {
 	switch (preset) {
 		case "halfBanner":
-			return "Half";
+			return "Half banner";
 		case "squareSmall":
-			return "S";
+			return "Small square";
 		case "landscape":
 			return "Wide";
 		case "squareLarge":
-			return "Tall";
+			return "Full square";
 		case "portrait":
 			return "Portrait";
 		case "fullBanner":
-			return "Full";
+			return "Full banner";
 	}
 }
 
