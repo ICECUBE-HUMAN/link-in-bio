@@ -273,57 +273,6 @@ export function resolveAxisAwareSwap(
 	return compactWithGravity(result, cols);
 }
 
-/**
- * Resize an item using RGL's vertical collision behavior: displaced items keep
- * their columns and move below the resized item's footprint, including chains.
- */
-export function resolveResizeWithVerticalPush(
-	layouts: LayoutMap,
-	resizedId: string,
-	candidate: ItemLayout,
-	cols: number,
-): LayoutMap {
-	if (!layouts[resizedId]) {
-		throw new Error(`Unknown resized item ${resizedId}.`);
-	}
-
-	const result: LayoutMap = {
-		...Object.fromEntries(
-			Object.entries(layouts).map(([id, layout]) => [id, { ...layout }]),
-		),
-		[resizedId]: { ...candidate },
-	};
-	const queue = Object.entries(result)
-		.filter(([id, layout]) => id !== resizedId && overlaps(candidate, layout))
-		.sort(([, a], [, b]) => a.y - b.y || a.x - b.x)
-		.map(([id]) => id);
-	const queued = new Set(queue);
-
-	while (queue.length > 0) {
-		const movingId = queue.shift();
-		if (!movingId) continue;
-		queued.delete(movingId);
-		const moving = result[movingId];
-		if (!moving) continue;
-
-		const resized = result[resizedId];
-		if (overlaps(moving, resized)) {
-			moving.y = resized.y + resized.h;
-		}
-
-		for (const [otherId, other] of Object.entries(result)) {
-			if (otherId === movingId || !overlaps(moving, other)) continue;
-			other.y = Math.max(other.y, moving.y + moving.h);
-			if (!queued.has(otherId)) {
-				queue.push(otherId);
-				queued.add(otherId);
-			}
-		}
-	}
-
-	return compactWithGravity(result, cols);
-}
-
 export function validateLayoutForItem(
 	item: {
 		type: ItemType;

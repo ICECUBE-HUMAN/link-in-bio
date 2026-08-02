@@ -5,10 +5,10 @@ import {
 	getPresetGeometry,
 	placeAtFirstAvailable,
 	resolveAxisAwareSwap,
-	resolveResizeWithVerticalPush,
 	validateLayout,
 	validateLayoutForItem,
 } from "@sinabro/grid-layout";
+import { fastVerticalCompactor } from "react-grid-layout/extras";
 import type {
 	Breakpoint,
 	GridItem,
@@ -26,7 +26,6 @@ export {
 	getPresetGeometry,
 	placeAtFirstAvailable,
 	resolveAxisAwareSwap,
-	resolveResizeWithVerticalPush,
 	validateLayout,
 	validateLayoutForItem,
 };
@@ -37,6 +36,29 @@ function sameGeometry(a: ItemLayout, b: ItemLayout) {
 
 function clamp(value: number, min: number, max: number) {
 	return Math.min(max, Math.max(min, value));
+}
+
+/**
+ * Use the exact vertical compactor configured on the rendered GridLayout.
+ * A preset resize is a whole-layout operation: RGL orders affected items by
+ * their current row and compacts the result, instead of finding an isolated
+ * empty slot for each direct collision.
+ */
+function compactWithRenderedGridRules(
+	layouts: LayoutMap,
+	cols: number,
+): LayoutMap {
+	const compacted = fastVerticalCompactor.compact(
+		Object.entries(layouts).map(([i, layout]) => ({
+			i,
+			...layout,
+		})),
+		cols,
+	);
+
+	return Object.fromEntries(
+		compacted.map(({ i, x, y, w, h }) => [i, { x, y, w, h }]),
+	) as LayoutMap;
 }
 
 export function inferPresetFromLayouts(
@@ -120,9 +142,7 @@ export function applyPresetToLayoutMap({
 	const distanceToLeft = current.x;
 	const distanceToRight = cols - (current.x + current.w);
 	const anchorRight = distanceToRight < distanceToLeft;
-	const nextX = anchorRight
-		? current.x + current.w - nextSize.w
-		: current.x;
+	const nextX = anchorRight ? current.x + current.w - nextSize.w : current.x;
 	const candidate: ItemLayout = {
 		x: clamp(nextX, 0, cols - nextSize.w),
 		y: current.y,
@@ -139,10 +159,11 @@ export function applyPresetToLayoutMap({
 		breakpoint,
 	);
 
-	return resolveResizeWithVerticalPush(
-		layouts,
-		itemId,
-		candidate,
+	return compactWithRenderedGridRules(
+		{
+			...layouts,
+			[itemId]: candidate,
+		},
 		cols,
 	);
 }
