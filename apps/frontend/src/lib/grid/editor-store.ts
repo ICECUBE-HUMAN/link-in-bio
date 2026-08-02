@@ -48,11 +48,23 @@ function toPageItem(item: GridItem): PageItemResponse {
 	return pageItem;
 }
 
+function normalizeItemLink(value: string | undefined) {
+	const trimmed = value?.trim();
+	if (!trimmed) return undefined;
+	return /^https:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
 function toBatchItem(item: GridItem): PageItemBatchRequest["upserts"][number] {
 	const { id, type, data, style, layouts } = item;
 	switch (type) {
 		case "text":
-			return { id, type, data, style, layouts };
+			return {
+				id,
+				type,
+				data: { ...data, link: normalizeItemLink(data.link) },
+				style,
+				layouts,
+			};
 		case "media":
 			return {
 				id,
@@ -61,6 +73,7 @@ function toBatchItem(item: GridItem): PageItemBatchRequest["upserts"][number] {
 					objectKey: data.objectKey,
 					mimeType: data.mimeType,
 					caption: data.caption,
+					link: normalizeItemLink(data.link),
 				},
 				style,
 				layouts,

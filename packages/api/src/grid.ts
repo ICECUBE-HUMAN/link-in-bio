@@ -60,7 +60,7 @@ export const pageItemLinkUrlSchema = v.union([httpsUrlSchema, mailtoUrlSchema]);
 
 export const pageItemTextDataSchema = v.object({
 	text: v.pipe(v.string(), v.trim()),
-	link: v.optional(httpsUrlSchema),
+	link: v.optional(v.string()),
 });
 
 export const pageItemMediaDataSchema = v.object({
@@ -70,7 +70,7 @@ export const pageItemMediaDataSchema = v.object({
 		v.regex(/^(image|video)\/[a-z0-9.+-]+$/i, "Media MIME type required."),
 	),
 	caption: v.optional(v.string()),
-	link: v.optional(httpsUrlSchema),
+	link: v.optional(v.string()),
 });
 
 export const pageItemMediaResponseDataSchema = v.object({

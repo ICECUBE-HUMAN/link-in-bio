@@ -177,7 +177,11 @@ export function getItemCapabilities(
 		}
 	}
 
-	if (canRender && context.mode === "edit" && item.type === "text") {
+	if (
+		canRender &&
+		context.mode === "edit" &&
+		(item.type === "text" || item.type === "media")
+	) {
 		controls.push({
 			command: "manage-link",
 			label: item.data.link ? "Change link" : "Add link",
