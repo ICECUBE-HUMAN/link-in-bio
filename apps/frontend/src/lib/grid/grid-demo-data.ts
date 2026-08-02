@@ -19,7 +19,7 @@ const linkProviderDemoUrls = [
 	"https://gumroad.com/sinabro",
 	"https://medium.com/@sinabro",
 	"https://patreon.com/sinabro",
-	"https://producthunt.com/@sinabro",
+	"https://producthunt.com/products/sinabro",
 	"https://reddit.com/u/sinabro",
 	"https://tiktok.com/@sinabro",
 	"https://twitch.tv/sinabro",
@@ -64,10 +64,25 @@ export function createLinkProviderDemoItems(
 			itemType: "link",
 			url,
 		});
-		const demoItem = {
-			...item,
-			id: `link-provider-demo-${index + 1}`,
-		};
+		const demoItem =
+			url === "https://producthunt.com/products/sinabro" && item.type === "link"
+				? {
+						...item,
+						id: `link-provider-demo-${index + 1}`,
+						data: {
+							...item.data,
+							metadata: {
+								...item.data.metadata,
+								providerData: {
+									upvoteCount: 1234,
+								},
+							},
+						},
+					}
+				: {
+						...item,
+						id: `link-provider-demo-${index + 1}`,
+					};
 		nextItems.push(demoItem);
 		return demoItem;
 	});

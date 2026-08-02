@@ -30,6 +30,7 @@
 			"TWITCH_USER_REFRESH_TOKEN",
 			"DISCORD_BOT_TOKEN",
 			"GITHUB_TOKEN",
+			"PRODUCT_HUNT_TOKEN",
 		]
 	},
 	"account_id": "849b4ba384d03f3c7d2bea5ed1ab9a3c",

@@ -6,6 +6,7 @@ import { createChzzkEnricher } from "./chzzk-link-provider";
 import { createDiscordEnricher } from "./discord-link-provider";
 import { createGithubEnricher } from "./github-link-provider";
 import { createInstagramEnricher } from "./instagram-link-provider";
+import { createProductHuntEnricher } from "./product-hunt-link-provider";
 import { createThreadsEnricher } from "./threads-link-provider";
 import { createTikTokEnricher } from "./tiktok-link-provider";
 import { createTwitchEnricher } from "./twitch-link-provider";
@@ -35,6 +36,7 @@ export type LinkProviderEnvironment = {
 	TWITCH_USER_REFRESH_TOKEN?: string;
 	DISCORD_BOT_TOKEN?: string;
 	GITHUB_TOKEN?: string;
+	PRODUCT_HUNT_TOKEN?: string;
 };
 
 export type TwitchUserToken = {
@@ -486,6 +488,10 @@ const githubEnricher =
 	createGithubEnricher(
 		enrichGenericWeb,
 	);
+const productHuntEnricher =
+	createProductHuntEnricher(
+		enrichGenericWeb,
+	);
 
 const providerEnrichers: Readonly<
 	Record<string, LinkProvider["enrich"]>
@@ -502,6 +508,7 @@ const providerEnrichers: Readonly<
 	tiktok: tiktokEnricher,
 	x: xEnricher,
 	github: githubEnricher,
+	"product-hunt": productHuntEnricher,
 };
 
 const sharedProviders: readonly LinkProvider[] =

@@ -1,6 +1,7 @@
 import { getLinkProviderPresentation } from "@sinabro/api";
+import { TriangleIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Envelope } from "reicon-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -69,6 +70,7 @@ function getProviderCount(
 			twitch: "followerCount",
 			x: "followerCount",
 			github: "followers",
+			"product-hunt": "upvoteCount",
 		} as Record<string, string>
 	)[provider];
 	const formatted = countKey
@@ -192,6 +194,7 @@ function LinkAction({
 	href,
 	label,
 	detail,
+	icon,
 	actionBackground,
 	actionText,
 	actionVariant,
@@ -200,6 +203,7 @@ function LinkAction({
 	href: string;
 	label: string;
 	detail?: string;
+	icon?: ReactNode;
 	actionBackground?: string;
 	actionText?: string;
 	actionVariant?: "solid" | "outline";
@@ -215,6 +219,14 @@ function LinkAction({
 					aria-label={detail ? `${label} ${detail}` : label}
 					className="font-light!"
 				>
+					{icon && (
+						<span
+							aria-hidden="true"
+							className="inline-flex size-3 shrink-0 items-center justify-center"
+						>
+							{icon}
+						</span>
+					)}
 					<span>{label}</span>
 					{detail && (
 						<span
@@ -511,9 +523,14 @@ export function LinkItemRenderer({
 	const baseActionLabel =
 		providerPresentation?.actionLabel ??
 		(provider === "mailto" ? "Send" : "Open");
+	const isProductHuntUpvote =
+		provider === "product-hunt" && providerCount !== undefined;
 	const linkActionProps = {
-		label: baseActionLabel,
+		label: isProductHuntUpvote ? "Upvote" : baseActionLabel,
 		detail: providerCount,
+		icon: isProductHuntUpvote ? (
+			<TriangleIcon className="size-3 fill-current" />
+		) : undefined,
 		actionBackground: providerPresentation?.actionBackground,
 		actionText: providerPresentation?.actionText,
 		actionVariant: providerPresentation?.actionVariant,
