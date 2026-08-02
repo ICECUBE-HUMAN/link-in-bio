@@ -613,7 +613,7 @@ export function PageImageEditor({
 					onPointerCancel={handleCropPointerEnd}
 				>
 					<div
-						className="t-profile-image-reveal absolute inset-0 flex items-center justify-center rounded-full"
+						className={`${isCropOpen ? "t-profile-image-reveal" : "overflow-hidden"} absolute inset-0 flex items-center justify-center rounded-full`}
 						data-open={isCropOpen && canRenderCropGeometry ? "true" : undefined}
 						style={
 							{
