@@ -21,8 +21,5 @@ export const mapPageResponse = (
 
 export const mapPublicPageResponse = (
 	page: typeof pages.$inferSelect,
-): PageResponse => ({
-	...mapPageResponse(page),
-	imageSource: null,
-	imageCrop: null,
-});
+): PageResponse =>
+	mapPageResponse(page);

@@ -56,9 +56,7 @@ async function uploadObject(
 }
 
 export type ProfileImageUploadInput = {
-	sourceFile?: File;
-	sourceObjectKey?: string | null;
-	displayFile: File;
+	sourceFile: File;
 	crop: ProfileImageCrop;
 };
 
@@ -75,15 +73,8 @@ export async function uploadPageImage(
 	input: ProfileImageUploadInput,
 ): Promise<ProfileImageUploadResult> {
 	const request: ProfileImageUploadRequest = {
-		source: input.sourceFile
-			? {
-					contentType: input.sourceFile.type,
-					size: input.sourceFile.size,
-				}
-			: undefined,
-		sourceObjectKey: input.sourceObjectKey ?? undefined,
-		displayContentType: input.displayFile.type,
-		displaySize: input.displayFile.size,
+		contentType: input.sourceFile.type,
+		size: input.sourceFile.size,
 	};
 	const uploadResponse = await parseResponse(
 		await fetch(`/api/pages/${encodeURIComponent(handle)}/image-upload`, {
@@ -95,19 +86,10 @@ export async function uploadPageImage(
 		profileImageUploadResponseSchema,
 	);
 
-	if (uploadResponse.source && input.sourceFile) {
-		await Promise.all([
-			uploadObject(uploadResponse.source, input.sourceFile),
-			uploadObject(uploadResponse.display, input.displayFile),
-		]);
-	} else {
-		await uploadObject(uploadResponse.display, input.displayFile);
-	}
+	await uploadObject(uploadResponse.source, input.sourceFile);
 
 	const completeRequest: ProfileImageCompleteRequest = {
-		sourceObjectKey:
-			uploadResponse.source?.objectKey ?? input.sourceObjectKey ?? "",
-		displayObjectKey: uploadResponse.display.objectKey,
+		sourceObjectKey: uploadResponse.source.objectKey,
 		crop: input.crop,
 		expectedUpdatedAt: uploadResponse.expectedUpdatedAt,
 	};
@@ -124,7 +106,7 @@ export async function uploadPageImage(
 		profileImageCompleteResponseSchema,
 	);
 
-	const key = completeResponse.page.image ?? uploadResponse.display.objectKey;
+	const key = completeResponse.page.image ?? uploadResponse.source.objectKey;
 	return {
 		key,
 		url: publicImageUrl(key, completeResponse.page.updatedAt),

@@ -2,23 +2,19 @@ import type { ProfileImageCrop } from "@sinabro/api";
 import { motion, useReducedMotion } from "motion/react";
 import { type RefObject, useEffect, useMemo, useState } from "react";
 import {
-	exportProfileImageCrop,
-	getProfileImageCropPixels,
 	isSquareProfileImageCrop,
-	type ProfileImageCropExport,
 	type ProfileImageSourceSize,
 } from "@/lib/image/crop-image";
 
 type CropProfileImageDialogProps = {
 	open: boolean;
-	sourceUrl: string;
 	crop: ProfileImageCrop;
 	sourceSize: ProfileImageSourceSize | null;
 	anchorRef: RefObject<HTMLElement | null>;
 	cropSize: number;
 	applyRequestRef: { current: (() => void) | null };
 	onOpenChange: (open: boolean) => void;
-	onApply: (result: ProfileImageCropExport) => string | null;
+	onApply: (crop: ProfileImageCrop) => Promise<void>;
 	onApplyingChange: (isApplying: boolean) => void;
 };
 
@@ -49,7 +45,6 @@ function getCropMaskStyle(
 
 export function CropProfileImageDialog({
 	open,
-	sourceUrl,
 	crop,
 	sourceSize,
 	anchorRef,
@@ -125,13 +120,7 @@ export function CropProfileImageDialog({
 		setIsApplying(true);
 		setError(null);
 		try {
-			const result = await exportProfileImageCrop({
-				sourceUrl,
-				croppedAreaPixels: getProfileImageCropPixels(crop, sourceSize),
-				croppedAreaPercentages: crop,
-			});
-			const nextPreviewUrl = onApply(result);
-			if (!nextPreviewUrl) return;
+			await onApply(crop);
 			onOpenChange(false);
 		} catch (applyError) {
 			setError(

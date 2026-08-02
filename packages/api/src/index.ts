@@ -190,20 +190,9 @@ export const myPageResponseSchema = v.object({
 
 export type MyPageResponse = v.InferOutput<typeof myPageResponseSchema>;
 
-const profileImageSourceUploadSchema = v.object({
+export const profileImageUploadRequestSchema = v.object({
 	contentType: v.pipe(v.string(), v.trim(), v.regex(/^image\/[a-z0-9.+-]+$/i)),
 	size: v.pipe(v.number(), v.integer(), v.minValue(1)),
-});
-
-export const profileImageUploadRequestSchema = v.object({
-	source: v.optional(profileImageSourceUploadSchema),
-	sourceObjectKey: v.optional(v.pipe(v.string(), v.trim(), v.minLength(1))),
-	displayContentType: v.pipe(
-		v.string(),
-		v.trim(),
-		v.regex(/^image\/(?:jpeg|webp)$/i),
-	),
-	displaySize: v.pipe(v.number(), v.integer(), v.minValue(1)),
 });
 
 export type ProfileImageUploadRequest = v.InferOutput<
@@ -219,8 +208,7 @@ export const profileImageUploadSlotSchema = v.object({
 });
 
 export const profileImageUploadResponseSchema = v.object({
-	source: v.nullable(profileImageUploadSlotSchema),
-	display: profileImageUploadSlotSchema,
+	source: profileImageUploadSlotSchema,
 	expectedUpdatedAt: v.string(),
 });
 
@@ -230,7 +218,6 @@ export type ProfileImageUploadResponse = v.InferOutput<
 
 export const profileImageCompleteRequestSchema = v.object({
 	sourceObjectKey: v.pipe(v.string(), v.minLength(1)),
-	displayObjectKey: v.pipe(v.string(), v.minLength(1)),
 	crop: profileImageCropSchema,
 	expectedUpdatedAt: v.pipe(v.string(), v.minLength(1)),
 });

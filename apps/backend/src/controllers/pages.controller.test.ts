@@ -570,8 +570,14 @@ describe("pagesController", () => {
 			handle: "kim",
 			name: "Kim",
 			bio: "Hello",
-			imageSource: null,
-			imageCrop: null,
+			imageSource:
+				"users/user_1/page_1/profile/avatar.png",
+			imageCrop: {
+				x: 10,
+				y: 10,
+				width: 80,
+				height: 80,
+			},
 		});
 	});
 

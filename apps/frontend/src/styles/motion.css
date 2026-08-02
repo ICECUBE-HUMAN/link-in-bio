@@ -46,6 +46,32 @@
 	will-change: width, height;
 }
 
+.t-profile-image-reveal {
+	overflow: hidden;
+	clip-path: circle(var(--profile-image-reveal-closed-radius) at 50% 50%);
+	transition: clip-path var(--profile-image-reveal-dur) var(--profile-image-reveal-ease);
+	will-change: clip-path;
+}
+
+.t-profile-image-reveal[data-open="true"] {
+	overflow: visible;
+	clip-path: circle(var(--profile-image-reveal-radius) at 50% 50%);
+	transition: none;
+	animation: t-profile-image-reveal-open var(--profile-image-reveal-dur)
+		var(--profile-image-reveal-ease) both;
+}
+
+@keyframes t-profile-image-reveal-open {
+	from {
+		clip-path: circle(
+			var(--profile-image-reveal-closed-radius) at 50% 50%
+		);
+	}
+	to {
+		clip-path: circle(var(--profile-image-reveal-radius) at 50% 50%);
+	}
+}
+
 .t-page-slide {
 	position: relative;
 	min-height: 0;
@@ -81,7 +107,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.t-resize, .t-page-slide .t-page { transition: none !important; }
+	.t-resize,
+	.t-profile-image-reveal,
+	.t-page-slide .t-page {
+		transition: none !important;
+		animation: none !important;
+	}
 }
 
 .t-login-page-slide {

@@ -4,15 +4,19 @@ import { MAX_PROFILE_IMAGE_SIZE, type ProfileImageCrop } from "@sinabro/api";
 import { CropIcon, TrashIcon } from "lucide-react";
 import {
 	type ChangeEvent,
+	type CSSProperties,
 	type MouseEvent,
 	type PointerEvent,
 	type SyntheticEvent,
+	useCallback,
 	useEffect,
+	useLayoutEffect,
 	useRef,
 	useState,
 } from "react";
 import { CropProfileImageDialog } from "@/components/page/crop-profile-image-dialog";
 import { Button } from "@/components/ui/button";
+import { updatePage } from "@/lib/api/pages-api";
 import {
 	getProfileImageUrl,
 	uploadPageImage,
@@ -22,8 +26,6 @@ import {
 	getCenteredProfileImageCrop,
 	getProfileImageCropImageStyle,
 	isSquareProfileImageCrop,
-	normalizeProfileImageDisplayFile,
-	type ProfileImageCropExport,
 	type ProfileImageSourceSize,
 } from "@/lib/image/crop-image";
 import { getPageLayoutClasses } from "@/lib/page/page-layout";
@@ -54,6 +56,27 @@ function clamp(value: number, min: number, max: number) {
 	return Math.min(Math.max(value, min), max);
 }
 
+function getProfileImageRevealRadius(
+	crop: ProfileImageCrop,
+	frameSize: number,
+) {
+	const imageLeft = (-crop.x / crop.width) * frameSize;
+	const imageTop = (-crop.y / crop.height) * frameSize;
+	const imageRight = imageLeft + (100 / crop.width) * frameSize;
+	const imageBottom = imageTop + (100 / crop.height) * frameSize;
+	const frameCenter = frameSize / 2;
+	const furthestX = Math.max(
+		Math.abs(imageLeft - frameCenter),
+		Math.abs(imageRight - frameCenter),
+	);
+	const furthestY = Math.max(
+		Math.abs(imageTop - frameCenter),
+		Math.abs(imageBottom - frameCenter),
+	);
+
+	return Math.ceil(Math.hypot(furthestX, furthestY));
+}
+
 type PageImageEditorProps = {
 	initialImage: string | null;
 	initialImageUpdatedAt: string;
@@ -79,6 +102,7 @@ export function PageImageEditor({
 }: PageImageEditorProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
 	const imageFrameRef = useRef<HTMLButtonElement>(null);
+	const sourceImageRef = useRef<HTMLImageElement>(null);
 	const cropButtonRef = useRef<HTMLButtonElement>(null);
 	const cropApplyRequestRef = useRef<(() => void) | null>(null);
 	const sourcePreviewUrlRef = useRef<string | null>(null);
@@ -101,7 +125,6 @@ export function PageImageEditor({
 	const [imageCrop, setImageCrop] = useState(initialImageCrop);
 	const [cropSourceUrl, setCropSourceUrl] = useState<string | null>(null);
 	const [cropSourceFile, setCropSourceFile] = useState<File | null>(null);
-	const [cropSourceKey, setCropSourceKey] = useState<string | null>(null);
 	const [isCropOpen, setIsCropOpen] = useState(false);
 	const [crop, setCrop] = useState<ProfileImageCrop>(FULL_IMAGE_CROP);
 	const [sourceImageSize, setSourceImageSize] =
@@ -202,7 +225,6 @@ export function PageImageEditor({
 		}
 		setCropSourceUrl(null);
 		setCropSourceFile(null);
-		setCropSourceKey(null);
 	}
 
 	function clearPendingDisplayPreview() {
@@ -247,10 +269,8 @@ export function PageImageEditor({
 		const sourceUrl = getProfileImageUrl(sourceKey);
 		if (!sourceUrl) return;
 		setError(null);
-		setCropSourceKey(sourceKey);
 		setCropSourceUrl(sourceUrl);
 		setCropSourceFile(null);
-		setSourceImageSize(null);
 		setCrop(getInitialCrop(sourceImageSize));
 		setIsCropOpen(true);
 	}
@@ -271,7 +291,6 @@ export function PageImageEditor({
 			const nextDisplayUrl = URL.createObjectURL(file);
 			startImageUpload({
 				sourceFile: file,
-				displayFile: normalizeProfileImageDisplayFile(file),
 				crop: FULL_IMAGE_CROP,
 				nextDisplayUrl,
 			});
@@ -285,7 +304,6 @@ export function PageImageEditor({
 		setImage(previewUrl);
 		setCropSourceFile(file);
 		setCropSourceUrl(previewUrl);
-		setCropSourceKey(null);
 		setImageSource(null);
 		setImageCrop(null);
 		setSourceImageSize(null);
@@ -315,23 +333,20 @@ export function PageImageEditor({
 	}
 
 	type ImageUploadInput = {
-		sourceFile?: File;
-		sourceObjectKey?: string | null;
-		displayFile: File | Promise<File>;
+		sourceFile: File;
 		crop: ProfileImageCrop;
 		nextDisplayUrl: string;
 	};
 
 	function startImageUpload({
 		sourceFile,
-		sourceObjectKey,
-		displayFile,
 		crop,
 		nextDisplayUrl,
 	}: ImageUploadInput) {
 		pendingDisplayUrlRef.current = nextDisplayUrl;
 		setPendingDisplayUrl(nextDisplayUrl);
 		setImage(nextDisplayUrl);
+		setImageCrop(crop);
 		setIsUploading(true);
 		setError(null);
 
@@ -339,8 +354,6 @@ export function PageImageEditor({
 			try {
 				const uploadedImage = await uploadPageImage(handle, {
 					sourceFile,
-					sourceObjectKey,
-					displayFile: await displayFile,
 					crop,
 				});
 				const nextChange = {
@@ -375,19 +388,40 @@ export function PageImageEditor({
 		})();
 	}
 
-	function handleCropApply(result: ProfileImageCropExport): string | null {
-		if (!cropSourceUrl) return null;
+	async function handleCropApply(nextCrop: ProfileImageCrop) {
+		if (!cropSourceUrl) return;
 		applyStartedRef.current = true;
-		const nextDisplayUrl = URL.createObjectURL(result.file);
-		startImageUpload({
-			sourceFile: cropSourceFile ?? undefined,
-			sourceObjectKey: cropSourceKey,
-			displayFile: result.file,
-			crop: result.crop,
-			nextDisplayUrl,
-		});
+		if (cropSourceFile) {
+			startImageUpload({
+				sourceFile: cropSourceFile,
+				crop: nextCrop,
+				nextDisplayUrl: cropSourceUrl,
+			});
+			return;
+		}
 
-		return nextDisplayUrl;
+		const previousChange = committedRef.current;
+		try {
+			const response = await updatePage(handle, {
+				imageCrop: nextCrop,
+			});
+			const nextChange = {
+				image: response.page.image,
+				imageSource: response.page.imageSource,
+				imageCrop: response.page.imageCrop,
+			};
+			committedRef.current = nextChange;
+			setImageVersion(response.page.updatedAt);
+			setImage(getProfileImageUrl(nextChange.image, response.page.updatedAt));
+			setImageSource(nextChange.imageSource);
+			setImageCrop(nextChange.imageCrop);
+			onImageCommit(nextChange);
+		} catch (cropError) {
+			applyStartedRef.current = false;
+			committedRef.current = previousChange;
+			setCrop(imageCrop ?? FULL_IMAGE_CROP);
+			throw cropError;
+		}
 	}
 
 	function handleImageRemove() {
@@ -408,19 +442,31 @@ export function PageImageEditor({
 		onImageChange(nextChange);
 	}
 
+	const syncSourceImageSize = useCallback(
+		(imageElement: HTMLImageElement) => {
+			const nextSize = {
+				width: imageElement.naturalWidth,
+				height: imageElement.naturalHeight,
+			};
+			if (!nextSize.width || !nextSize.height) return;
+			setSourceImageSize((currentSize) =>
+				currentSize?.width === nextSize.width &&
+				currentSize.height === nextSize.height
+					? currentSize
+					: nextSize,
+			);
+			if (!isCropOpen) return;
+			setCrop((currentCrop) =>
+				isSquareProfileImageCrop(currentCrop, nextSize)
+					? currentCrop
+					: getCenteredProfileImageCrop(nextSize),
+			);
+		},
+		[isCropOpen],
+	);
+
 	function handleSourceImageLoad(event: SyntheticEvent<HTMLImageElement>) {
-		const nextSize = {
-			width: event.currentTarget.naturalWidth,
-			height: event.currentTarget.naturalHeight,
-		};
-		if (!nextSize.width || !nextSize.height) return;
-		setSourceImageSize(nextSize);
-		if (!isCropOpen) return;
-		setCrop((currentCrop) =>
-			isSquareProfileImageCrop(currentCrop, nextSize)
-				? currentCrop
-				: getCenteredProfileImageCrop(nextSize),
-		);
+		syncSourceImageSize(event.currentTarget);
 	}
 
 	function handleCropPointerDown(event: PointerEvent<HTMLButtonElement>) {
@@ -495,7 +541,6 @@ export function PageImageEditor({
 	const renderedCrop = isCropOpen ? crop : imageCrop;
 	const canRenderCropGeometry = Boolean(
 		renderedImageUrl &&
-			!pendingDisplayUrl &&
 			sourceImageSize &&
 			renderedCrop &&
 			isSquareProfileImageCrop(renderedCrop, sourceImageSize),
@@ -504,13 +549,27 @@ export function PageImageEditor({
 		canRenderCropGeometry && renderedCrop
 			? getProfileImageCropImageStyle(renderedCrop)
 			: undefined;
+	const imageRevealRadius =
+		canRenderCropGeometry && renderedCrop
+			? getProfileImageRevealRadius(renderedCrop, imageFrameSize)
+			: imageFrameSize;
+
+	useLayoutEffect(() => {
+		const imageElement = sourceImageRef.current;
+		if (!renderedImageUrl || !imageElement?.complete) return;
+		syncSourceImageSize(imageElement);
+	}, [renderedImageUrl, syncSourceImageSize]);
+
 	const imageContent =
-		image || mode === "view" ? (
+		renderedImageUrl || mode === "view" ? (
 			<img
-				className="size-full object-cover transition-transform duration-250 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover/image:scale-105 motion-reduce:transition-none"
-				src={image ?? DEFAULT_IMAGE_DATA_URL}
+				ref={sourceImageRef}
+				className={`${imageStyle ? "" : "size-full object-cover"} rounded-lg transition-transform duration-250 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover/image:scale-105 motion-reduce:transition-none`}
+				style={imageStyle}
+				src={renderedImageUrl ?? DEFAULT_IMAGE_DATA_URL}
 				alt="Profile"
 				loading="eager"
+				onLoad={handleSourceImageLoad}
 			/>
 		) : mode === "edit" ? (
 			<div>
@@ -522,7 +581,7 @@ export function PageImageEditor({
 			</div>
 		) : null;
 	const imageFrameClassName = `flex size-28 items-center justify-center rounded-full bg-secondary/80 text-sm font-medium text-muted-foreground/60 ${layoutClasses.image}`;
-	const imageClassName = `${imageFrameClassName} overflow-hidden`;
+	const imageClassName = `${imageFrameClassName} relative overflow-hidden`;
 
 	if (mode !== "edit") {
 		return <div className={imageClassName}>{imageContent}</div>;
@@ -554,10 +613,18 @@ export function PageImageEditor({
 					onPointerCancel={handleCropPointerEnd}
 				>
 					<div
-						className={`absolute inset-0 rounded-full ${isCropOpen ? "overflow-visible" : "overflow-hidden"}`}
+						className="t-profile-image-reveal absolute inset-0 flex items-center justify-center rounded-full"
+						data-open={isCropOpen && canRenderCropGeometry ? "true" : undefined}
+						style={
+							{
+								"--profile-image-reveal-closed-radius": `${imageFrameSize / 2}px`,
+								"--profile-image-reveal-radius": `${imageRevealRadius}px`,
+							} as CSSProperties
+						}
 					>
 						{renderedImageUrl ? (
 							<img
+								ref={sourceImageRef}
 								className={`${imageStyle ? "" : "size-full object-cover"} rounded-lg ${isCropOpen ? "smooth-shadow-lg" : ""}`}
 								style={imageStyle}
 								src={renderedImageUrl}
@@ -579,15 +646,7 @@ export function PageImageEditor({
 						<span
 							className={`pointer-events-none absolute inset-0 rounded-full bg-black/25 transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none ${isCropOpen ? "opacity-0" : "opacity-0 group-hover/image:opacity-100"}`}
 						/>
-					) : (
-						<div>
-							<HugeiconsIcon
-								icon={CircleArrowOutUpRightIcon}
-								className="text-gray-bright 2xl:size-9"
-								strokeWidth={2.5}
-							/>
-						</div>
-					)}
+					) : null}
 				</button>
 				{image && !isUploading ? (
 					<>
@@ -629,7 +688,6 @@ export function PageImageEditor({
 				{cropSourceUrl ? (
 					<CropProfileImageDialog
 						open={isCropOpen}
-						sourceUrl={cropSourceUrl}
 						crop={crop}
 						sourceSize={sourceImageSize}
 						anchorRef={imageFrameRef}

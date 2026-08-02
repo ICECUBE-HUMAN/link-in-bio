@@ -75,6 +75,8 @@
 	--revert-dur: 280ms;
 	--resize-dur: 300ms;
 	--resize-ease: cubic-bezier(0.22, 1, 0.36, 1);
+	--profile-image-reveal-dur: 400ms;
+	--profile-image-reveal-ease: cubic-bezier(0.22, 1, 0.36, 1);
 	--page-slide-dur: 250ms;
 	--page-fade-dur: 250ms;
 	--page-slide-distance: 8px;

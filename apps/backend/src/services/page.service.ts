@@ -197,9 +197,14 @@ export const updatePage = async ({
 		input.image === null &&
 		input.imageSource === null &&
 		input.imageCrop === null;
+	const isCropOnlyUpdate =
+		input.image === undefined &&
+		input.imageSource === undefined &&
+		input.imageCrop !== undefined;
 	if (
 		hasProfileMetadataUpdate &&
-		!isImageClear
+		!isImageClear &&
+		!isCropOnlyUpdate
 	) {
 		throw new UnprocessableEntityError(
 			"Profile image metadata must be updated through image completion.",
@@ -242,6 +247,16 @@ export const updatePage = async ({
 					throw new NotFoundError(
 						"Page",
 					);
+				if (
+					isCropOnlyUpdate &&
+					!existingPage.image &&
+					!existingPage.imageSource
+				) {
+					throw new UnprocessableEntityError(
+						"A profile image is required before updating its crop.",
+						"INVALID_PROFILE_IMAGE",
+					);
+				}
 				const [page] = await tx
 					.update(pages)
 					.set({
@@ -263,11 +278,17 @@ export const updatePage = async ({
 						imageSource:
 							input.image === null
 								? null
-								: existingPage.imageSource,
+								: input.imageSource ===
+										undefined
+									? existingPage.imageSource
+									: input.imageSource,
 						imageCrop:
 							input.image === null
 								? null
-								: existingPage.imageCrop,
+								: input.imageCrop ===
+										undefined
+									? existingPage.imageCrop
+									: input.imageCrop,
 						updatedAt: new Date(),
 					})
 					.where(
