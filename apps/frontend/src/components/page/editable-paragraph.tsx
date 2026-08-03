@@ -7,6 +7,7 @@ type EditableParagraphProps = {
 	className?: string;
 	onChange: (value: string) => void;
 	rows?: number;
+	spellCheck?: boolean;
 };
 
 export function EditableParagraph({
@@ -16,6 +17,7 @@ export function EditableParagraph({
 	className,
 	onChange,
 	rows = 2,
+	spellCheck,
 }: EditableParagraphProps) {
 	const sharedClassName = `editable-paragraph field-sizing-content min-h-fit w-full resize-none overflow-hidden whitespace-pre-wrap outline-none transition-[background-color,box-shadow] duration-150 ease-out ${className ?? "text-base leading-6"}`;
 
@@ -35,6 +37,7 @@ export function EditableParagraph({
 		"data-empty": !value?.trim(),
 		placeholder,
 		value: value ?? "",
+		spellCheck,
 		onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
 			onChange(event.currentTarget.value),
 	};

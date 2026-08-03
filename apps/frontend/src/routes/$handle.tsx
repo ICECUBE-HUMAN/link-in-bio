@@ -304,6 +304,7 @@ function HandlePageContent({
 								mode={mode}
 								onChange={(name) => updateField("name", name)}
 								rows={1}
+								spellCheck={false}
 								className={`t-stagger-line t-stagger-line--2 text-3xl font-bold leading-tight tracking-tight ${layoutClasses.name}`}
 							/>
 							<EditableParagraph
@@ -312,6 +313,7 @@ function HandlePageContent({
 								mode={mode}
 								onChange={(bio) => updateField("bio", bio)}
 								rows={2}
+								spellCheck={false}
 								className={`t-stagger-line t-stagger-line--3 px-0.5 text-base leading-6 text-primary/80 ${layoutClasses.bio}`}
 							/>
 						</div>
