@@ -64,6 +64,26 @@ function getDesktopLayoutServerSnapshot() {
 	return false;
 }
 
+function getVerticalScrollContainer(element: HTMLElement) {
+	let ancestor = element.parentElement;
+	while (ancestor) {
+		const { overflowY } = window.getComputedStyle(ancestor);
+		if (
+			(overflowY === "auto" ||
+				overflowY === "scroll" ||
+				overflowY === "overlay") &&
+			ancestor.scrollHeight > ancestor.clientHeight
+		) {
+			return ancestor;
+		}
+		ancestor = ancestor.parentElement;
+	}
+
+	return document.scrollingElement instanceof HTMLElement
+		? document.scrollingElement
+		: null;
+}
+
 export function GridSection({
 	items,
 	breakpoint,
@@ -78,6 +98,7 @@ export function GridSection({
 	const hasInitializedItemsRef = useRef(false);
 	const initialAnimationScheduledRef = useRef(false);
 	const enteringItemFramesRef = useRef(new Map<string, number>());
+	const newItemScrollFramesRef = useRef(new Map<string, number>());
 	const exitingItemTimersRef = useRef(new Map<string, number>());
 	const previousItemsByIdRef = useRef(
 		new Map(items.map((item) => [item.id, item])),
@@ -141,7 +162,7 @@ export function GridSection({
 		const isInitialRender = !hasInitializedItemsRef.current;
 		const newItemIds = isInitialRender
 			? []
-			: renderedItems
+			: items
 					.filter((item) => !knownItemIdsRef.current.has(item.id))
 					.map((item) => item.id);
 
@@ -159,12 +180,46 @@ export function GridSection({
 						return next;
 					});
 					enteringItemFramesRef.current.delete(itemId);
+					const itemShell = document.querySelector<HTMLElement>(
+						`[data-grid-item-id="${CSS.escape(itemId)}"]`,
+					);
+					if (itemShell) {
+						const gridSectionShell = itemShell.closest<HTMLElement>(
+							".grid-section-shell",
+						);
+						const paddingBottom = gridSectionShell
+							? Number.parseFloat(
+									window.getComputedStyle(gridSectionShell).paddingBottom,
+								)
+							: 0;
+						const scrollContainer = getVerticalScrollContainer(itemShell);
+						if (scrollContainer) {
+							const itemRect = itemShell.getBoundingClientRect();
+							const containerRect = scrollContainer.getBoundingClientRect();
+							const scrollDistance =
+								itemRect.bottom - containerRect.bottom + paddingBottom;
+							if (scrollDistance > 0) {
+								scrollContainer.scrollBy({
+									top: scrollDistance,
+									behavior: "smooth",
+								});
+							}
+						} else {
+							itemShell.scrollIntoView({
+								behavior: "smooth",
+								block: "nearest",
+								inline: "nearest",
+							});
+						}
+					}
+					newItemScrollFramesRef.current.delete(itemId);
 				});
 				enteringItemFramesRef.current.set(itemId, secondFrame);
+				newItemScrollFramesRef.current.set(itemId, secondFrame);
 			});
 			enteringItemFramesRef.current.set(itemId, firstFrame);
 		}
-	}, [renderedItems]);
+	}, [items, renderedItems]);
 
 	const startItemExit = useCallback((item: GridItem) => {
 		if (exitingItemTimersRef.current.has(item.id)) return;
@@ -230,6 +285,9 @@ export function GridSection({
 		return () => {
 			initialAnimationScheduledRef.current = false;
 			for (const frame of enteringItemFramesRef.current.values()) {
+				window.cancelAnimationFrame(frame);
+			}
+			for (const frame of newItemScrollFramesRef.current.values()) {
 				window.cancelAnimationFrame(frame);
 			}
 			for (const timer of exitingItemTimersRef.current.values()) {
