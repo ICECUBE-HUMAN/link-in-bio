@@ -203,6 +203,30 @@
 	.t-login-page-slide .t-page { transition: none !important; }
 }
 
+.t-share-page-slide {
+	display: grid;
+	height: auto !important;
+}
+.t-share-page-slide .t-page {
+	position: relative;
+	inset: auto;
+	grid-area: 1 / 1;
+	width: 100%;
+	transform: scale(0.96);
+	transition:
+		opacity var(--page-fade-dur) var(--page-fade-ease),
+		transform var(--page-slide-dur) cubic-bezier(0.34, 1.36, 0.64, 1),
+		filter var(--page-slide-dur) var(--page-slide-ease);
+}
+.t-share-page-slide[data-page="1"] .t-page[data-page-id="1"],
+.t-share-page-slide[data-page="2"] .t-page[data-page-id="2"] {
+	transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.t-share-page-slide .t-page { transition: none !important; }
+}
+
 .t-success-check {
 	display: inline-block;
 	transform-origin: center;

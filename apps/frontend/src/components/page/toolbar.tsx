@@ -4,6 +4,7 @@ import {
 	Smartphone,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import type { PageResponse } from "@sinabro/api";
 import {
 	ITEM_MEDIA_ACCEPT,
 	MAX_ITEM_MEDIA_SIZE,
@@ -33,10 +34,12 @@ import {
 } from "../ui/input-group";
 import { Separator } from "../ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { ShareDialog } from "./share-dialog";
 
 type ToolbarProps = {
 	breakpoint: Breakpoint;
 	isSaving: boolean;
+	page: PageResponse;
 	onBreakpointChange: (breakpoint: Breakpoint) => void;
 	onItemAdd: (itemType: ItemType, url?: string) => void;
 	onMediaSelect: (file: File) => void | Promise<void>;
@@ -53,6 +56,7 @@ function normalizeLinkInput(value: string) {
 export default function Toolbar({
 	breakpoint,
 	isSaving,
+	page,
 	onBreakpointChange,
 	onItemAdd,
 	onMediaSelect,
@@ -205,15 +209,19 @@ export default function Toolbar({
 						>
 							<div id="toolbar-content" className="flex items-center gap-1">
 								<div className="hidden items-center min-[90rem]:flex">
-									<Button
-										variant={"brand"}
-										size={"default"}
-										className={"px-8 surface-line w-28"}
-										disabled={isSaving}
-									>
-										{isSaving && <Loader className="size-4 animate-spin" />}
-										{isSaving ? "Saving" : "Share"}
-									</Button>
+									{isSaving ? (
+										<Button
+											variant="brand"
+											size="default"
+											className="surface-line w-28 px-8"
+											disabled
+										>
+											<Loader className="size-4 animate-spin" />
+											Saving
+										</Button>
+									) : (
+										<ShareDialog page={page} />
+									)}
 								</div>
 								<div className="flex items-center gap-0 text-muted-foreground">
 									<ToolbarButton label="Link" onClick={() => setView("link")}>

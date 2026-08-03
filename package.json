@@ -3,6 +3,9 @@
   "private": true,
   "type": "module",
   "workspaces": ["apps/*", "packages/*"],
+  "overrides": {
+    "qr": "0.5.5"
+  },
   "scripts": {
     "dev": "bun run --parallel --filter @sinabro/frontend --filter @sinabro/backend dev",
     "dev:frontend": "bun run --filter @sinabro/frontend dev",

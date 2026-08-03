@@ -452,6 +452,7 @@ function HandlePageContent({
 
 			{mode === "edit" ? (
 				<Toolbar
+					page={page}
 					breakpoint={previewBreakpoint}
 					isSaving={status === "saving" || gridStatus === "saving"}
 					onItemAdd={(itemType, url) => {
