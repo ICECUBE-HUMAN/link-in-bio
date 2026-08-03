@@ -332,10 +332,12 @@ export function getLinkProviderPresentation(value: string): {
 export function normalizeLinkUrl(value: string): string {
 	const trimmed = value.trim();
 	if (!trimmed) throw new Error("Link URL is required.");
+	const hasProtocol = /^[a-z][a-z\d+.-]*:/i.test(trimmed);
+	if (!hasProtocol && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+		return `mailto:${trimmed}`;
+	}
 
-	const candidate = /^[a-z][a-z\d+.-]*:/i.test(trimmed)
-		? trimmed
-		: `https://${trimmed}`;
+	const candidate = hasProtocol ? trimmed : `https://${trimmed}`;
 	const url = new URL(candidate);
 
 	if (url.protocol === "mailto:") {

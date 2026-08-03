@@ -25,6 +25,14 @@ describe("link metadata helpers", () => {
 		).toBe("mailto:hello@example.com");
 	});
 
+	it("adds mailto to an email-shaped link", () => {
+		expect(
+			normalizeLinkUrl(
+				"hello@example.com",
+			),
+		).toBe("mailto:hello@example.com");
+	});
+
 	it("creates deterministic initial metadata without fetching", () => {
 		expect(
 			createInitialLinkMetadata(
