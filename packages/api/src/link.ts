@@ -4,10 +4,13 @@ export type LinkProviderId =
 	| "mailto"
 	| "github"
 	| "youtube"
+	| "youtube-music"
 	| "discord"
 	| "instagram"
 	| "x"
 	| "spotify"
+	| "app-store"
+	| "google-play"
 	| "threads"
 	| "buy-me-a-coffee"
 	| "linkedin"
@@ -58,6 +61,13 @@ export const linkProviderDefinitions: readonly LinkProviderDefinition[] = [
 		match: (url) => url.hostname.includes("github"),
 	},
 	{
+		id: "youtube-music",
+		label: "YouTube Music",
+		priority: 10,
+		fallbackTone: "youtube",
+		match: (url) => url.hostname === "music.youtube.com",
+	},
+	{
 		id: "youtube",
 		label: "YouTube",
 		priority: 0,
@@ -93,6 +103,21 @@ export const linkProviderDefinitions: readonly LinkProviderDefinition[] = [
 		priority: 0,
 		fallbackTone: "neutral",
 		match: (url) => url.hostname.includes("spotify"),
+	},
+	{
+		id: "app-store",
+		label: "App Store",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) =>
+			url.hostname === "apps.apple.com" || url.hostname === "itunes.apple.com",
+	},
+	{
+		id: "google-play",
+		label: "Google Play",
+		priority: 0,
+		fallbackTone: "neutral",
+		match: (url) => url.hostname === "play.google.com",
 	},
 	{
 		id: "threads",
@@ -217,10 +242,13 @@ export const linkProviderDefinitions: readonly LinkProviderDefinition[] = [
 
 export const linkProviderIconObjectKeys = {
 	youtube: "assets/link-provider-icon/youtube.svg",
+	"youtube-music": "assets/link-provider-icon/youtube-music.svg",
 	discord: "assets/link-provider-icon/discord.svg",
 	github: "assets/link-provider-icon/github.svg",
 	x: "assets/link-provider-icon/x.svg",
 	spotify: "assets/link-provider-icon/spotify.svg",
+	"app-store": "assets/link-provider-icon/app-store.svg",
+	"google-play": "assets/link-provider-icon/google-play.svg",
 	threads: "assets/link-provider-icon/threads.svg",
 	instagram: "assets/link-provider-icon/instagram.svg",
 	"buy-me-a-coffee": "assets/link-provider-icon/buy-me-a-coffee.svg",

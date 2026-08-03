@@ -22,6 +22,13 @@ export const linkProviderPresentation = {
 		actionLabel: "Watch",
 		actionVariant: "solid",
 	},
+	"youtube-music": {
+		cardBackground: "#fff2f5",
+		actionBackground: "#ff0033",
+		actionText: "#ffffff",
+		actionLabel: "Listen",
+		actionVariant: "solid",
+	},
 	discord: {
 		cardBackground: "#f2f3ff",
 		actionBackground: "#5865f2",
@@ -49,6 +56,20 @@ export const linkProviderPresentation = {
 		actionText: "#ffffff",
 		actionLabel: "Play",
 		actionVariant: "solid",
+	},
+	"app-store": {
+		cardBackground: "#EAF4FF",
+		actionBackground: "#007AFF",
+		actionText: "#FFFFFF",
+		actionLabel: "Download",
+		actionVariant: "solid",
+	},
+	"google-play": {
+		cardBackground: "#FFFFFF",
+		actionBackground: "#F6F8FA",
+		actionText: "#000000",
+		actionLabel: "Get it",
+		actionVariant: "outline",
 	},
 	threads: {
 		cardBackground: "#ffffff",

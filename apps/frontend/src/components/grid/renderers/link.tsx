@@ -276,7 +276,7 @@ function LinkBadge({
 	const fallback = getProviderFallback(url);
 	const isMailto = url.toLowerCase().startsWith("mailto:");
 	const className = cn(
-		"inline-flex size-8 shrink-0 cursor-pointer! items-center justify-center overflow-hidden rounded-md bg-muted/30 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+		"inline-flex size-8 shrink-0 cursor-pointer! items-center justify-center rounded-md bg-muted/30 p-0.5 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
 		!faviconUrl && "size-11 rounded-2xl px-2 text-center text-xs font-semibold",
 		isMailto && "bg-brand text-primary-foreground",
 	);
@@ -303,7 +303,7 @@ function LinkBadge({
 				target="_blank"
 				rel="noreferrer"
 				aria-label={`Open ${fallback.label}`}
-				className={cn(className, "surface-line")}
+				className={className}
 			>
 				<img src={faviconUrl} alt="" className="size-full object-contain" />
 			</a>
