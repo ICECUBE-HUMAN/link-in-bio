@@ -500,6 +500,7 @@ const providerEnrichers: Readonly<
 	discord: discordEnricher,
 	twitch: twitchEnricher,
 	youtube: youtubeEnricher,
+	"youtube-music": youtubeEnricher,
 	threads: threadsEnricher,
 	instagram: instagramEnricher,
 	tiktok: tiktokEnricher,
