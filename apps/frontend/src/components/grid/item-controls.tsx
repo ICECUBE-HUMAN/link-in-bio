@@ -56,7 +56,22 @@ function MapItemExtraControls() {
 		useMapItemInteraction();
 
 	return (
-		<Popover open={isLocationEditing} onOpenChange={setLocationEditing}>
+		<Popover
+			open={isLocationEditing}
+			onOpenChange={(open, details) => {
+				if (
+					!open &&
+					details.reason === "outside-press" &&
+					details.event.target instanceof Element &&
+					details.event.target.closest('[data-grid-item-type="map"]')
+				) {
+					details.cancel();
+					return;
+				}
+
+				setLocationEditing(open);
+			}}
+		>
 			<PopoverTrigger
 				render={
 					<Button
