@@ -18,6 +18,7 @@ type UsePageAutoSaveOptions = {
 	page: PageResponse;
 	handle: string;
 	enabled?: boolean;
+	persist?: boolean;
 };
 
 export function getEditablePageFields(page: PageResponse): EditablePageFields {
@@ -46,6 +47,7 @@ export function usePageAutoSave({
 	page,
 	handle,
 	enabled = true,
+	persist = true,
 }: UsePageAutoSaveOptions) {
 	const queryClient = useQueryClient();
 	const [draft, setDraft] = useState<EditablePageFields>(() =>
@@ -151,6 +153,10 @@ export function usePageAutoSave({
 		const changes = pendingRef.current;
 		pendingRef.current = {};
 		if (Object.keys(changes).length === 0) return;
+		if (!persist) {
+			setStatus("saved");
+			return;
+		}
 
 		const sequence = ++saveSequenceRef.current;
 		setStatus("saving");
@@ -211,7 +217,7 @@ export function usePageAutoSave({
 				setStatus("error");
 			}
 		}
-	}, [handle, pageMutation, queryClient]);
+	}, [handle, pageMutation, persist, queryClient]);
 
 	const scheduleSave = useCallback(() => {
 		if (timerRef.current) clearTimeout(timerRef.current);
@@ -236,10 +242,17 @@ export function usePageAutoSave({
 				nextDraft,
 				persistedRef.current,
 			);
+			if (!persist) {
+				persistedRef.current = nextDraft;
+				pendingRef.current = {};
+				applyOptimisticUpdate(changes);
+				setStatus("saved");
+				return;
+			}
 			setStatus("dirty");
 			scheduleSave();
 		},
-		[enabled, scheduleSave],
+		[applyOptimisticUpdate, enabled, persist, scheduleSave],
 	);
 
 	const updateField = useCallback(

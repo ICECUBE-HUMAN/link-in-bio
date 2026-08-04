@@ -4,11 +4,13 @@ import type {
 	PageByHandleResponse,
 	PageResponse,
 } from "@sinabro/api";
+import { isReservedPageHandle, pageHandleSchema } from "@sinabro/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronLeftIcon } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Check, CheckCircle, Gear, Loader, XCircle } from "reicon-react";
 import { createUISFX } from "uisfx";
+import * as v from "valibot";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import {
@@ -40,6 +42,7 @@ const DELETE_CONFIRMATION_CLICKS = 3;
 type PageSettingsMenuProps = {
 	page: PageResponse;
 	onChanged: (page: PageResponse) => void;
+	localOnly?: boolean;
 };
 
 const handleAvailabilityIcons = {
@@ -48,7 +51,11 @@ const handleAvailabilityIcons = {
 	duplicate: <XCircle weight="Filled" className="size-full" />,
 };
 
-export function PageSettingsMenu({ page, onChanged }: PageSettingsMenuProps) {
+export function PageSettingsMenu({
+	page,
+	onChanged,
+	localOnly = false,
+}: PageSettingsMenuProps) {
 	const ui = createUISFX({
 		pack: "minimal",
 		volume: 2,
@@ -90,6 +97,11 @@ export function PageSettingsMenu({ page, onChanged }: PageSettingsMenuProps) {
 				>
 					<section className="t-page" data-page-id="1">
 						<SharedLayoutBg className="px-5">
+							{localOnly ? (
+								<div className="flex h-15 items-center text-sm text-muted-foreground">
+									Demo mode · changes stay in this browser
+								</div>
+							) : null}
 							<button
 								type="button"
 								className="w-full flex flex-col items-start justify-center rounded-lg font-normal h-15 gap-0"
@@ -98,31 +110,35 @@ export function PageSettingsMenu({ page, onChanged }: PageSettingsMenuProps) {
 								<span>Change handle</span>
 								<span className="text-muted-foreground/80">/{page.handle}</span>
 							</button>
-							<button
-								type="button"
-								className="flex items-center w-full justify-start rounded-lg font-normal h-15"
-								onClick={async () => {
-									ui.play("disconnect");
-									const { error } = await authClient.signOut();
-									if (error) return;
+							{!localOnly ? (
+								<button
+									type="button"
+									className="flex items-center w-full justify-start rounded-lg font-normal h-15"
+									onClick={async () => {
+										ui.play("disconnect");
+										const { error } = await authClient.signOut();
+										if (error) return;
 
-									await clearSessionQuery(queryClient);
-									queryClient.resetQueries({
-										queryKey: MY_PAGE_QUERY_KEY,
-										exact: true,
-									});
-									setOpen(false);
-								}}
-							>
-								Log out
-							</button>
-							<button
-								type="button"
-								className="flex items-center w-full justify-start rounded-lg font-normal h-15 text-gray-bright"
-								onClick={() => setView("delete")}
-							>
-								Delete Account
-							</button>
+										await clearSessionQuery(queryClient);
+										queryClient.resetQueries({
+											queryKey: MY_PAGE_QUERY_KEY,
+											exact: true,
+										});
+										setOpen(false);
+									}}
+								>
+									Log out
+								</button>
+							) : null}
+							{!localOnly ? (
+								<button
+									type="button"
+									className="flex items-center w-full justify-start rounded-lg font-normal h-15 text-gray-bright"
+									onClick={() => setView("delete")}
+								>
+									Delete Account
+								</button>
+							) : null}
 						</SharedLayoutBg>
 					</section>
 					<section className="t-page p-1" data-page-id="2">
@@ -131,6 +147,7 @@ export function PageSettingsMenu({ page, onChanged }: PageSettingsMenuProps) {
 						) : view === "handle" ? (
 							<ChangeHandleView
 								page={page}
+								localOnly={localOnly}
 								isActive={view === "handle"}
 								ui={ui}
 								onBack={() => {
@@ -295,6 +312,7 @@ function ChangeHandleView({
 	onBack,
 	onChanged,
 	onSuccessChange,
+	localOnly,
 }: {
 	page: PageResponse;
 	isActive: boolean;
@@ -302,6 +320,7 @@ function ChangeHandleView({
 	onBack: () => void;
 	onChanged: (page: PageResponse) => void;
 	onSuccessChange: (isSuccess: boolean) => void;
+	localOnly: boolean;
 }) {
 	const queryClient = useQueryClient();
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -338,6 +357,18 @@ function ChangeHandleView({
 			setIsChecking(false);
 			return;
 		}
+		if (localOnly) {
+			const normalizedHandle = handle.trim().toLowerCase();
+			const isValid = v.safeParse(pageHandleSchema, handle).success;
+			const isReserved = isReservedPageHandle(normalizedHandle);
+			setAvailability({
+				handle: normalizedHandle,
+				available: isValid && !isReserved,
+				reason: !isValid ? "invalid" : isReserved ? "reserved" : null,
+			});
+			setIsChecking(false);
+			return;
+		}
 		let isCurrent = true;
 		const timer = window.setTimeout(async () => {
 			setIsChecking(true);
@@ -357,7 +388,7 @@ function ChangeHandleView({
 			isCurrent = false;
 			window.clearTimeout(timer);
 		};
-	}, [currentHandle, handle]);
+	}, [currentHandle, handle, localOnly]);
 
 	useEffect(() => {
 		onSuccessChange(isSuccess);
@@ -370,6 +401,20 @@ function ChangeHandleView({
 		setIsSaving(true);
 		setError(null);
 		try {
+			if (localOnly) {
+				const nextHandle = handle.trim().toLowerCase();
+				const nextPage = { ...page, handle: nextHandle };
+				setCurrentHandle(nextHandle);
+				setHandle(nextHandle);
+				setAvailability({
+					handle: nextHandle,
+					available: true,
+					reason: null,
+				});
+				onChanged(nextPage);
+				setIsSuccess(true);
+				return;
+			}
 			const result = await updatePage(currentHandle, { handle });
 			setCurrentHandle(result.page.handle);
 			setHandle(result.page.handle);

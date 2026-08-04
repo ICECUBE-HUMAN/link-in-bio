@@ -8,12 +8,14 @@ type UseLinkMetadataEnrichmentOptions = {
 	handle: string;
 	flushPendingChanges: () => Promise<readonly GridItem[]>;
 	replaceItemFromServer: (item: PageItemResponse) => void;
+	enabled?: boolean;
 };
 
 export function useLinkMetadataEnrichment({
 	handle,
 	flushPendingChanges,
 	replaceItemFromServer,
+	enabled = true,
 }: UseLinkMetadataEnrichmentOptions) {
 	const [enrichingItemIds, setEnrichingItemIds] = useState<ReadonlySet<string>>(
 		new Set(),
@@ -30,6 +32,8 @@ export function useLinkMetadataEnrichment({
 	}, []);
 
 	async function enrichLinkItem(itemId: string, url: string) {
+		if (!enabled) return;
+
 		const controller = new AbortController();
 		controllersRef.current.get(itemId)?.abort();
 		controllersRef.current.set(itemId, controller);

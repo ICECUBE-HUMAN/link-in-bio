@@ -31,6 +31,7 @@ import {
 } from "@/lib/api/pages.functions";
 import { getProfileImageUrl } from "@/lib/api/profile-image-api";
 import { getSessionQueryOptions } from "@/lib/api/session.functions";
+import { getDemoPage } from "@/lib/demo/demo-page.functions";
 import { useGridEditorStore } from "@/lib/grid/editor-store";
 import type { Breakpoint } from "@/lib/grid/types";
 import { getPageLayoutClasses } from "@/lib/page/page-layout";
@@ -44,6 +45,7 @@ type HandleLoaderData = {
 	page: PageResponse;
 	items: PageItemResponse[];
 	isCurrentUserPage: boolean;
+	isDemo: boolean;
 };
 
 function getFaviconUrl(imageUrl: string) {
@@ -52,6 +54,16 @@ function getFaviconUrl(imageUrl: string) {
 
 export const Route = createFileRoute("/$handle")({
 	loader: async ({ context, params }): Promise<HandleLoaderData> => {
+		if (params.handle.trim().toLowerCase() === "demo") {
+			const demoPage = await getDemoPage();
+			return {
+				page: demoPage.page,
+				items: demoPage.items,
+				isCurrentUserPage: true,
+				isDemo: true,
+			};
+		}
+
 		const [{ data: session }, result] = await Promise.all([
 			context.queryClient.ensureQueryData(getSessionQueryOptions()),
 			context.queryClient.ensureQueryData(
@@ -75,6 +87,7 @@ export const Route = createFileRoute("/$handle")({
 			page: result.page,
 			items: result.items,
 			isCurrentUserPage: session?.user.id === result.page.userId,
+			isDemo: false,
 		};
 	},
 	head: ({ loaderData }) => {
@@ -117,11 +130,13 @@ function HandlePage() {
 			loaderData={{ ...loaderData, page }}
 			onPageChange={(nextPage) => {
 				setPage(nextPage);
-				window.history.replaceState(
-					window.history.state,
-					"",
-					`/${encodeURIComponent(nextPage.handle)}${window.location.search}${window.location.hash}`,
-				);
+				if (!loaderData.isDemo) {
+					window.history.replaceState(
+						window.history.state,
+						"",
+						`/${encodeURIComponent(nextPage.handle)}${window.location.search}${window.location.hash}`,
+					);
+				}
 			}}
 		/>
 	);
@@ -135,7 +150,10 @@ function HandlePageContent({
 	onPageChange: (page: PageResponse) => void;
 }) {
 	const { page } = loaderData;
-	const { data: sessionResult } = useQuery(getSessionQueryOptions());
+	const { data: sessionResult } = useQuery({
+		...getSessionQueryOptions(),
+		enabled: !loaderData.isDemo,
+	});
 	const isCurrentUserPage = sessionResult
 		? sessionResult.data?.user.id === page.userId
 		: loaderData.isCurrentUserPage;
@@ -157,6 +175,7 @@ function HandlePageContent({
 			page,
 			handle: page.handle,
 			enabled: mode === "edit",
+			persist: !loaderData.isDemo,
 		});
 	const {
 		items,
@@ -174,12 +193,13 @@ function HandlePageContent({
 		handle: page.handle,
 		breakpoint: previewBreakpoint,
 		enabled: mode === "edit",
-		persistItems: true,
+		persistItems: !loaderData.isDemo,
 	});
 	const { enrichingItemIds, enrichLinkItem } = useLinkMetadataEnrichment({
 		handle: page.handle,
 		flushPendingChanges,
 		replaceItemFromServer,
+		enabled: !loaderData.isDemo,
 	});
 	const {
 		breakpointTransition,
@@ -293,6 +313,7 @@ function HandlePageContent({
 								breakpoint={previewBreakpoint}
 								onImageChange={updateFields}
 								onImageCommit={commitFields}
+								localOnly={loaderData.isDemo}
 							/>
 						</div>
 						<div
@@ -338,7 +359,7 @@ function HandlePageContent({
 					</div>
 				</section>
 
-				{!isSignedIn ? (
+				{!isSignedIn && !loaderData.isDemo ? (
 					<div className="flex w-full max-w-[28rem] flex-col items-center gap-3 px-6 pb-[calc(2rem+env(safe-area-inset-bottom))] min-[90rem]:hidden">
 						<Button
 							render={
@@ -371,86 +392,94 @@ function HandlePageContent({
 				) : null}
 			</motion.div>
 
-			<aside
-				className={`hidden items-center gap-2 z-10 ${layoutClasses.controls}`}
-				aria-label="Page controls"
-			>
-				<div className="flex items-center gap-0">
-					{isCurrentUserPage ? (
+			{!loaderData.isDemo ? (
+				<aside
+					className={`hidden items-center gap-2 z-10 ${layoutClasses.controls}`}
+					aria-label="Page controls"
+				>
+					<div className="flex items-center gap-0">
+						{isCurrentUserPage ? (
+							<Tooltip>
+								<TooltipTrigger render={<span className="inline-flex" />}>
+									<PageSettingsMenu
+										page={page}
+										onChanged={onPageChange}
+										localOnly={loaderData.isDemo}
+									/>
+								</TooltipTrigger>
+								<TooltipContent>Settings</TooltipContent>
+							</Tooltip>
+						) : isSignedIn && myPage ? (
+							<Button
+								render={
+									<Link to="/$handle" params={{ handle: myPage.handle }} />
+								}
+								variant="ghost"
+								nativeButton={false}
+								size="sm"
+								className="text-muted-foreground/80 rounded-md gap-1.5"
+							>
+								<Avatar size="xs">
+									<AvatarImage
+										src={getProfileImageUrl(myPage.image) ?? undefined}
+										alt=""
+									/>
+									<AvatarFallback />
+								</Avatar>
+								<span>My page</span>
+							</Button>
+						) : isSignedIn ? null : (
+							<Button
+								render={
+									<Link
+										to="/log-in"
+										search={{ redirect: `/${page.handle}` }}
+										className="inline-flex items-center gap-1.5 px-4 py-4.5 smooth-shadow-ring shadow-neutral-500 smooth-ring-brand border-0 mr-2 rounded-sm"
+									>
+										Create your page
+									</Link>
+								}
+								variant="brand"
+								nativeButton={false}
+								size="sm"
+								className="rounded-md"
+							/>
+						)}
 						<Tooltip>
-							<TooltipTrigger render={<span className="inline-flex" />}>
-								<PageSettingsMenu page={page} onChanged={onPageChange} />
+							<TooltipTrigger
+								render={
+									<Button
+										render={<Link to="/explore" />}
+										variant="ghost"
+										nativeButton={false}
+										size="icon-sm"
+										aria-label="Explore"
+										className="text-muted-foreground/80 rounded-md"
+									/>
+								}
+							>
+								<StackPerspective weight="Filled" />
 							</TooltipTrigger>
-							<TooltipContent>Settings</TooltipContent>
+							<TooltipContent>Explore</TooltipContent>
 						</Tooltip>
-					) : isSignedIn && myPage ? (
-						<Button
-							render={<Link to="/$handle" params={{ handle: myPage.handle }} />}
-							variant="ghost"
-							nativeButton={false}
-							size="sm"
-							className="text-muted-foreground/80 rounded-md gap-1.5"
-						>
-							<Avatar size="xs">
-								<AvatarImage
-									src={getProfileImageUrl(myPage.image) ?? undefined}
-									alt=""
-								/>
-								<AvatarFallback />
-							</Avatar>
-							<span>My page</span>
-						</Button>
-					) : isSignedIn ? null : (
-						<Button
-							render={
-								<Link
-									to="/log-in"
-									search={{ redirect: `/${page.handle}` }}
-									className="inline-flex items-center gap-1.5 px-4 py-4.5 smooth-shadow-ring shadow-neutral-500 smooth-ring-brand border-0 mr-2 rounded-sm"
-								>
-									Create your page
-								</Link>
-							}
-							variant="brand"
-							nativeButton={false}
-							size="sm"
-							className="rounded-md"
-						/>
-					)}
-					<Tooltip>
-						<TooltipTrigger
-							render={
-								<Button
-									render={<Link to="/explore" />}
-									variant="ghost"
-									nativeButton={false}
-									size="icon-sm"
-									aria-label="Explore"
-									className="text-muted-foreground/80 rounded-md"
-								/>
-							}
-						>
-							<StackPerspective weight="Filled" />
-						</TooltipTrigger>
-						<TooltipContent>Explore</TooltipContent>
-					</Tooltip>
-					<Tooltip>
-						<TooltipTrigger
-							render={
-								<Button
-									variant="ghost"
-									size="icon-sm"
-									aria-label="Feedback"
-									className="text-muted-foreground/80 rounded-md"
-								/>
-							}
-						>
-							<Send weight="Filled" />
-						</TooltipTrigger>
-						<TooltipContent>Feedback</TooltipContent>
-					</Tooltip>
-				</div>
-			</aside>
+						<Tooltip>
+							<TooltipTrigger
+								render={
+									<Button
+										variant="ghost"
+										size="icon-sm"
+										aria-label="Feedback"
+										className="text-muted-foreground/80 rounded-md"
+									/>
+								}
+							>
+								<Send weight="Filled" />
+							</TooltipTrigger>
+							<TooltipContent>Feedback</TooltipContent>
+						</Tooltip>
+					</div>
+				</aside>
+			) : null}
 
 			{mode === "edit" ? (
 				<Toolbar
@@ -478,6 +507,7 @@ function HandlePageContent({
 							URL.revokeObjectURL(previewUrl);
 							return;
 						}
+						if (loaderData.isDemo) return;
 						try {
 							const uploaded = await uploadPageItemMedia(page.handle, file);
 							updateMediaUpload({

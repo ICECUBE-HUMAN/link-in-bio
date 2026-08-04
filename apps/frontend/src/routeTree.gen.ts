@@ -16,7 +16,6 @@ import { Route as NewRouteImport } from './routes/new'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ApiFaviconRouteImport } from './routes/api/favicon'
 import { Route as ApiProfileImageRouteImport } from './routes/api/profile-image'
-import { Route as DemoIndexRouteImport } from './routes/demo/index'
 import { Route as ExploreIndexRouteImport } from './routes/explore/index'
 import { Route as LogInIndexRouteImport } from './routes/log-in/index'
 import { Route as UpdateIndexRouteImport } from './routes/update/index'
@@ -59,11 +58,6 @@ const ApiFaviconRoute = ApiFaviconRouteImport.update({
 const ApiProfileImageRoute = ApiProfileImageRouteImport.update({
   id: '/api/profile-image',
   path: '/api/profile-image',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DemoIndexRoute = DemoIndexRouteImport.update({
-  id: '/demo/',
-  path: '/demo/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExploreIndexRoute = ExploreIndexRouteImport.update({
@@ -119,7 +113,6 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/favicon': typeof ApiFaviconRoute
   '/api/profile-image': typeof ApiProfileImageRoute
-  '/demo/': typeof DemoIndexRoute
   '/explore/': typeof ExploreIndexRoute
   '/log-in/': typeof LogInIndexRoute
   '/update/': typeof UpdateIndexRoute
@@ -137,7 +130,6 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/favicon': typeof ApiFaviconRoute
   '/api/profile-image': typeof ApiProfileImageRoute
-  '/demo': typeof DemoIndexRoute
   '/explore': typeof ExploreIndexRoute
   '/log-in': typeof LogInIndexRoute
   '/update': typeof UpdateIndexRoute
@@ -156,7 +148,6 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/favicon': typeof ApiFaviconRoute
   '/api/profile-image': typeof ApiProfileImageRoute
-  '/demo/': typeof DemoIndexRoute
   '/explore/': typeof ExploreIndexRoute
   '/log-in/': typeof LogInIndexRoute
   '/update/': typeof UpdateIndexRoute
@@ -176,7 +167,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/api/favicon'
     | '/api/profile-image'
-    | '/demo/'
     | '/explore/'
     | '/log-in/'
     | '/update/'
@@ -194,7 +184,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/api/favicon'
     | '/api/profile-image'
-    | '/demo'
     | '/explore'
     | '/log-in'
     | '/update'
@@ -212,7 +201,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/api/favicon'
     | '/api/profile-image'
-    | '/demo/'
     | '/explore/'
     | '/log-in/'
     | '/update/'
@@ -231,7 +219,6 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiFaviconRoute: typeof ApiFaviconRoute
   ApiProfileImageRoute: typeof ApiProfileImageRoute
-  DemoIndexRoute: typeof DemoIndexRoute
   ExploreIndexRoute: typeof ExploreIndexRoute
   LogInIndexRoute: typeof LogInIndexRoute
   UpdateIndexRoute: typeof UpdateIndexRoute
@@ -287,13 +274,6 @@ declare module '@tanstack/react-router' {
       path: '/api/profile-image'
       fullPath: '/api/profile-image'
       preLoaderRoute: typeof ApiProfileImageRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/demo/': {
-      id: '/demo/'
-      path: '/demo'
-      fullPath: '/demo/'
-      preLoaderRoute: typeof DemoIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/explore/': {
@@ -407,7 +387,6 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiFaviconRoute: ApiFaviconRoute,
   ApiProfileImageRoute: ApiProfileImageRoute,
-  DemoIndexRoute: DemoIndexRoute,
   ExploreIndexRoute: ExploreIndexRoute,
   LogInIndexRoute: LogInIndexRoute,
   UpdateIndexRoute: UpdateIndexRoute,

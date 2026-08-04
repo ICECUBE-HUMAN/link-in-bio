@@ -9,7 +9,7 @@ import * as v from "valibot";
 import { env } from "@/env";
 
 const publicImageUrl = (objectKey: string, cacheVersion?: string | null) => {
-	if (/^https?:\/\//.test(objectKey)) return objectKey;
+	if (/^(?:https?:\/\/|blob:|data:|\/)/.test(objectKey)) return objectKey;
 	if (!env.VITE_R2_PUBLIC_URL) return null;
 
 	const url = `${env.VITE_R2_PUBLIC_URL.replace(/\/+$/, "")}/${objectKey

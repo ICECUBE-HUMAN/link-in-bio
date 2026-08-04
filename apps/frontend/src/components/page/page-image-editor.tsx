@@ -87,6 +87,7 @@ type PageImageEditorProps = {
 	breakpoint: Breakpoint;
 	onImageChange: (change: ProfileImageChange) => void;
 	onImageCommit: (change: ProfileImageChange) => void;
+	localOnly?: boolean;
 };
 
 export function PageImageEditor({
@@ -99,6 +100,7 @@ export function PageImageEditor({
 	breakpoint,
 	onImageChange,
 	onImageCommit,
+	localOnly = false,
 }: PageImageEditorProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
 	const imageFrameRef = useRef<HTMLButtonElement>(null);
@@ -350,6 +352,24 @@ export function PageImageEditor({
 		setIsUploading(true);
 		setError(null);
 
+		if (localOnly) {
+			pendingDisplayUrlRef.current = nextDisplayUrl;
+			setPendingDisplayUrl(nextDisplayUrl);
+			const nextChange = {
+				image: nextDisplayUrl,
+				imageSource: null,
+				imageCrop: crop,
+			};
+			committedRef.current = nextChange;
+			setImage(nextDisplayUrl);
+			setImageSource(null);
+			setImageCrop(crop);
+			setIsCropOpen(false);
+			setIsUploading(false);
+			onImageCommit(nextChange);
+			return;
+		}
+
 		void (async () => {
 			try {
 				const uploadedImage = await uploadPageImage(handle, {
@@ -397,6 +417,18 @@ export function PageImageEditor({
 				crop: nextCrop,
 				nextDisplayUrl: cropSourceUrl,
 			});
+			return;
+		}
+		if (localOnly) {
+			const nextChange = {
+				image: committedRef.current.image,
+				imageSource: null,
+				imageCrop: nextCrop,
+			};
+			committedRef.current = nextChange;
+			setImageCrop(nextCrop);
+			setIsCropOpen(false);
+			onImageCommit(nextChange);
 			return;
 		}
 
