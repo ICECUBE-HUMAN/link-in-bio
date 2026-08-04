@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { ItemCaption } from "@/components/grid/item-caption";
 import { ItemExternalAction } from "@/components/grid/item-external-action";
 import type { ItemRendererProps } from "@/lib/grid/item-registry";
@@ -21,42 +20,25 @@ export function MediaItemRenderer({
 }: ItemRendererProps<GridItemByType<"media">>) {
 	const isVideo = item.data.mimeType.startsWith("video/");
 	const linkedUrl = item.data.link;
-	const mediaUrl = item.data.mediaUrl;
-	const [loadedMediaUrl, setLoadedMediaUrl] = useState<string | null>(null);
-	const isMediaLoaded = mediaUrl !== undefined && loadedMediaUrl === mediaUrl;
 
 	return (
 		<div className="relative size-full overflow-hidden rounded-[inherit] bg-muted/30 surface-line">
-			<img
-				src={DEFAULT_IMAGE_DATA_URL}
-				alt=""
-				aria-hidden="true"
-				className="pointer-events-none absolute inset-0 size-full object-cover"
-			/>
-			{mediaUrl && isVideo ? (
+			{isVideo ? (
 				<video
-					src={mediaUrl}
+					src={item.data.mediaUrl ?? DEFAULT_IMAGE_DATA_URL}
 					autoPlay
 					muted
 					loop
 					playsInline
-					onLoadedData={() => setLoadedMediaUrl(mediaUrl)}
-					className={cn(
-						"pointer-events-none absolute inset-0 size-full object-cover transition-opacity duration-200 ease-out",
-						isMediaLoaded ? "opacity-100" : "opacity-0",
-					)}
+					className="pointer-events-none size-full object-cover"
 				/>
-			) : mediaUrl ? (
+			) : (
 				<img
-					src={mediaUrl}
+					src={item.data.mediaUrl ?? DEFAULT_IMAGE_DATA_URL}
 					alt={item.data.caption ?? "Media item"}
-					onLoad={() => setLoadedMediaUrl(mediaUrl)}
-					className={cn(
-						"absolute inset-0 size-full object-cover transition-opacity duration-200 ease-out",
-						isMediaLoaded ? "opacity-100" : "opacity-0",
-					)}
+					className="size-full object-cover"
 				/>
-			) : null}
+			)}
 			<div
 				className={cn(
 					"pointer-events-none absolute inset-x-0 bottom-0 flex min-w-0 items-center justify-between gap-3 p-4 text-white",
