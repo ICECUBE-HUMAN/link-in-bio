@@ -4,7 +4,7 @@ import type {
 	LinkProviderContext,
 } from "./link-providers";
 
-const THREADS_PROFILE_TIMEOUT_MS = 2500;
+const THREADS_PROFILE_TIMEOUT_MS = 8000;
 const MAX_PROFILE_HTML_BYTES =
 	1024 * 1024;
 const THREADS_HOSTNAMES = new Set([
