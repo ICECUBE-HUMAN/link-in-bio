@@ -166,6 +166,7 @@ function HandlePageContent({
 	const myPage = myPageResult?.page;
 	const mode = getPageMode(isCurrentUserPage);
 	const [isAsideShown, setIsAsideShown] = useState(false);
+	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 	const [previewBreakpoint, setPreviewBreakpoint] =
 		useState<Breakpoint>("wide");
 	const pageScrollRef = useRef<HTMLElement | null>(null);
@@ -399,11 +400,12 @@ function HandlePageContent({
 				>
 					<div className="flex items-center gap-0">
 						{isCurrentUserPage ? (
-							<Tooltip>
+							<Tooltip disabled={isSettingsOpen}>
 								<TooltipTrigger render={<span className="inline-flex" />}>
 									<PageSettingsMenu
 										page={page}
 										onChanged={onPageChange}
+										onOpenChange={setIsSettingsOpen}
 										localOnly={loaderData.isDemo}
 									/>
 								</TooltipTrigger>

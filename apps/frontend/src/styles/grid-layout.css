@@ -3,6 +3,10 @@
 	z-index: 9999 !important;
 }
 
+.sinabro-grid-layout .react-grid-item:has([data-grid-item-crop-open="true"]) {
+	z-index: 10000 !important;
+}
+
 .sinabro-grid-layout .react-grid-item:not(.react-grid-placeholder) {
 	z-index: 1;
 }

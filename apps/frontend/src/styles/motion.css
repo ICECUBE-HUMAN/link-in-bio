@@ -117,7 +117,12 @@
 
 .t-profile-image-reveal[data-open="true"] {
 	overflow: visible;
-	clip-path: circle(var(--profile-image-reveal-radius) at 50% 50%);
+	clip-path: circle(
+		calc(
+			var(--profile-image-reveal-radius) + var(--profile-image-shadow-outset)
+		)
+		at 50% 50%
+	);
 	transition: none;
 	animation: t-profile-image-reveal-open var(--profile-image-reveal-dur)
 		var(--profile-image-reveal-ease) both;
@@ -130,7 +135,33 @@
 		);
 	}
 	to {
-		clip-path: circle(var(--profile-image-reveal-radius) at 50% 50%);
+		clip-path: circle(
+			calc(
+				var(--profile-image-reveal-radius) + var(--profile-image-shadow-outset)
+			)
+			at 50% 50%
+		);
+	}
+}
+
+.t-media-crop-reveal {
+	animation: t-media-crop-reveal-open var(--profile-image-reveal-dur)
+		var(--profile-image-reveal-ease) both;
+	will-change: clip-path;
+}
+
+@keyframes t-media-crop-reveal-open {
+	from {
+		clip-path: inset(
+			var(--media-crop-reveal-top)
+			var(--media-crop-reveal-right)
+			var(--media-crop-reveal-bottom)
+			var(--media-crop-reveal-left)
+			round var(--radius-2xl)
+		);
+	}
+	to {
+		clip-path: inset(0 round var(--radius-2xl));
 	}
 }
 
@@ -171,6 +202,7 @@
 @media (prefers-reduced-motion: reduce) {
 	.t-resize,
 	.t-profile-image-reveal,
+	.t-media-crop-reveal,
 	.t-page-slide .t-page {
 		transition: none !important;
 		animation: none !important;

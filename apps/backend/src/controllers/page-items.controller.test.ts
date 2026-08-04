@@ -453,6 +453,163 @@ describe("pageItemsController", () => {
 		).toHaveLength(2);
 	});
 
+	it("persists independent wide and compact media crops", async () => {
+		const { app, items } =
+			createBatchApp();
+		const crop = {
+			wide: {
+				x: 12,
+				y: 8,
+				width: 60,
+				height: 72,
+			},
+			compact: {
+				x: 4,
+				y: 20,
+				width: 88,
+				height: 48,
+			},
+		};
+		const response = await app.request(
+			"/pages/kim/batch",
+			{
+				method: "PATCH",
+				headers: {
+					"content-type":
+						"application/json",
+				},
+				body: JSON.stringify({
+					upserts: [
+						{
+							id: "media_1",
+							type: "media",
+							data: {
+								objectKey:
+									"users/user_1/page_1/media.png",
+								mimeType: "image/png",
+								crop,
+							},
+							style: {},
+							layouts: defaultLayouts,
+						},
+					],
+					deletes: [],
+				}),
+			},
+		);
+
+		expect(response.status).toBe(200);
+		expect(items).toHaveLength(1);
+		expect(
+			items[0]?.data,
+		).toMatchObject({ crop });
+		expect(
+			(
+				(await response.json()) as {
+					items: Array<{
+						data: { crop: typeof crop };
+					}>;
+				}
+			).items[0]?.data.crop,
+		).toEqual(crop);
+	});
+
+	it("rejects an out-of-bounds media crop without mutating the item", async () => {
+		const { app, items } =
+			createBatchApp();
+		const validCrop = {
+			wide: {
+				x: 12,
+				y: 8,
+				width: 60,
+				height: 72,
+			},
+			compact: {
+				x: 4,
+				y: 20,
+				width: 88,
+				height: 48,
+			},
+		};
+		const createResponse =
+			await app.request(
+				"/pages/kim/batch",
+				{
+					method: "PATCH",
+					headers: {
+						"content-type":
+							"application/json",
+					},
+					body: JSON.stringify({
+						upserts: [
+							{
+								id: "media_1",
+								type: "media",
+								data: {
+									objectKey:
+										"users/user_1/page_1/media.png",
+									mimeType: "image/png",
+									crop: validCrop,
+								},
+								style: {},
+								layouts: defaultLayouts,
+							},
+						],
+						deletes: [],
+					}),
+				},
+			);
+		expect(createResponse.status).toBe(
+			200,
+		);
+		const beforeInvalidUpdate =
+			structuredClone(items[0]?.data);
+
+		const invalidResponse =
+			await app.request(
+				"/pages/kim/batch",
+				{
+					method: "PATCH",
+					headers: {
+						"content-type":
+							"application/json",
+					},
+					body: JSON.stringify({
+						upserts: [
+							{
+								id: "media_1",
+								type: "media",
+								data: {
+									objectKey:
+										"users/user_1/page_1/media.png",
+									mimeType: "image/png",
+									crop: {
+										wide: {
+											x: 50,
+											y: 0,
+											width: 60,
+											height: 40,
+										},
+									},
+								},
+								style: {},
+								layouts: defaultLayouts,
+							},
+						],
+						deletes: [],
+					}),
+				},
+			);
+
+		expect(invalidResponse.status).toBe(
+			422,
+		);
+		expect(items).toHaveLength(1);
+		expect(items[0]?.data).toEqual(
+			beforeInvalidUpdate,
+		);
+	});
+
 	it("stores deterministic initial metadata for link items", async () => {
 		const { app, items } =
 			createBatchApp();

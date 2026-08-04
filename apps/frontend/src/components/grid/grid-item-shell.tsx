@@ -2,6 +2,7 @@ import { getLinkProviderPresentation } from "@sinabro/api";
 import {
 	type CSSProperties,
 	type ReactNode,
+	type RefObject,
 	useEffect,
 	useRef,
 	useState,
@@ -11,6 +12,10 @@ import {
 	MapItemInteractionProvider,
 	useOptionalMapItemInteraction,
 } from "@/components/grid/map/map-item-interaction-context";
+import {
+	MediaCropInteractionProvider,
+	useOptionalMediaCropInteraction,
+} from "@/components/grid/media-crop-interaction-context";
 import type {
 	GridItemCommandHandler,
 	ItemCapabilities,
@@ -59,12 +64,19 @@ function getCardThemeStyle(item: GridItem): CSSProperties | undefined {
 }
 
 export function GridItemShell(props: GridItemShellProps) {
+	const shellRef = useRef<HTMLDivElement>(null);
+	const content = (
+		<MediaCropInteractionProvider containerRef={shellRef}>
+			<GridItemShellContent {...props} shellRef={shellRef} />
+		</MediaCropInteractionProvider>
+	);
+
 	return props.item.type === "map" ? (
 		<MapItemInteractionProvider key={props.item.id}>
-			<GridItemShellContent {...props} />
+			{content}
 		</MapItemInteractionProvider>
 	) : (
-		<GridItemShellContent {...props} />
+		content
 	);
 }
 
@@ -79,10 +91,17 @@ function GridItemShellContent({
 	capabilities,
 	onCommand,
 	children,
-}: GridItemShellProps) {
+	shellRef,
+}: GridItemShellProps & {
+	shellRef: RefObject<HTMLDivElement | null>;
+}) {
 	const mapInteraction = useOptionalMapItemInteraction();
+	const mediaCropInteraction = useOptionalMediaCropInteraction();
+	const isMediaCropOpen =
+		item.type === "media" && Boolean(mediaCropInteraction?.isOpen);
 	const keepControlsVisible =
-		item.type === "map" && Boolean(mapInteraction?.isLocationEditing);
+		(item.type === "map" && Boolean(mapInteraction?.isLocationEditing)) ||
+		isMediaCropOpen;
 	const hasContent = children !== null && children !== undefined;
 	const hasControls =
 		capabilities.controls.some(
@@ -97,9 +116,9 @@ function GridItemShellContent({
 		) &&
 		onCommand &&
 		!isAnyItemDragging &&
-		!isExiting;
+		!isExiting &&
+		!isMediaCropOpen;
 	const ControlsView = getItemViewRegistration(item).controls;
-	const shellRef = useRef<HTMLDivElement>(null);
 	const hideControlsTimer = useRef<number | null>(null);
 	const pointerInsideRef = useRef(false);
 	const [controlsOpen, setControlsOpen] = useState(false);
@@ -161,6 +180,7 @@ function GridItemShellContent({
 			data-grid-item-id={item.id}
 			data-grid-item-type={item.type}
 			data-grid-item-preset={item.preset ?? "unsupported"}
+			data-grid-item-crop-open={isMediaCropOpen ? "true" : undefined}
 			data-grid-item-drag-cancel-selector={GRID_ITEM_DRAG_CANCEL_SELECTOR}
 			className={cn(
 				"group/grid-item relative size-full overflow-visible rounded-2xl",
@@ -190,11 +210,13 @@ function GridItemShellContent({
 				data-grid-item-card="true"
 				className={cn(
 					"grid-item-card relative size-full overflow-hidden bg-background rounded-2xl shadow-sm",
+					isMediaCropOpen && "overflow-visible!",
+					item.type === "map" && "map-item-interaction",
 					cardThemeStyle && "link-card-themed",
 					item.type === "media" ? "ring-0! border-0!" : "ring-1 ring-black/5",
 					item.type === "map" &&
 						mapInteraction?.isLocationEditing &&
-						"scale-[1.04] ring-2 ring-black",
+						"scale-[1.02] ring-3 ring-black",
 				)}
 				style={cardThemeStyle}
 			>
