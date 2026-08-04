@@ -74,6 +74,7 @@ function toBatchItem(item: GridItem): PageItemBatchRequest["upserts"][number] {
 					mimeType: data.mimeType,
 					caption: data.caption,
 					link: normalizeItemLink(data.link),
+					crop: data.crop,
 				},
 				style,
 				layouts,

@@ -67,21 +67,9 @@ const nullableTrimmedImageSchema = v.pipe(
 	v.transform((value) => (value.length === 0 ? null : value)),
 );
 
-export const profileImageCropSchema = v.pipe(
-	v.object({
-		x: v.pipe(v.number(), v.minValue(0), v.maxValue(100)),
-		y: v.pipe(v.number(), v.minValue(0), v.maxValue(100)),
-		width: v.pipe(v.number(), v.minValue(0), v.maxValue(100)),
-		height: v.pipe(v.number(), v.minValue(0), v.maxValue(100)),
-	}),
-	v.check(
-		({ x, y, width, height }) =>
-			width > 0 && height > 0 && x + width <= 100 && y + height <= 100,
-		"Crop area must stay within the source image.",
-	),
-);
+export const profileImageCropSchema = grid.normalizedCropSchema;
 
-export type ProfileImageCrop = v.InferOutput<typeof profileImageCropSchema>;
+export type ProfileImageCrop = grid.NormalizedCrop;
 
 /**
  * Public HTTP response contracts shared by the backend and its consumers.

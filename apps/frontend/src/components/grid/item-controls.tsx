@@ -8,13 +8,14 @@ import {
 	Unlink02Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { TrashIcon } from "lucide-react";
+import { CropIcon, TrashIcon } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Fragment, useEffect, useState } from "react";
 import {
 	useMapItemInteraction,
 	useOptionalMapItemInteraction,
 } from "@/components/grid/map/map-item-interaction-context";
+import { useOptionalMediaCropInteraction } from "@/components/grid/media-crop-interaction-context";
 import { PresetIcon } from "@/components/grid/preset-icon";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
@@ -162,6 +163,7 @@ export function ItemControls({
 	const [linkUrl, setLinkUrl] = useState("");
 	const shouldReduceMotion = useReducedMotion();
 	const mapInteraction = useOptionalMapItemInteraction();
+	const mediaCropInteraction = useOptionalMediaCropInteraction();
 	const isMapItem = item.type === "map" && mapInteraction !== null;
 	const menuControls = capabilities.controls.filter(
 		(control) => control.command !== "delete-item",
@@ -275,30 +277,58 @@ export function ItemControls({
 									type="button"
 									size={
 										control.command === "apply-preset" ||
-										control.command === "manage-link"
+										control.command === "manage-link" ||
+										control.command === "crop-media"
 											? "icon-sm"
 											: "xs"
 									}
 									className={cn(
 										control.command === "apply-preset" ||
-											control.command === "manage-link"
+											control.command === "manage-link" ||
+											control.command === "crop-media"
 											? "cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white"
 											: "cursor-pointer! rounded-full",
 										control.isActive && "bg-white text-black hover:bg-white/90",
+										control.command === "crop-media" &&
+											mediaCropInteraction?.isOpen &&
+											"bg-brand! text-white! hover:bg-brand! hover:text-white!",
 									)}
 									variant={
 										control.command === "apply-preset" ||
-										control.command === "manage-link"
+										control.command === "manage-link" ||
+										control.command === "crop-media"
 											? "ghost"
 											: "secondary"
 									}
-									aria-label={control.label}
+									aria-label={
+										control.command === "crop-media" &&
+										mediaCropInteraction?.isOpen
+											? "Apply media crop"
+											: control.command === "crop-media"
+												? "Crop media"
+												: control.label
+									}
 									aria-pressed={
 										control.command === "apply-preset"
 											? control.isActive
+											: control.command === "crop-media"
+												? mediaCropInteraction?.isOpen
+												: undefined
+									}
+									title={
+										control.command === "crop-media" &&
+										mediaCropInteraction?.isOpen
+											? "Apply media crop"
+											: control.command === "crop-media"
+												? "Crop media"
+												: control.label
+									}
+									disabled={
+										control.command === "crop-media" &&
+										mediaCropInteraction?.isOpen
+											? !mediaCropInteraction.canApply
 											: undefined
 									}
-									title={control.label}
 									onClick={() => {
 										if (control.command === "apply-preset" && control.preset) {
 											onCommand?.({
@@ -306,6 +336,15 @@ export function ItemControls({
 												itemId: item.id,
 												preset: control.preset,
 											});
+											return;
+										}
+
+										if (control.command === "crop-media") {
+											if (mediaCropInteraction?.isOpen) {
+												mediaCropInteraction.apply();
+											} else {
+												mediaCropInteraction?.open();
+											}
 											return;
 										}
 
@@ -326,6 +365,8 @@ export function ItemControls({
 											strokeWidth={2.5}
 											className="size-4 text-white"
 										/>
+									) : control.command === "crop-media" ? (
+										<CropIcon className="size-4 stroke-3 text-white" />
 									) : (
 										control.label
 									)}

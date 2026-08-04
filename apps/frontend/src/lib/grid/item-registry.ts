@@ -37,6 +37,7 @@ export type GridItemPrimaryAction =
 export type GridItemControlCommand =
 	| "manage-link"
 	| "apply-preset"
+	| "crop-media"
 	| "delete-item";
 
 export type GridItemCommand =
@@ -185,6 +186,13 @@ export function getItemCapabilities(
 		controls.push({
 			command: "manage-link",
 			label: item.data.link ? "Change link" : "Add link",
+		});
+	}
+
+	if (canRender && context.mode === "edit" && item.type === "media") {
+		controls.push({
+			command: "crop-media",
+			label: "Crop media",
 		});
 	}
 

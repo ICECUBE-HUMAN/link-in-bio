@@ -92,6 +92,18 @@ bounding box를 기준으로 삼아, crop frame과 카드의 외곽이 어긋나
 - `wide`에서의 preset geometry와 `compact`에서의 preset geometry는 각자
   독립적으로 계산한다.
 - crop 영역은 항상 카드 전체를 덮는 frame이다.
+- crop 편집 중에는 profile image crop과 같이 frame 밖의 원본 image/video까지
+  모두 보이도록 활성 media item의 clipping을 해제한다. frame 자체는 카드와
+  같은 크기를 유지하며 `3px` 검은색 테두리로 경계를 표시한다. 원본은 profile
+  image crop과 같은 `400ms` reveal easing으로 crop frame에서 전체 source 범위까지
+  서서히 나타난다.
+- 활성 crop frame과 reveal된 원본 media는 media card의 rounded 값을 상속한다.
+  crop 중에는 기존 `surface-line`을 제거하고, frame 밖 원본 영역에 profile image
+  crop과 같은 `rgb(255 255 255 / 0.35)` mask와 `smooth-shadow-lg`를 적용한다.
+- reveal된 원본 전체는 하나의 crop drag surface로 동작한다. 이 surface는
+  `cursor: grab`을 표시하고 뒤쪽 grid item으로 pointer hit-test가 통과하지 않게
+  하며, 고정된 검은 frame border와는 별도 layer로 렌더링한다.
+- crop 편집을 닫으면 카드 밖의 원본은 다시 숨기고 기존 card clipping을 복원한다.
 - 기존에 저장된 crop의 실효 aspect가 새 preset 비율과 맞지 않으면, 저장된
   metadata를 즉시 바꾸지 않고 새 preset 기준의 임시 중앙 crop을 계산해 표시한다.
   사용자가 Apply할 때만 새 breakpoint crop으로 저장한다.
@@ -205,8 +217,16 @@ source natural size를 `sourceWidth / sourceHeight`, 현재 preset frame을
 
 ### Media layer
 
-crop이 적용된 경우 wrapper는 `overflow-hidden`을 유지하고, image/video를
-absolute layer로 배치한다.
+crop이 적용된 일반 렌더링에서는 wrapper가 `overflow-hidden`을 유지하고,
+image/video를 absolute layer로 배치한다. crop 편집 중에만 active media frame과
+card의 overflow를 풀어 같은 absolute layer의 원본 전체를 frame 밖까지 reveal한다.
+이때 crop frame은 이동하거나 커지지 않고 카드 bounding box를 그대로 유지한다.
+단일 image/video element 위에 source bounds로 clipping된 연속 mask layer를
+배치하고 rounded crop frame만 투명한 hole로 남긴다. 이 방식은 검은 테두리 바깥
+네 꼭짓점도 mask에 포함하며 비디오 element를 복제하지 않는다. visual source와
+mask는 profile image crop과 동일한 duration/easing의 inset clip-path animation으로
+frame 영역에서 source 전체까지 reveal한다. shadow는 animation 바깥 wrapper에
+적용해 reveal이 끝난 뒤에도 잘리지 않게 한다.
 
 ```ts
 {
@@ -227,6 +247,8 @@ object-cover` fallback을 사용한다.
 - 비디오는 기존 `autoPlay`, `muted`, `loop`, `playsInline` 동작을 유지한다.
 - crop interaction surface에는 `data-grid-item-drag-cancel="true"`를 지정해
   grid drag와 pointer drag가 경쟁하지 않게 한다.
+- interaction surface의 bounding box는 reveal된 source와 동일하게 잡아 frame 밖
+  원본 위에서도 drag와 `grab` cursor가 유지되고 뒤쪽 item을 조작할 수 없게 한다.
 
 ## API·backend·DB 흐름
 
@@ -316,8 +338,23 @@ Gallery upload가 진행 중인 pending media에서 crop을 먼저 적용해도 
 
 - Given: 편집 모드에서 media item의 preset이 정해져 있다.
 - When: ItemControls의 Crop 버튼을 클릭한다.
-- Then: crop frame이 현재 preset 카드 전체와 같은 크기와 비율로 열린다.
-- Evidence: 카드 bounding box와 crop frame bounding box 비교.
+- Then: crop frame이 현재 preset 카드 전체와 같은 크기와 비율로 열리고,
+  frame 밖의 원본 전체가 옅은 흰색 mask와 함께 보인다. frame에는 media card의
+  rounded를 상속한 `3px` 검은색 테두리가 표시되고 `surface-line`은 보이지 않는다.
+  원본은 profile crop과 같은 `400ms` reveal motion으로 나타난다.
+- Evidence: 카드와 crop frame bounding box 비교, frame 밖 원본의 visible 영역,
+  crop frame의 computed border/radius, mask 색상, animation duration/easing,
+  surface-line 유무.
+
+### MEDIA-CROP-02A — Revealed source hit surface
+
+- Given: crop 편집 중 reveal된 원본이 다른 grid item 위에 겹친다.
+- When: frame 밖 원본 영역에 pointer를 올리고 drag한다.
+- Then: 최상위 hit target은 현재 media item의 crop drag surface이며 cursor는
+  `grab`/`grabbing`으로 바뀐다. 뒤쪽 item은 hover lift, control 노출, 클릭, drag가
+  발생하지 않는다.
+- Evidence: source/drag surface bounding box 비교, `elementsFromPoint`, computed
+  cursor, 뒤쪽 item의 transform 및 control 상태.
 
 ### MEDIA-CROP-03 — Image apply and persistence
 

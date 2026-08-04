@@ -63,6 +63,29 @@ export const pageItemTextDataSchema = v.object({
 	link: v.optional(v.string()),
 });
 
+export const normalizedCropSchema = v.pipe(
+	v.object({
+		x: v.pipe(v.number(), v.minValue(0), v.maxValue(100)),
+		y: v.pipe(v.number(), v.minValue(0), v.maxValue(100)),
+		width: v.pipe(v.number(), v.minValue(0), v.maxValue(100)),
+		height: v.pipe(v.number(), v.minValue(0), v.maxValue(100)),
+	}),
+	v.check(
+		({ x, y, width, height }) =>
+			width > 0 && height > 0 && x + width <= 100 && y + height <= 100,
+		"Crop area must stay within the source image.",
+	),
+);
+
+export type NormalizedCrop = v.InferOutput<typeof normalizedCropSchema>;
+
+export const pageItemMediaCropSchema = v.object({
+	wide: v.optional(normalizedCropSchema),
+	compact: v.optional(normalizedCropSchema),
+});
+
+export type PageItemMediaCrop = v.InferOutput<typeof pageItemMediaCropSchema>;
+
 export const pageItemMediaDataSchema = v.object({
 	objectKey: v.pipe(v.string(), v.minLength(1)),
 	mimeType: v.pipe(
@@ -71,6 +94,7 @@ export const pageItemMediaDataSchema = v.object({
 	),
 	caption: v.optional(v.string()),
 	link: v.optional(v.string()),
+	crop: v.optional(pageItemMediaCropSchema),
 });
 
 export const pageItemMediaResponseDataSchema = v.object({

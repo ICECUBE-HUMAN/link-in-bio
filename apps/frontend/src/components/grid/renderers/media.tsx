@@ -1,6 +1,27 @@
+import type { NormalizedCrop } from "@sinabro/api";
+import {
+	type CSSProperties,
+	type PointerEvent as ReactPointerEvent,
+	type SyntheticEvent,
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { ItemCaption } from "@/components/grid/item-caption";
 import { ItemExternalAction } from "@/components/grid/item-external-action";
+import { useMediaCropInteraction } from "@/components/grid/media-crop-interaction-context";
 import type { ItemRendererProps } from "@/lib/grid/item-registry";
+import {
+	getCenteredMediaCrop,
+	getMediaCropStyle,
+	isMediaCropAspectCompatible,
+	type MediaFrameSize,
+	type MediaSourceSize,
+	moveMediaCrop,
+} from "@/lib/grid/media-crop";
 import type { GridItemByType } from "@/lib/grid/types";
 import { DEFAULT_IMAGE_DATA_URL } from "@/lib/shared/default-image";
 import { cn } from "@/lib/utils";
@@ -15,34 +36,362 @@ function MediaAction({ href }: { href: string | undefined }) {
 
 export function MediaItemRenderer({
 	item,
+	breakpoint,
+	preset,
 	mode,
 	onCommand,
 }: ItemRendererProps<GridItemByType<"media">>) {
 	const isVideo = item.data.mimeType.startsWith("video/");
 	const linkedUrl = item.data.link;
+	const cropInteraction = useMediaCropInteraction();
+	const mediaFrameRef = useRef<HTMLDivElement>(null);
+	const imageRef = useRef<HTMLImageElement>(null);
+	const videoRef = useRef<HTMLVideoElement>(null);
+	const cropDragRef = useRef<{
+		pointerId: number;
+		startX: number;
+		startY: number;
+		startCrop: NormalizedCrop;
+	} | null>(null);
+	const [sourceSize, setSourceSize] = useState<MediaSourceSize | null>(null);
+	const [frameSize, setFrameSize] = useState<MediaFrameSize>({
+		width: 0,
+		height: 0,
+	});
+	const [draftCrop, setDraftCrop] = useState<NormalizedCrop | null>(null);
+
+	useEffect(() => {
+		const mediaFrame = mediaFrameRef.current;
+		if (!mediaFrame) return;
+
+		const updateFrameSize = () => {
+			const rect = mediaFrame.getBoundingClientRect();
+			setFrameSize((currentSize) =>
+				currentSize.width === rect.width && currentSize.height === rect.height
+					? currentSize
+					: { width: rect.width, height: rect.height },
+			);
+		};
+
+		updateFrameSize();
+		const observer = new ResizeObserver(updateFrameSize);
+		observer.observe(mediaFrame);
+		return () => observer.disconnect();
+	}, []);
+
+	const mediaSource = item.data.mediaUrl ?? DEFAULT_IMAGE_DATA_URL;
+	useLayoutEffect(() => {
+		setSourceSize(null);
+
+		if (isVideo) {
+			const video = videoRef.current;
+			if (
+				video &&
+				video.getAttribute("src") === mediaSource &&
+				video.readyState >= HTMLMediaElement.HAVE_METADATA &&
+				video.videoWidth > 0 &&
+				video.videoHeight > 0
+			) {
+				setSourceSize({
+					width: video.videoWidth,
+					height: video.videoHeight,
+				});
+			}
+			return;
+		}
+
+		const image = imageRef.current;
+		if (
+			image?.getAttribute("src") === mediaSource &&
+			image.complete &&
+			image.naturalWidth > 0 &&
+			image.naturalHeight > 0
+		) {
+			setSourceSize({
+				width: image.naturalWidth,
+				height: image.naturalHeight,
+			});
+		}
+	}, [isVideo, mediaSource]);
+
+	const persistedCrop = item.data.crop?.[breakpoint];
+	const hasFrameSize = frameSize.width > 0 && frameSize.height > 0;
+	const centeredCrop = useMemo(() => {
+		if (!sourceSize || !hasFrameSize) return null;
+		return getCenteredMediaCrop(sourceSize, frameSize);
+	}, [frameSize, hasFrameSize, sourceSize]);
+
+	const getInitialCrop = useCallback(() => {
+		if (!sourceSize || !hasFrameSize) return null;
+		if (
+			persistedCrop &&
+			isMediaCropAspectCompatible(persistedCrop, sourceSize, frameSize)
+		)
+			return persistedCrop;
+		return centeredCrop;
+	}, [centeredCrop, frameSize, hasFrameSize, persistedCrop, sourceSize]);
+
+	const compatiblePersistedCrop =
+		persistedCrop &&
+		sourceSize &&
+		hasFrameSize &&
+		isMediaCropAspectCompatible(persistedCrop, sourceSize, frameSize)
+			? persistedCrop
+			: null;
+	const renderedCrop = cropInteraction.isOpen
+		? (draftCrop ?? centeredCrop)
+		: (compatiblePersistedCrop ?? (persistedCrop ? centeredCrop : null));
+	const cropStyle =
+		renderedCrop &&
+		sourceSize &&
+		hasFrameSize &&
+		isMediaCropAspectCompatible(renderedCrop, sourceSize, frameSize)
+			? getMediaCropStyle(renderedCrop)
+			: undefined;
+	const cropRevealStyle = renderedCrop
+		? ({
+				"--media-crop-reveal-top": `${renderedCrop.y}%`,
+				"--media-crop-reveal-right": `${Math.max(
+					0,
+					100 - renderedCrop.x - renderedCrop.width,
+				)}%`,
+				"--media-crop-reveal-bottom": `${Math.max(
+					0,
+					100 - renderedCrop.y - renderedCrop.height,
+				)}%`,
+				"--media-crop-reveal-left": `${renderedCrop.x}%`,
+			} as CSSProperties)
+		: undefined;
+	const canApply = Boolean(
+		mode === "edit" &&
+			onCommand &&
+			sourceSize &&
+			hasFrameSize &&
+			draftCrop &&
+			isMediaCropAspectCompatible(draftCrop, sourceSize, frameSize),
+	);
+	const cropActionStateRef = useRef({
+		canApply,
+		draftCrop,
+		getInitialCrop,
+		item,
+		breakpoint,
+		onCommand,
+	});
+	cropActionStateRef.current = {
+		canApply,
+		draftCrop,
+		getInitialCrop,
+		item,
+		breakpoint,
+		onCommand,
+	};
+
+	const handleCropOpen = useCallback(() => {
+		setDraftCrop(cropActionStateRef.current.getInitialCrop());
+	}, []);
+	const handleCropCancel = useCallback(() => {
+		cropDragRef.current = null;
+		setDraftCrop(null);
+	}, []);
+	const handleCropApply = useCallback(() => {
+		const { canApply, draftCrop, item, breakpoint, onCommand } =
+			cropActionStateRef.current;
+		if (!canApply || !draftCrop || !onCommand) return;
+		onCommand({
+			type: "update-data",
+			itemId: item.id,
+			data: {
+				...item.data,
+				crop: {
+					...item.data.crop,
+					[breakpoint]: draftCrop,
+				},
+			},
+		});
+		setDraftCrop(null);
+	}, []);
+
+	useEffect(() => {
+		return cropInteraction.registerActions({
+			breakpoint,
+			canApply,
+			onOpen: handleCropOpen,
+			onCancel: handleCropCancel,
+			onApply: handleCropApply,
+		});
+	}, [
+		breakpoint,
+		canApply,
+		cropInteraction.registerActions,
+		handleCropApply,
+		handleCropCancel,
+		handleCropOpen,
+	]);
+
+	const previousBreakpointRef = useRef(breakpoint);
+	useEffect(() => {
+		if (previousBreakpointRef.current === breakpoint) return;
+		previousBreakpointRef.current = breakpoint;
+		if (cropInteraction.isOpen) cropInteraction.cancel();
+	}, [breakpoint, cropInteraction.cancel, cropInteraction.isOpen]);
+
+	useEffect(() => {
+		if (!cropInteraction.isOpen || !sourceSize || !hasFrameSize) return;
+		setDraftCrop((currentCrop) =>
+			currentCrop &&
+			isMediaCropAspectCompatible(currentCrop, sourceSize, frameSize)
+				? currentCrop
+				: getCenteredMediaCrop(sourceSize, frameSize),
+		);
+	}, [cropInteraction.isOpen, frameSize, hasFrameSize, sourceSize]);
+
+	function updateSourceSize(nextSize: MediaSourceSize) {
+		if (nextSize.width <= 0 || nextSize.height <= 0) return;
+		setSourceSize((currentSize) =>
+			currentSize?.width === nextSize.width &&
+			currentSize.height === nextSize.height
+				? currentSize
+				: nextSize,
+		);
+	}
+
+	function handleImageLoad(event: SyntheticEvent<HTMLImageElement>) {
+		updateSourceSize({
+			width: event.currentTarget.naturalWidth,
+			height: event.currentTarget.naturalHeight,
+		});
+	}
+
+	function handleVideoMetadata(event: SyntheticEvent<HTMLVideoElement>) {
+		updateSourceSize({
+			width: event.currentTarget.videoWidth,
+			height: event.currentTarget.videoHeight,
+		});
+	}
+
+	function handleCropPointerDown(event: ReactPointerEvent<HTMLButtonElement>) {
+		if (!cropInteraction.isOpen || !draftCrop) return;
+		if (event.pointerType === "mouse" && event.button !== 0) return;
+		event.preventDefault();
+		event.currentTarget.setPointerCapture(event.pointerId);
+		cropDragRef.current = {
+			pointerId: event.pointerId,
+			startX: event.clientX,
+			startY: event.clientY,
+			startCrop: draftCrop,
+		};
+		cropInteraction.setDragging(true);
+	}
+
+	function handleCropPointerMove(event: ReactPointerEvent<HTMLButtonElement>) {
+		const drag = cropDragRef.current;
+		if (
+			!drag ||
+			drag.pointerId !== event.pointerId ||
+			!cropInteraction.isOpen ||
+			!hasFrameSize
+		)
+			return;
+
+		const deltaX = event.clientX - drag.startX;
+		const deltaY = event.clientY - drag.startY;
+		if (deltaX === 0 && deltaY === 0) return;
+		event.preventDefault();
+		setDraftCrop(moveMediaCrop(drag.startCrop, deltaX, deltaY, frameSize));
+	}
+
+	function handleCropPointerEnd(event: ReactPointerEvent<HTMLButtonElement>) {
+		const drag = cropDragRef.current;
+		if (!drag || drag.pointerId !== event.pointerId) return;
+		cropDragRef.current = null;
+		if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+			event.currentTarget.releasePointerCapture(event.pointerId);
+		}
+		cropInteraction.setDragging(false);
+	}
+
+	const mediaElement = isVideo ? (
+		<video
+			ref={videoRef}
+			src={mediaSource}
+			autoPlay
+			muted
+			loop
+			playsInline
+			onLoadedMetadata={handleVideoMetadata}
+			className={cn(
+				"pointer-events-none",
+				cropStyle ? "size-full rounded-[inherit]" : "size-full object-cover",
+			)}
+		/>
+	) : (
+		<img
+			ref={imageRef}
+			src={mediaSource}
+			alt={item.data.caption ?? "Media item"}
+			onLoad={handleImageLoad}
+			className={cn(
+				"pointer-events-none",
+				cropStyle ? "size-full rounded-[inherit]" : "size-full object-cover",
+			)}
+		/>
+	);
 
 	return (
-		<div className="relative size-full overflow-hidden rounded-[inherit] bg-muted/30 surface-line">
-			{isVideo ? (
-				<video
-					src={item.data.mediaUrl ?? DEFAULT_IMAGE_DATA_URL}
-					autoPlay
-					muted
-					loop
-					playsInline
-					className="pointer-events-none size-full object-cover"
-				/>
+		<div
+			ref={mediaFrameRef}
+			data-media-frame="true"
+			data-media-preset={preset}
+			className={cn(
+				"relative size-full overflow-hidden rounded-[inherit] bg-muted/30",
+				!cropInteraction.isOpen && "surface-line",
+				cropInteraction.isOpen && "overflow-visible!",
+			)}
+		>
+			{cropStyle ? (
+				<div
+					data-media-crop-source="true"
+					className={cn(
+						"pointer-events-none absolute rounded-[inherit]",
+						cropInteraction.isOpen && "smooth-shadow-lg",
+					)}
+					style={cropStyle}
+				>
+					<div
+						className={cn(
+							"relative size-full overflow-hidden rounded-[inherit]",
+							cropInteraction.isOpen && "t-media-crop-reveal",
+						)}
+						style={cropInteraction.isOpen ? cropRevealStyle : undefined}
+					>
+						{mediaElement}
+						{cropInteraction.isOpen && renderedCrop ? (
+							<div
+								aria-hidden="true"
+								data-media-crop-mask="true"
+								className="pointer-events-none absolute inset-0 z-10 overflow-hidden rounded-[inherit]"
+							>
+								<span
+									className="pointer-events-none absolute rounded-[inherit]"
+									style={{
+										left: `${renderedCrop.x}%`,
+										top: `${renderedCrop.y}%`,
+										width: `${renderedCrop.width}%`,
+										height: `${renderedCrop.height}%`,
+										boxShadow: "0 0 0 9999px rgb(255 255 255 / 0.35)",
+									}}
+								/>
+							</div>
+						) : null}
+					</div>
+				</div>
 			) : (
-				<img
-					src={item.data.mediaUrl ?? DEFAULT_IMAGE_DATA_URL}
-					alt={item.data.caption ?? "Media item"}
-					className="size-full object-cover"
-				/>
+				mediaElement
 			)}
 			<div
 				className={cn(
 					"pointer-events-none absolute inset-x-0 bottom-0 flex min-w-0 items-center justify-between gap-3 p-4 text-white",
-					// preset === "squareSmall" ? "min-h-24" : "min-h-28",
 				)}
 			>
 				<ItemCaption
@@ -62,6 +411,29 @@ export function MediaItemRenderer({
 					</div>
 				) : null}
 			</div>
+			{mode === "edit" && cropInteraction.isOpen && cropStyle ? (
+				<>
+					<button
+						type="button"
+						data-grid-item-drag-cancel="true"
+						aria-label="Drag media to crop"
+						className={cn(
+							"absolute z-20 m-0 block cursor-grab! touch-none appearance-none rounded-[inherit] border-0 bg-transparent p-0 outline-none",
+							cropInteraction.isDragging && "cursor-grabbing!",
+							"focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black",
+						)}
+						style={cropStyle}
+						onPointerDown={handleCropPointerDown}
+						onPointerMove={handleCropPointerMove}
+						onPointerUp={handleCropPointerEnd}
+						onPointerCancel={handleCropPointerEnd}
+					/>
+					<span
+						aria-hidden="true"
+						className="pointer-events-none absolute inset-0 z-30 rounded-[inherit] border-[3px] border-black shadow-none"
+					/>
+				</>
+			) : null}
 		</div>
 	);
 }
