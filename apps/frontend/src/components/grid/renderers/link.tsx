@@ -375,14 +375,6 @@ function getTitle(item: GridItemByType<"link">) {
 	return item.data.metadata?.title?.trim() ?? getHostname(item.data.url);
 }
 
-const titleClampClassByPreset: Partial<Record<PresetName, string>> = {
-	fullBanner: "line-clamp-1",
-	squareSmall: "line-clamp-5",
-	landscape: "line-clamp-3",
-	squareLarge: "line-clamp-[10]",
-	portrait: "line-clamp-[12]",
-};
-
 function LinkTitle({
 	title,
 	preset,
@@ -411,11 +403,13 @@ function LinkTitle({
 		isHalfBanner
 			? "h-8 max-h-8 overflow-hidden whitespace-nowrap leading-8"
 			: isTall
-				? "h-20 max-h-20 overflow-hidden leading-5"
-				: "max-h-full overflow-hidden leading-5",
+				? "h-20 max-h-20 leading-5"
+				: "max-h-full leading-5",
 		isLandscape && "flex-1",
 		isSquareSmall && "flex-1",
 		isTall && "flex-1",
+		!isHalfBanner &&
+			(mode === "view" ? "no-scrollbar overflow-y-auto" : "overflow-hidden"),
 	);
 
 	if (mode === "view") {
@@ -424,7 +418,8 @@ function LinkTitle({
 				className={cn(
 					titleClassName,
 					"min-w-0",
-					isHalfBanner ? "truncate" : titleClampClassByPreset[preset],
+					!isHalfBanner && "whitespace-pre-line",
+					isHalfBanner && "truncate",
 				)}
 			>
 				{title}
