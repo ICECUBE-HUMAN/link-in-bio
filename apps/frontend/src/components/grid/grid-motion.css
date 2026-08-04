@@ -144,6 +144,12 @@
 		scale(var(--grid-item-initial-scale));
 }
 
+/* Media renders its data URL placeholder immediately, then reveals the loaded asset. */
+.grid-item-initial-enter.is-entering[data-grid-item-type="media"] {
+	opacity: 1;
+	transform: none;
+}
+
 /* Drag feedback. RGL's parent keeps the item's grid position; this card appears lifted. */
 .grid-item-card {
 	border: 0 solid transparent;

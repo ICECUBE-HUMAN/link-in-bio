@@ -160,6 +160,7 @@ function GridItemShellContent({
 			data-grid-item-shell="true"
 			data-grid-item-id={item.id}
 			data-grid-item-type={item.type}
+			data-grid-item-initial-entering={isInitialEntering ? "true" : undefined}
 			data-grid-item-preset={item.preset ?? "unsupported"}
 			data-grid-item-drag-cancel-selector={GRID_ITEM_DRAG_CANCEL_SELECTOR}
 			className={cn(

@@ -18,32 +18,36 @@ export function MapViewportGate({
 	children,
 }: MapViewportGateProps): ReactElement {
 	const containerRef = useRef<HTMLDivElement>(null);
-	const [isNearViewport, setIsNearViewport] = useState(false);
+	const [hasMounted, setHasMounted] = useState(false);
 
 	useEffect(() => {
+		if (hasMounted) return;
+
 		if (forceMount) {
-			setIsNearViewport(true);
+			setHasMounted(true);
 			return;
 		}
 
 		const container = containerRef.current;
 		if (!container || typeof IntersectionObserver === "undefined") {
-			setIsNearViewport(true);
+			setHasMounted(true);
 			return;
 		}
 
 		const observer = new IntersectionObserver(
-			([entry]) => setIsNearViewport(entry?.isIntersecting ?? false),
+			([entry]) => {
+				if (entry?.isIntersecting) setHasMounted(true);
+			},
 			{ rootMargin: "200px 0px" },
 		);
 		observer.observe(container);
 
 		return () => observer.disconnect();
-	}, [forceMount]);
+	}, [forceMount, hasMounted]);
 
 	return (
 		<div ref={containerRef} className="relative size-full min-h-0">
-			{isNearViewport ? children : placeholder}
+			{hasMounted ? children : placeholder}
 		</div>
 	);
 }
