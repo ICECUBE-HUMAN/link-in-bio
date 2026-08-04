@@ -47,15 +47,6 @@ function syncTextareaVerticalAlign(
 	textarea.style.paddingTop = `${basePadding + extraPadding}px`;
 }
 
-const textClampClassByPreset = {
-	fullBanner: "line-clamp-1",
-	halfBanner: "line-clamp-2",
-	squareSmall: "line-clamp-5",
-	landscape: "line-clamp-3",
-	squareLarge: "line-clamp-[10]",
-	portrait: "line-clamp-[12]",
-} as const;
-
 const textSizeClassByPreset = {
 	fullBanner: "text-lg leading-7",
 	halfBanner: "text-lg leading-8.5",
@@ -64,6 +55,9 @@ const textSizeClassByPreset = {
 	squareLarge: "text-lg leading-8",
 	portrait: "text-lg leading-8",
 } as const;
+
+const textContentClassName =
+	"min-h-0 min-w-0 flex-1 rounded-lg bg-transparent p-1 px-2 text-foreground/90 outline-none";
 
 export function TextItemRenderer({
 	item,
@@ -139,7 +133,8 @@ export function TextItemRenderer({
 								})
 							}
 							className={cn(
-								"min-h-0 min-w-0 flex-1 resize-none whitespace-pre-wrap rounded-lg bg-transparent p-1 px-2 text-foreground/90 outline-none",
+								textContentClassName,
+								"resize-none whitespace-pre-wrap",
 								textSizeClassByPreset[preset],
 								"h-full overflow-y-auto placeholder:text-input hover:bg-muted focus-visible:bg-muted",
 							)}
@@ -148,9 +143,9 @@ export function TextItemRenderer({
 					) : (
 						<div
 							className={cn(
-								"min-h-0 min-w-0 whitespace-pre-line text-ellipsis text-foreground/90",
+								textContentClassName,
+								"no-scrollbar overflow-y-auto whitespace-pre-wrap",
 								textSizeClassByPreset[preset],
-								textClampClassByPreset[preset],
 							)}
 							style={{ textAlign }}
 						>
