@@ -42,6 +42,7 @@ const DELETE_CONFIRMATION_CLICKS = 3;
 type PageSettingsMenuProps = {
 	page: PageResponse;
 	onChanged: (page: PageResponse) => void;
+	onOpenChange?: (open: boolean) => void;
 	localOnly?: boolean;
 };
 
@@ -54,6 +55,7 @@ const handleAvailabilityIcons = {
 export function PageSettingsMenu({
 	page,
 	onChanged,
+	onOpenChange,
 	localOnly = false,
 }: PageSettingsMenuProps) {
 	const ui = createUISFX({
@@ -71,6 +73,7 @@ export function PageSettingsMenu({
 			open={open}
 			onOpenChange={(nextOpen) => {
 				setOpen(nextOpen);
+				onOpenChange?.(nextOpen);
 				if (nextOpen) {
 					setView("menu");
 					setIsHandleSuccess(false);

@@ -651,6 +651,7 @@ export function PageImageEditor({
 							{
 								"--profile-image-reveal-closed-radius": `${imageFrameSize / 2}px`,
 								"--profile-image-reveal-radius": `${imageRevealRadius}px`,
+								"--profile-image-shadow-outset": "96px",
 							} as CSSProperties
 						}
 					>

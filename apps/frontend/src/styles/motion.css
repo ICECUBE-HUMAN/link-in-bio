@@ -117,7 +117,12 @@
 
 .t-profile-image-reveal[data-open="true"] {
 	overflow: visible;
-	clip-path: circle(var(--profile-image-reveal-radius) at 50% 50%);
+	clip-path: circle(
+		calc(
+			var(--profile-image-reveal-radius) + var(--profile-image-shadow-outset)
+		)
+		at 50% 50%
+	);
 	transition: none;
 	animation: t-profile-image-reveal-open var(--profile-image-reveal-dur)
 		var(--profile-image-reveal-ease) both;
@@ -130,7 +135,12 @@
 		);
 	}
 	to {
-		clip-path: circle(var(--profile-image-reveal-radius) at 50% 50%);
+		clip-path: circle(
+			calc(
+				var(--profile-image-reveal-radius) + var(--profile-image-shadow-outset)
+			)
+			at 50% 50%
+		);
 	}
 }
 
