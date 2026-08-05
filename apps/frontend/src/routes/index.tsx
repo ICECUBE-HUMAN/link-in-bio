@@ -27,7 +27,7 @@ function Home() {
 				<section className="flex-1 px-5 pb-16">
           <HeroSection />
           <FeatureSection />
-					<MessageSection />
+					{/*<MessageSection />*/}
 					<CTASection />
 				</section>
       </div>

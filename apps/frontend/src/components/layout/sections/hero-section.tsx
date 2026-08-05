@@ -1,5 +1,6 @@
 import CTAButton from "@/components/auth/cta-button";
 import TryDemoButton from "@/components/auth/demo-button";
+import { Badge } from "@/components/ui/badge";
 
 export default function HeroSection() {
 	return (
@@ -8,9 +9,10 @@ export default function HeroSection() {
         <div className="flex flex-col items-center justify-center gap-12">
           <header className="flex flex-col gap-6">
             <aside>
-              <div className="size-8 rounded-full surface-line">
+              {/*<div className="size-8 rounded-full surface-line">
                 <img src="/logo512.png" alt="Logo" className="size-full rounded-[inherit] object-cover" />
-              </div>
+              </div>*/}
+              <Badge className="p-3 text-brand bg-brand/10! rounded-md font-medium">Public beta</Badge>
             </aside>
             <h1 className="text-3xl md:text-4xl tracking-tight leading-9 font-medium md:text-balance flex flex-col">
               <p>A Link in Bio</p>
