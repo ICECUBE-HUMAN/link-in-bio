@@ -6,6 +6,12 @@
 	"compatibility_flags": [
 		"nodejs_compat"
 	],
+	"routes": [
+		{
+			"pattern": "api.grabbin.me",
+			"custom_domain": true
+		}
+	],
 	"secrets": {
 		"required": [
 			"BETTER_AUTH_URL",
@@ -27,8 +33,6 @@
 			"CHZZK_CLIENT_SECRET",
 			"TWITCH_CLIENT_ID",
 			"TWITCH_CLIENT_SECRET",
-			"TWITCH_USER_REFRESH_TOKEN",
-			"DISCORD_BOT_TOKEN",
 			"GITHUB_TOKEN",
 			"PRODUCT_HUNT_TOKEN",
 		]
@@ -41,6 +45,12 @@
 			// Keep local development independent from Wrangler's remote dev proxy.
 			// Production still uses the configured R2 bucket when deployed.
 			"remote": true,
+		}
+	],
+	"hyperdrive": [
+		{
+			"binding": "HYPERDRIVE",
+			"id": "04aace29e5904b6b874aa3becbd9986d"
 		}
 	],
 	"queues": {

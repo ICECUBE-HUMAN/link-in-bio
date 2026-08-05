@@ -4,7 +4,7 @@
 	"type": "module",
 	"exports": "./src/index.ts",
 	"scripts": {
-		"dev": "wrangler dev",
+		"dev": "set -a && . .env.local && set +a && CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE=\"$DATABASE_URL\" wrangler dev",
 		"deploy": "wrangler deploy --minify --secrets-file .env.production",
 		"test": "bun test",
 		"check": "tsc --noEmit",

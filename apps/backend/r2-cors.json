@@ -1,0 +1,17 @@
+
+{
+	"rules": [
+		{
+			"allowed": {
+			"origins": [
+				"http://localhost:3000",
+				"https://grabbin.me"
+			],
+			"methods": ["GET", "HEAD", "PUT"],
+			"headers": ["Content-Type", "Cache-Control"]
+			},
+			"exposeHeaders": [],
+			"maxAgeSeconds": 3600
+		}
+	]
+}

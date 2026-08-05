@@ -7,6 +7,7 @@ export const createDatabaseClient = (
 	env: AppBindings,
 ) => {
 	const connectionString =
+		env.HYPERDRIVE?.connectionString ??
 		env.DATABASE_URL;
 
 	if (!connectionString) {

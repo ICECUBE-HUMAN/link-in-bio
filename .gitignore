@@ -3,7 +3,8 @@ node_modules
 dist
 dist-ssr
 *.local
-.env
+.env*
+.dev.vars*
 .nitro
 .tanstack
 .wrangler

@@ -22,6 +22,14 @@ export const betterAuthOptions = (
 	env: AppBindings,
 	{ backgroundTaskHandler }: Options,
 ) => {
+	const frontendHostname = new URL(
+		env.FRONTEND_URL,
+	).hostname;
+	const isLocalFrontend = [
+		"localhost",
+		"127.0.0.1",
+	].includes(frontendHostname);
+
 	return {
 		/**
 		 * The name of the application.
@@ -112,10 +120,10 @@ export const betterAuthOptions = (
 			backgroundTasks: {
 				handler: backgroundTaskHandler,
 			},
-			// crossSubDomainCookies: {
-			//   enabled: true,
-			//   domain: 'YOUR_APP_DOMAIN'
-			// }
+			crossSubDomainCookies: {
+				enabled: !isLocalFrontend,
+				domain: frontendHostname,
+			},
 		},
 	} as BetterAuthOptions;
 };
