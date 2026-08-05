@@ -56,8 +56,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			<head>
 				<HeadContent />
 			</head>
-      <body className="flex min-h-lvh flex-col">
-        <TooltipProvider><main className="flex min-h-lvh flex-1 flex-col">{children}</main></TooltipProvider>
+      <body className="flex flex-col">
+        <TooltipProvider>
+          <main className="flex min-h-svh flex-col">
+            {children}
+          </main>
+        </TooltipProvider>
 				<Toaster position="bottom-center" />
 				<Scripts />
 			</body>
