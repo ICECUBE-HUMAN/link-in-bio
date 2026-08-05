@@ -159,12 +159,7 @@ export default function LogInSection({ redirectTo }: LogInSectionProps) {
 	}
 
 	return (
-		<main className="relative mx-auto flex min-h-dvh w-full items-center justify-center overflow-y-auto px-5 py-6">
-			<img
-				src="/images/t.png"
-				alt=""
-				className="fixed -bottom-16 left-0 w-full h-96 md:h-165 object-cover -z-10"
-			/>
+		<main className="relative mx-auto flex min-h-dvh w-full items-center justify-center overflow-y-auto overscroll-none px-5 py-6">
 			<section className="w-full max-w-xs flex flex-col gap-10 relative">
 				<form
 					className="t-page-slide t-login-page-slide"
