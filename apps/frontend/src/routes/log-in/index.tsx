@@ -50,6 +50,7 @@ export const Route = createFileRoute("/log-in/")({
 			title: "Log in",
 			description: LOG_IN_DESCRIPTION,
 			canonicalPath: "/log-in",
+			noIndex: true,
 			jsonLd: createWebPageJsonLd({
 				title: "Log in",
 				description: LOG_IN_DESCRIPTION,

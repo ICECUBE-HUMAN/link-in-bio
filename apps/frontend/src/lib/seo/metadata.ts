@@ -13,6 +13,7 @@ type MetadataInput = {
 	description?: string;
 	canonicalPath?: string;
 	image?: string;
+	imageAlt?: string;
 	keywords?: string[];
 	noIndex?: boolean;
 	type?: "website" | "article";
@@ -29,11 +30,20 @@ type RouteHead = {
 	scripts: Array<Record<string, string>>;
 };
 
-export const DEFAULT_SITE_NAME = env.VITE_APP_TITLE?.trim() || "Cream";
+const configuredSiteName = env.VITE_APP_TITLE?.trim();
+const isStarterSiteName = ["cream", "service"].includes(
+	configuredSiteName?.toLowerCase() ?? "",
+);
+
+export const DEFAULT_SITE_NAME =
+	configuredSiteName && !isStarterSiteName ? configuredSiteName : "grabbin";
 
 export const DEFAULT_APP_LOGO = "/favicon.ico";
 
-export const DEFAULT_SEO_DESCRIPTION = "Built with interest and long solitude";
+export const DEFAULT_SOCIAL_IMAGE = "/logo512.png";
+
+export const DEFAULT_SEO_DESCRIPTION =
+	"Create a beautiful link in bio page with your links, media, and favorite places.";
 
 const DEFAULT_LOCALE = "en_US";
 
@@ -85,6 +95,13 @@ function buildTitle(title: string | undefined, siteName: string) {
 	return title ? `${title} | ${siteName}` : siteName;
 }
 
+export function truncateSeoText(value: string, maxLength = 160) {
+	const normalized = value.replace(/\s+/g, " ").trim();
+	if (normalized.length <= maxLength) return normalized;
+
+	return `${normalized.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
 function toJsonLdScripts(jsonLd?: MetadataInput["jsonLd"]) {
 	const items = Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : [];
 
@@ -125,6 +142,9 @@ export function createSeo(
 		{ property: "og:locale", content: input.locale ?? DEFAULT_LOCALE },
 		...(canonicalUrl ? [{ property: "og:url", content: canonicalUrl }] : []),
 		...(imageUrl ? [{ property: "og:image", content: imageUrl }] : []),
+		...(input.imageAlt
+			? [{ property: "og:image:alt", content: input.imageAlt }]
+			: []),
 		{
 			name: "twitter:card",
 			content: imageUrl ? "summary_large_image" : "summary",
@@ -134,6 +154,9 @@ export function createSeo(
 			? [{ name: "twitter:description", content: input.description }]
 			: []),
 		...(imageUrl ? [{ name: "twitter:image", content: imageUrl }] : []),
+		...(input.imageAlt
+			? [{ name: "twitter:image:alt", content: input.imageAlt }]
+			: []),
 		...(input.noIndex
 			? [{ name: "robots", content: "noindex, nofollow" }]
 			: []),

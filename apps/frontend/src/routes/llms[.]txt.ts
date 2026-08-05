@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { allPosts } from "content-collections";
-import { env } from "@/env";
-import { createLlmsText } from "@/lib/seo/metadata";
+import { createLlmsText, DEFAULT_SITE_NAME } from "@/lib/seo/metadata";
 import { getSiteUrl } from "@/lib/site/site-url";
 
 function toAbsoluteUrl(path: string, siteUrl?: string) {
@@ -17,38 +15,27 @@ export const Route = createFileRoute("/llms.txt")({
 		handlers: {
 			GET: ({ request }) => {
 				const siteUrl = getSiteUrl() ?? new URL(request.url).origin;
-				const title = env.VITE_APP_TITLE?.trim() || "TanStack Start Starter";
 				const body = createLlmsText({
-					title,
+					title: DEFAULT_SITE_NAME,
 					description:
-						"A TanStack Start starter with SSR, structured metadata, authentication, and markdown-backed blog content.",
+						"grabbin is a flexible link in bio service for presenting your identity, links, media, and favorite places in one personal page.",
 					resources: [
 						{
 							name: "Home",
 							url: toAbsoluteUrl("/", siteUrl),
 							description:
-								"Top-level overview of the site and primary navigation.",
+								"Overview of the link in bio service and its main features.",
 						},
 						{
-							name: "Blog Index",
-							url: toAbsoluteUrl("/blog", siteUrl),
-							description: "Collection of markdown-backed posts and updates.",
+							name: "Explore",
+							url: toAbsoluteUrl("/explore", siteUrl),
+							description: "Discovery surface for pages created by users.",
 						},
 						{
-							name: "Privacy Policy",
-							url: toAbsoluteUrl("/privacy", siteUrl),
-							description: "Starter privacy policy page.",
+							name: "Updates",
+							url: toAbsoluteUrl("/update", siteUrl),
+							description: "Product updates and insights.",
 						},
-						{
-							name: "Terms of Service",
-							url: toAbsoluteUrl("/terms", siteUrl),
-							description: "Starter terms of service page.",
-						},
-						...allPosts.map((post) => ({
-							name: post.title,
-							url: toAbsoluteUrl(`/blog/${post.slug}`, siteUrl),
-							description: post.description,
-						})),
 					],
 				});
 

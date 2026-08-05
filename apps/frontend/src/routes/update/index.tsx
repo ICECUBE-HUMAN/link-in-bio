@@ -1,4 +1,3 @@
-// src/routes/blog.index.tsx
 import { createFileRoute } from "@tanstack/react-router";
 import { createWebPageJsonLd } from "@/lib/seo/json-ld";
 import { createSeo, DEFAULT_SITE_NAME } from "@/lib/seo/metadata";
@@ -17,11 +16,12 @@ export const Route = createFileRoute("/update/")({
 	head: () =>
 		createSeo({
 			title: "Update",
-			description: "Updates and insights from Service",
+			description: "Updates and insights from the team behind this link in bio service.",
 			canonicalPath: "/update",
+			noIndex: true,
 			jsonLd: createWebPageJsonLd({
 				title: "Update",
-				description: "Updates and insights from Service",
+				description: "Updates and insights from the team behind this link in bio service.",
 				path: "/update",
 			}),
 		}),

@@ -66,6 +66,7 @@ export const Route = createFileRoute("/new")({
 			title: "Create your page",
 			description: NEW_PAGE_DESCRIPTION,
 			canonicalPath: "/new",
+			noIndex: true,
 			jsonLd: createWebPageJsonLd({
 				title: "New page",
 				description: NEW_PAGE_DESCRIPTION,

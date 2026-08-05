@@ -1,13 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createSeo } from "@/lib/seo/metadata";
+import {
+	createWebPageJsonLd,
+	createWebSiteJsonLd,
+} from "@/lib/seo/json-ld";
+import {
+	createSeo,
+	DEFAULT_SEO_DESCRIPTION,
+	DEFAULT_SITE_NAME,
+	DEFAULT_SOCIAL_IMAGE,
+} from "@/lib/seo/metadata";
 
 import CTASection from "@/components/layout/sections/cta-section";
 import HeroSection from "@/components/layout/sections/hero-section";
-import MessageSection from "@/components/layout/sections/message-section";
 import FeatureSection from "@/components/layout/sections/feature-section";
 
 import { Footer } from "@/components/layout/shell/footer";
 
+
+const HOME_TITLE = "A Link in Bio, the most beautiful and clean you've ever seen";
+const HOME_KEYWORDS = [
+	"link in bio",
+	"personal page",
+	"creator page",
+	"social links",
+	"online profile",
+];
 
 export const Route = createFileRoute("/")({
 	staticData: {
@@ -16,7 +33,27 @@ export const Route = createFileRoute("/")({
 			order: 10,
 		},
 	},
-	head: () => createSeo({}),
+	head: () =>
+		createSeo({
+			title: HOME_TITLE,
+			description: DEFAULT_SEO_DESCRIPTION,
+			canonicalPath: "/",
+			image: DEFAULT_SOCIAL_IMAGE,
+			imageAlt: `${DEFAULT_SITE_NAME} preview`,
+			keywords: HOME_KEYWORDS,
+			jsonLd: [
+				createWebSiteJsonLd({
+					name: DEFAULT_SITE_NAME,
+					description: DEFAULT_SEO_DESCRIPTION,
+					path: "/",
+				}),
+				createWebPageJsonLd({
+					title: HOME_TITLE,
+					description: DEFAULT_SEO_DESCRIPTION,
+					path: "/",
+				}),
+			],
+		}),
 	component: Home,
 });
 

@@ -21,6 +21,7 @@ export const Route = createFileRoute("/explore/")({
 			title: "Explore",
 			description: EXPLORE_DESCRIPTION,
 			canonicalPath: "/explore",
+			noIndex: true,
 			jsonLd: createWebPageJsonLd({
 				title: "Explore",
 				description: EXPLORE_DESCRIPTION,

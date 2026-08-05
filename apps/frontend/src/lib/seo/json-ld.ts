@@ -1,4 +1,3 @@
-import { env } from "@/env";
 import {
 	DEFAULT_APP_LOGO,
 	DEFAULT_SITE_NAME,
@@ -41,6 +40,35 @@ export function createWebPageJsonLd(input: {
 	};
 }
 
+export function createProfilePageJsonLd(input: {
+	title: string;
+	handle: string;
+	description?: string;
+	path: string;
+	image?: string;
+	siteUrl?: string;
+}) {
+	const siteUrl = input.siteUrl ?? getSiteUrl();
+	const url = withSiteUrl(input.path, siteUrl);
+	const image = input.image ? withSiteUrl(input.image, siteUrl) : undefined;
+
+	return {
+		"@context": "https://schema.org",
+		"@type": "ProfilePage",
+		name: input.title,
+		url,
+		...(input.description ? { description: input.description } : {}),
+		mainEntity: {
+			"@type": "Person",
+			name: input.title,
+			alternateName: `@${input.handle}`,
+			url,
+			...(input.description ? { description: input.description } : {}),
+			...(image ? { image } : {}),
+		},
+	};
+}
+
 export function createOrganizationJsonLd(input?: {
 	name?: string;
 	url?: string;
@@ -48,7 +76,7 @@ export function createOrganizationJsonLd(input?: {
 	description?: string;
 }) {
 	const siteUrl = input?.url ?? getSiteUrl();
-	const name = input?.name ?? env.VITE_APP_TITLE?.trim() ?? DEFAULT_SITE_NAME;
+	const name = input?.name ?? DEFAULT_SITE_NAME;
 	const logo = input?.logoPath
 		? withSiteUrl(input.logoPath, siteUrl)
 		: siteUrl

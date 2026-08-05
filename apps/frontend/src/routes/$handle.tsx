@@ -39,7 +39,14 @@ import { getPageMode } from "@/lib/page/page-mode";
 import { useBreakpointTransition } from "@/lib/page/use-breakpoint-transition";
 import { useLinkMetadataEnrichment } from "@/lib/page/use-link-metadata-enrichment";
 import { usePageAutoSave } from "@/lib/page/use-page-auto-save";
-import { DEFAULT_APP_LOGO } from "@/lib/seo/metadata";
+import { createProfilePageJsonLd } from "@/lib/seo/json-ld";
+import {
+	createSeo,
+	DEFAULT_APP_LOGO,
+	DEFAULT_SEO_DESCRIPTION,
+	DEFAULT_SITE_NAME,
+	truncateSeoText,
+} from "@/lib/seo/metadata";
 
 type HandleLoaderData = {
 	page: PageResponse;
@@ -50,6 +57,31 @@ type HandleLoaderData = {
 
 function getFaviconUrl(imageUrl: string) {
 	return `/api/favicon?v=3&image=${encodeURIComponent(imageUrl)}`;
+}
+
+function getPublicPageTitle(page: PageResponse) {
+	return page.name?.trim() || `@${page.handle}`;
+}
+
+function getPublicPageDescription(page: PageResponse) {
+	const title = getPublicPageTitle(page);
+	const bio = page.bio?.trim();
+
+	return truncateSeoText(
+		bio || `${title} on ${DEFAULT_SITE_NAME}: links, media, and more.`,
+	);
+}
+
+function hasPublicPageContent(page: PageResponse, items: PageItemResponse[]) {
+	return Boolean(
+		page.name?.trim() ||
+		page.bio?.trim() ||
+		items.some((item) => {
+			if (item.type === "text") return item.data.text.trim();
+			if (item.type === "section") return item.data.title.trim();
+			return true;
+		}),
+	);
 }
 
 export const Route = createFileRoute("/$handle")({
@@ -91,21 +123,45 @@ export const Route = createFileRoute("/$handle")({
 		};
 	},
 	head: ({ loaderData }) => {
-		const title = loaderData?.page.name?.trim() || loaderData?.page.handle;
+		const title = loaderData
+			? getPublicPageTitle(loaderData.page)
+			: DEFAULT_SITE_NAME;
+		const description = loaderData
+			? getPublicPageDescription(loaderData.page)
+			: DEFAULT_SEO_DESCRIPTION;
 		const image = loaderData
 			? (getProfileImageUrl(loaderData.page.image) ?? DEFAULT_APP_LOGO)
 			: DEFAULT_APP_LOGO;
 		const favicon = getFaviconUrl(image);
+		const canonicalPath = loaderData
+			? `/${encodeURIComponent(loaderData.page.handle)}`
+			: undefined;
+		const noIndex = loaderData
+			? loaderData.isDemo || !hasPublicPageContent(loaderData.page, loaderData.items)
+			: false;
+
+		const seo = createSeo({
+			title,
+			description,
+			canonicalPath,
+			image,
+			imageAlt: `${title} profile image`,
+			noIndex,
+			jsonLd: loaderData
+				? createProfilePageJsonLd({
+						title,
+						handle: loaderData.page.handle,
+						description,
+						path: canonicalPath ?? "/",
+						image,
+					})
+				: undefined,
+		});
 
 		return {
-			meta: [
-				{ title: title ?? "Sinabro" },
-				{ property: "og:title", content: title ?? "Sinabro" },
-				{ property: "og:image", content: image },
-				{ name: "twitter:title", content: title ?? "Sinabro" },
-				{ name: "twitter:image", content: image },
-			],
+			...seo,
 			links: [
+				...seo.links,
 				{
 					rel: "icon",
 					href: favicon,

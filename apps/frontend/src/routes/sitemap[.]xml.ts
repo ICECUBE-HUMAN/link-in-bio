@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { allPosts, allPrivacyPages, allTermsPages } from "content-collections";
 import { getSiteUrl } from "@/lib/site/site-url";
 
 type SitemapEntry = {
@@ -48,41 +47,6 @@ export const Route = createFileRoute("/sitemap.xml")({
 						changefreq: "weekly",
 						priority: 1,
 					},
-					{
-						loc: toAbsoluteUrl("/blog", origin),
-						changefreq: "weekly",
-						priority: 0.8,
-					},
-					{
-						loc: toAbsoluteUrl("/privacy", origin),
-						changefreq: "monthly",
-						priority: 0.3,
-					},
-					{
-						loc: toAbsoluteUrl("/terms", origin),
-						changefreq: "monthly",
-						priority: 0.3,
-					},
-					...allPosts.map((post) => ({
-						loc: toAbsoluteUrl(`/blog/${post.slug}`, origin),
-						lastmod: post.published.toISOString().split("T")[0],
-						changefreq: "monthly" as const,
-						priority: 0.6,
-					})),
-					...allPrivacyPages
-						.filter((page) => page.slug !== "index")
-						.map((page) => ({
-							loc: toAbsoluteUrl(`/privacy/${page.slug}`, origin),
-							changefreq: "monthly" as const,
-							priority: 0.2,
-						})),
-					...allTermsPages
-						.filter((page) => page.slug !== "index")
-						.map((page) => ({
-							loc: toAbsoluteUrl(`/terms/${page.slug}`, origin),
-							changefreq: "monthly" as const,
-							priority: 0.2,
-						})),
 				];
 
 				const sitemap =
