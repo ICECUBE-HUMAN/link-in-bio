@@ -389,7 +389,7 @@ function getFeatureViewport(width: number): FeatureViewport {
 export default function FeatureSection() {
 	const { ref: textRevealRef, isShown: isTextShown } =
 		useRevealOnView<HTMLDivElement>({ threshold: 0.5 });
-	const [viewport, setViewport] = useState<FeatureViewport>("mobile");
+	const [viewport, setViewport] = useState<FeatureViewport | null>(null);
 	useEffect(() => {
 		const syncViewport = () =>
 			setViewport(getFeatureViewport(window.innerWidth));
@@ -399,6 +399,8 @@ export default function FeatureSection() {
 	}, []);
 	const items = useMemo(createFeatureItems, []);
 	const visibleItems = useMemo(() => {
+		if (!viewport) return [];
+
 		const activePlaceholders = FEATURE_PLACEHOLDERS_BY_VIEWPORT[viewport];
 		return items.filter(
 			(item) =>
@@ -407,9 +409,9 @@ export default function FeatureSection() {
 		);
 	}, [items, viewport]);
 	const breakpoint: Breakpoint = viewport === "wide" ? "wide" : "compact";
-	const columns = FEATURE_COLUMNS[viewport];
+	const columns = viewport ? FEATURE_COLUMNS[viewport] : 0;
 	const layoutOverride = useMemo(
-		() => createFeatureLayout(viewport),
+		() => (viewport ? createFeatureLayout(viewport) : undefined),
 		[viewport],
 	);
 
@@ -428,20 +430,22 @@ export default function FeatureSection() {
 				</p>
 			</div>
 
-			<div className="feature-section-grid -mx-9 w-[calc(100%+4.5rem)] max-w-none overflow-x-auto overflow-y-visible px-0 sm:overflow-x-visible **:aria-[aria-label*='Google']:hidden">
-				<div className="pointer-events-none mx-auto w-full min-w-0" inert>
-					<GridSection
-						items={visibleItems}
-						breakpoint={breakpoint}
-						forceBreakpoint={breakpoint}
-						columns={columns}
-						disableCompaction
-						layoutOverride={layoutOverride}
-						mode="view"
-						onCommand={noopGridCommand}
-					/>
+			{viewport ? (
+				<div className="feature-section-grid -mx-9 w-[calc(100%+4.5rem)] max-w-none overflow-x-auto overflow-y-visible px-0 sm:overflow-x-visible **:aria-[aria-label*='Google']:hidden">
+					<div className="pointer-events-none mx-auto w-full min-w-0" inert>
+						<GridSection
+							items={visibleItems}
+							breakpoint={breakpoint}
+							forceBreakpoint={breakpoint}
+							columns={columns}
+							disableCompaction
+							layoutOverride={layoutOverride}
+							mode="view"
+							onCommand={noopGridCommand}
+						/>
+					</div>
 				</div>
-			</div>
+			) : null}
 		</section>
 	);
 }
