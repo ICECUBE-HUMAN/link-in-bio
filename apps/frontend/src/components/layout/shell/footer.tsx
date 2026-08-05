@@ -52,7 +52,7 @@ export function Footer() {
       </div>
 			<div
 				aria-hidden="true"
-				className="pointer-events-none absolute inset-x-0 bottom-6 translate-y-1/2 text-center text-[10rem] font-bold tracking-wider text-gray-bright/20"
+				className="pointer-events-none absolute inset-x-0 bottom-4 translate-y-1/2 text-center text-[7rem] md:bottom-6 md:text-[10rem] font-bold tracking-wider text-gray-bright/20"
 			>
 				{DEFAULT_SITE_NAME}
 			</div>
