@@ -3,12 +3,12 @@ import { SmileCircle } from "reicon-react";
 
 export default function MessageSection() {
   return (
-    <section className="min-h-[70vh] flex flex-col items-center gap-16 py-20">
+    <section className="min-h-[70vh] flex flex-col items-center gap-16 py-20 p-4 max-w-4xl mx-auto">
       <div>
-        <h2 className="text-3xl sm:text-4xl/18 tracking-tighter font-semibold md:text-balance max-w-2xl">From the Builder</h2>
+        <h2 className="text-3xl md:text-4xl tracking-tighter font-medium md:text-balance max-w-2xl">From the Builder</h2>
       </div>
       <div className="">
-        <div className="text-center rounded-2xl bg-secondary/80 max-w-4xl p-16 tracking-tight leading-7 font-medium text-lg text-balance text-primary/80 flex flex-col gap-5 sm:text-xl">
+        <div className="text-center rounded-2xl bg-secondary/80 p-16 tracking-tight leading-7 font-medium text-lg text-balance text-primary/80 flex flex-col gap-5 sm:text-xl">
           <p>
             Hello! I'm Reze, the builder of {env.VITE_APP_TITLE}.
           </p>

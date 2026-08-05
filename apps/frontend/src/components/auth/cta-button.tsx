@@ -9,8 +9,8 @@ export default function CTAButton({
 	return (
 		<Button
       size="lg"
-      variant={'secondary'}
-			className="h-12 rounded-xl px-10 text-base"
+      variant={'brand'}
+			className="rounded-lg text-base px-6 py-5.5"
 			nativeButton={false}
 			render={<Link to="/log-in">{title}</Link>}
 		/>

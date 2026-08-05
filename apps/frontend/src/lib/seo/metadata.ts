@@ -33,7 +33,7 @@ export const DEFAULT_SITE_NAME = env.VITE_APP_TITLE?.trim() || "Cream";
 
 export const DEFAULT_APP_LOGO = "/favicon.ico";
 
-export const DEFAULT_SEO_DESCRIPTION = "Built with interest and long solitude.";
+export const DEFAULT_SEO_DESCRIPTION = "Built with interest and long solitude";
 
 const DEFAULT_LOCALE = "en_US";
 

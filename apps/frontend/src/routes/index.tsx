@@ -4,7 +4,7 @@ import { createSeo } from "@/lib/seo/metadata";
 import CTASection from "@/components/layout/sections/cta-section";
 import HeroSection from "@/components/layout/sections/hero-section";
 import MessageSection from "@/components/layout/sections/message-section";
-import { FeatureSection2 } from "@/components/layout/sections/feature-section";
+import FeatureSection from "@/components/layout/sections/feature-section";
 
 import { Footer } from "@/components/layout/shell/footer";
 
@@ -26,12 +26,14 @@ function Home() {
 			<div className="flex min-h-lvh flex-col">
 				<section className="flex-1 px-5 pb-16">
           <HeroSection />
-          <FeatureSection2 />
+          <FeatureSection />
 					<MessageSection />
 					<CTASection />
 				</section>
-			</div>
-			<Footer />
+      </div>
+      <div className="px-5">
+        <Footer />
+      </div>
 		</main>
 	);
 }

@@ -11,26 +11,31 @@ export function Footer() {
 
 	return (
 		<footer className="bg-background">
-			<div className="mx-auto flex min-h-[24vh] w-full max-w-5xl flex-col justify-between gap-10 px-5 py-32 text-center sm:flex-row sm:px-8 sm:py-16">
-				<div className="flex flex-col gap-12">
-					{/*<img
-						src={DEFAULT_APP_LOGO}
-						alt={DEFAULT_SITE_NAME}
-						className="size-10 rounded-2xl object-contain sm:size-12"
-					/>*/}
-					<div className="flex flex-col items-start text-sm font-medium gap-3">
+			<div className="mx-auto flex min-h-[36vh] w-full max-w-4xl flex-col justify-between gap-10 px-4 py-32 text-center sm:flex-row ">
+        <div className="flex flex-col gap-2">
+          <aside className="flex items-center gap-2">
+            <div className="size-6 rounded-full surface-line">
+              <img
+    						src={'/logo512.png'}
+    						alt={DEFAULT_SITE_NAME}
+    						className="rounded-[inherit] size-full"
+              />
+            </div>
+            <h3 className="font-medium">{DEFAULT_SITE_NAME}</h3>
+          </aside>
+					<div className="flex flex-col items-start font-medium gap-8">
 						<div className="flex flex-col items-start tracking-tight leading-3">
 							<p className="max-w-md leading-6">{DEFAULT_SEO_DESCRIPTION}</p>
-							<p>Designed for everyone.</p>
+							<p>Designed for everyone</p>
 						</div>
-						<p className="">
+						<p className="text-gray-bright text-sm tracking-tight leading-6">
 							&copy; {currentYear} {DEFAULT_SITE_NAME}
 						</p>
 					</div>
 				</div>
 
 				<nav aria-label="Footer">
-					<ul className="flex flex-col items-start gap-1 text-sm font-medium sm:flex-col">
+					<ul className="flex flex-col items-start gap-1 text-base font-medium sm:flex-col">
 						{footerRoutes.map((route) => (
 							<li key={route.to}>
 								<Link
