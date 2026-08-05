@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { GridSection } from "@/components/grid/grid-section";
 import { FEATURE_ITEMS } from "@/constant/features";
 import { GITHUB_CONTRIBUTION_GRAPH } from "@/constant/github-contribution-graph";
+import { useRevealOnView } from "@/hooks/use-reveal-on-view";
 import { createGridItem } from "@/lib/grid/item-factory";
 import type { GridItemCommandHandler } from "@/lib/grid/item-registry";
 import {
@@ -289,7 +290,7 @@ function createFeatureItems(): GridItem[] {
 	});
 	add({
 		...text,
-		data: { ...text.data, text: "I only know 25 letters.\n I don't know Y." },
+		data: { ...text.data, text: "I only know 25 letters.\nI don't know Y." },
 	});
 
 	const links = [
@@ -386,6 +387,8 @@ function getFeatureViewport(width: number): FeatureViewport {
 }
 
 export default function FeatureSection() {
+	const { ref: textRevealRef, isShown: isTextShown } =
+		useRevealOnView<HTMLDivElement>({ threshold: 0.5 });
 	const [viewport, setViewport] = useState<FeatureViewport>("mobile");
 	useEffect(() => {
 		const syncViewport = () =>
@@ -412,11 +415,14 @@ export default function FeatureSection() {
 
 	return (
 		<section className="mx-auto flex min-h-lvh max-w-7xl flex-col items-center gap-32 p-4 py-20">
-			<div className="flex flex-col items-center gap-2 text-center">
-				<h2 className="text-3xl font-medium tracking-tight md:text-4xl">
+			<div
+				ref={textRevealRef}
+				className={`t-stagger flex flex-col items-center gap-2 text-center ${isTextShown ? "is-shown" : ""}`}
+			>
+				<h2 className="t-stagger-line t-stagger-line--1 text-3xl font-medium tracking-tight md:text-4xl">
 					<span className="text-brand">More than</span> a list of links
 				</h2>
-				<p className="text-lg tracking-tight md:text-xl">
+				<p className="t-stagger-line t-stagger-line--2 text-lg tracking-tight md:text-xl">
 					Bring your links, content, and places together in one page that
 					represents yourself
 				</p>

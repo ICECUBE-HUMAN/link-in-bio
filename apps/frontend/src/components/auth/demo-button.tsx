@@ -10,7 +10,7 @@ export default function TryDemoButton() {
 			nativeButton={false}
 			render={
 				<Link to="/$handle" params={{ handle: "demo" }}>
-					Demo
+					Try demo
 				</Link>
 			}
 		/>

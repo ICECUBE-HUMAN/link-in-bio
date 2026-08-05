@@ -10,10 +10,10 @@ export function Footer() {
 	);
 
 	return (
-		<footer className="bg-background">
-			<div className="mx-auto flex min-h-[36vh] w-full max-w-4xl flex-col justify-between gap-10 px-4 py-32 text-center sm:flex-row ">
+		<footer className="relative overflow-hidden bg-background">
+			<div className="relative mx-auto flex min-h-[36vh] w-full max-w-4xl flex-col justify-between gap-10 px-4 py-32 text-center sm:flex-row ">
         <div className="flex flex-col gap-2">
-          <aside className="flex items-center gap-2">
+          {/*<aside className="flex items-center gap-2">
             <div className="size-6 rounded-full surface-line">
               <img
     						src={'/logo512.png'}
@@ -22,15 +22,15 @@ export function Footer() {
               />
             </div>
             <h3 className="font-medium">{DEFAULT_SITE_NAME}</h3>
-          </aside>
+          </aside>*/}
 					<div className="flex flex-col items-start font-medium gap-8">
-						<div className="flex flex-col items-start tracking-tight leading-3">
-							<p className="max-w-md leading-6">{DEFAULT_SEO_DESCRIPTION}</p>
+						<div className="flex flex-col items-start gap-12 tracking-tight leading-3 max-w-sm">
+							<p className="text-left text-balance leading-tight">{DEFAULT_SEO_DESCRIPTION}</p>
 							<p>Designed for everyone</p>
 						</div>
-						<p className="text-gray-bright text-sm tracking-tight leading-6">
+						{/*<p className="text-gray-bright text-sm tracking-tight leading-6">
 							&copy; {currentYear} {DEFAULT_SITE_NAME}
-						</p>
+						</p>*/}
 					</div>
 				</div>
 
@@ -47,7 +47,14 @@ export function Footer() {
 							</li>
 						))}
 					</ul>
-				</nav>
+        </nav>
+
+      </div>
+			<div
+				aria-hidden="true"
+				className="pointer-events-none absolute inset-x-0 bottom-6 translate-y-1/2 text-center text-[10rem] font-bold tracking-wider text-gray-bright/20 capitalize"
+			>
+				{DEFAULT_SITE_NAME}
 			</div>
 		</footer>
 	);

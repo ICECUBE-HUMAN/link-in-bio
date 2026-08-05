@@ -1,4 +1,4 @@
-import { env } from "@/env";
+import { DEFAULT_SITE_NAME } from "@/lib/seo/metadata";
 import { SmileCircle } from "reicon-react";
 
 export default function MessageSection() {
@@ -10,7 +10,7 @@ export default function MessageSection() {
       <div className="">
         <div className="text-center rounded-2xl bg-secondary/80 p-16 tracking-tight leading-7 font-medium text-lg text-balance text-primary/80 flex flex-col gap-5 sm:text-xl">
           <p>
-            Hello! I'm Reze, the builder of {env.VITE_APP_TITLE}.
+            Hello! I'm Reze, the builder of {DEFAULT_SITE_NAME}.
           </p>
           <div>
             <p>
@@ -20,7 +20,7 @@ export default function MessageSection() {
           </div>
           
           <p>
-            I truly love this product, and as long as I can afford to keep it running, {env.VITE_APP_TITLE} will stay completely free.
+            I truly love this product, and as long as I can afford to keep it running, {DEFAULT_SITE_NAME} will stay completely free.
           </p>
           <p className="flex items-center justify-center">
             Enjoy it. <SmileCircle weight="Filled" />
