@@ -6,7 +6,6 @@ import {
 	useState,
 } from "react";
 import { ItemCaption } from "@/components/grid/item-caption";
-import { ItemExternalAction } from "@/components/grid/item-external-action";
 import { MapFallback } from "@/components/grid/map/map-fallback";
 import { useMapItemInteraction } from "@/components/grid/map/map-item-interaction-context";
 import { MapViewportGate } from "@/components/grid/map/map-viewport-gate";
@@ -15,7 +14,6 @@ import {
 	type MapboxMapSurfaceHandle,
 } from "@/components/grid/map/mapbox-map-surface";
 import type { ItemRendererProps } from "@/lib/grid/item-registry";
-import { toGoogleMapsUrl } from "@/lib/grid/item-registry";
 import type { GridItemByType } from "@/lib/grid/types";
 import {
 	getMapboxAccessToken,
@@ -131,8 +129,6 @@ export function MapItemRenderer({
 		setMapSurfaceKey((key) => key + 1);
 	}
 
-	const href = toGoogleMapsUrl(item.data.latitude, item.data.longitude);
-
 	function handleGridDragStart(event: ReactPointerEvent<HTMLDivElement>) {
 		const target = event.target;
 		if (!(target instanceof Element)) return;
@@ -212,11 +208,6 @@ export function MapItemRenderer({
 						})
 					}
 				/>
-				{showMapFallback ? null : (
-					<div className="pointer-events-auto flex h-fit shrink-0 items-center">
-						<ItemExternalAction href={href} ariaLabel="Open Google Maps" />
-					</div>
-				)}
 			</div>
 		</div>
 	);

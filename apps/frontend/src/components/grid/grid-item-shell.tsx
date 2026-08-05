@@ -63,6 +63,14 @@ function getCardThemeStyle(item: GridItem): CSSProperties | undefined {
 	return getLinkCardThemeStyle(provider);
 }
 
+function getCardStyle(item: GridItem): CSSProperties | undefined {
+	const themeStyle = getCardThemeStyle(item);
+	const backgroundColor = item.style.backgroundColor;
+	if (typeof backgroundColor !== "string") return themeStyle;
+
+	return { ...themeStyle, backgroundColor };
+}
+
 export function GridItemShell(props: GridItemShellProps) {
 	const shellRef = useRef<HTMLDivElement>(null);
 	const content = (
@@ -130,6 +138,8 @@ function GridItemShellContent({
 			: "0ms",
 	} as CSSProperties;
 	const cardThemeStyle = getCardThemeStyle(item);
+	const cardStyle = getCardStyle(item);
+	const isChromeLess = item.style.chromeLess === true;
 
 	useEffect(() => {
 		return () => {
@@ -209,16 +219,22 @@ function GridItemShellContent({
 			<div
 				data-grid-item-card="true"
 				className={cn(
-					"grid-item-card relative size-full overflow-hidden bg-background rounded-2xl shadow-sm",
+					"grid-item-card relative size-full overflow-hidden rounded-2xl",
+					"bg-background",
+					!isChromeLess && "shadow-sm",
 					isMediaCropOpen && "overflow-visible!",
 					item.type === "map" && "map-item-interaction",
 					cardThemeStyle && "link-card-themed",
-					item.type === "media" ? "ring-0! border-0!" : "ring-1 ring-black/5",
+					isChromeLess
+						? "border-0!"
+						: item.type === "media"
+							? "ring-0! border-0!"
+							: "ring-1 ring-black/5",
 					item.type === "map" &&
 						mapInteraction?.isLocationEditing &&
 						"scale-[1.02] ring-3 ring-black",
 				)}
-				style={cardThemeStyle}
+				style={cardStyle}
 			>
 				<div className="relative z-10 size-full min-h-0 rounded-[inherit]">
 					{hasContent ? children : <RuntimeFallback item={item} />}

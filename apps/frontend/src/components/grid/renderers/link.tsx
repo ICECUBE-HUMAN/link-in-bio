@@ -217,7 +217,7 @@ function LinkAction({
 					target="_blank"
 					rel="noreferrer"
 					aria-label={detail ? `${label} ${detail}` : label}
-					className="font-light!"
+					className="font-medium"
 				>
 					{icon && (
 						<span
@@ -397,7 +397,7 @@ function LinkTitle({
 	}, [title]);
 
 	const titleClassName = cn(
-		"block min-h-0 w-full min-w-24 max-w-full rounded-sm px-1 py-0 text-sm font-normal wrap-break-word text-foreground",
+		"block min-h-0 w-full min-w-24 max-w-full rounded-sm px-1 py-0 text-sm font-medium wrap-break-word text-foreground",
 		(isHalfBanner || isLandscape || isSquareSmall || isTall) &&
 			"field-sizing-fixed",
 		isHalfBanner

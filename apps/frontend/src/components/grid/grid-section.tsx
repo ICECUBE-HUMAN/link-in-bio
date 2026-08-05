@@ -13,6 +13,7 @@ import {
 	useSyncExternalStore,
 } from "react";
 import GridLayout, { type EventCallback } from "react-grid-layout";
+import { noCompactor } from "react-grid-layout/core";
 import { fastVerticalCompactor } from "react-grid-layout/extras";
 import {
 	GRID_ITEM_DRAG_CANCEL_SELECTOR,
@@ -40,6 +41,10 @@ type GridSectionProps = {
 	items: readonly GridItem[];
 	breakpoint: Breakpoint;
 	mode: PageMode;
+	forceBreakpoint?: Breakpoint;
+	columns?: number;
+	disableCompaction?: boolean;
+	layoutOverride?: LayoutMap;
 	enrichingItemIds?: ReadonlySet<string>;
 	autoFocusItemId?: string | null;
 	onAutoFocus?: (itemId: string) => void;
@@ -88,6 +93,10 @@ export function GridSection({
 	items,
 	breakpoint,
 	mode,
+	forceBreakpoint,
+	columns,
+	disableCompaction = false,
+	layoutOverride,
 	enrichingItemIds = new Set(),
 	autoFocusItemId = null,
 	onAutoFocus,
@@ -158,6 +167,8 @@ export function GridSection({
 	}, []);
 
 	useEffect(() => {
+		if (mode !== "edit") return;
+
 		const currentItemIds = new Set(renderedItems.map((item) => item.id));
 		const isInitialRender = !hasInitializedItemsRef.current;
 		const newItemIds = isInitialRender
@@ -219,7 +230,7 @@ export function GridSection({
 			});
 			enteringItemFramesRef.current.set(itemId, firstFrame);
 		}
-	}, [items, renderedItems]);
+	}, [items, mode, renderedItems]);
 
 	const startItemExit = useCallback((item: GridItem) => {
 		if (exitingItemTimersRef.current.has(item.id)) return;
@@ -296,7 +307,8 @@ export function GridSection({
 		};
 	}, []);
 
-	const effectiveBreakpoint = isDesktopLayout ? breakpoint : "compact";
+	const effectiveBreakpoint =
+		forceBreakpoint ?? (isDesktopLayout ? breakpoint : "compact");
 	const hasBottomPadding = mode === "edit" || !isDesktopLayout;
 	const bottomPaddingClass = hasBottomPadding
 		? isDesktopLayout
@@ -304,7 +316,7 @@ export function GridSection({
 			: "pb-64"
 		: "";
 	const isAnyItemDragging = draggingItemId !== null;
-	const cols = getColumns(effectiveBreakpoint);
+	const cols = columns ?? getColumns(effectiveBreakpoint);
 	const gridWidth = getGridWidth(cols);
 	const handleGridCommand: GridItemCommandHandler = (command) => {
 		if (command.type === "delete-item") {
@@ -323,11 +335,11 @@ export function GridSection({
 		() =>
 			displayItems.map((item) => ({
 				i: item.id,
-				...item.layouts[effectiveBreakpoint],
+				...(layoutOverride?.[item.id] ?? item.layouts[effectiveBreakpoint]),
 				isResizable: false,
 				resizeHandles: [],
 			})),
-		[displayItems, effectiveBreakpoint],
+		[displayItems, effectiveBreakpoint, layoutOverride],
 	);
 
 	const handleDragStart: EventCallback = (
@@ -429,13 +441,14 @@ export function GridSection({
 					enabled: false,
 				}}
 				autoSize
-				compactor={fastVerticalCompactor}
+				compactor={disableCompaction ? noCompactor : fastVerticalCompactor}
 				onDragStart={handleDragStart}
 				onDrag={handleDrag}
 				onDragStop={handleDragStop}
 			>
 				{displayItems.map((item) => {
-					const itemLayout = item.layouts[effectiveBreakpoint];
+					const itemLayout =
+						layoutOverride?.[item.id] ?? item.layouts[effectiveBreakpoint];
 					const currentPreset = inferPresetFromLayout(
 						item.type,
 						itemLayout,

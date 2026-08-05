@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import type { PageMode } from "@/lib/page/page-mode";
 
 const captionClassName =
-	"field-sizing-content h-7.5 w-fit max-w-full rounded-sm ring ring-border bg-white/100 px-2 py-0 text-sm font-medium text-foreground shadow-xs placeholder:text-gray-bright/60";
+	"field-sizing-content h-7.5 w-fit max-w-full rounded-sm ring ring-border bg-white/70 backdrop-blur-sm px-2 py-0 text-sm font-medium text-foreground shadow-xs placeholder:text-gray-bright/60";
 
 export function ItemCaption({
 	mode,
