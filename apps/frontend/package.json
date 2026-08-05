@@ -12,7 +12,7 @@
     "lint": "biome lint",
     "check": "biome check",
     "typecheck": "tsc --noEmit",
-    "deploy": "bun run build && wrangler deploy"
+    "deploy": "VITE_APP_URL=https://grabbin.me VITE_APP_DOMAIN=grabbin.me VITE_API_BASE_URL=https://api.grabbin.me VITE_R2_PUBLIC_URL=https://cdn.grabbin.me VITE_ENABLE_ANNOUNCEMENT=false bun run build && wrangler deploy"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

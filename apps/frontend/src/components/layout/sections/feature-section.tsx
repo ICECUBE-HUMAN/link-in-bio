@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { GridSection } from "@/components/grid/grid-section";
 import { FEATURE_ITEMS } from "@/constant/features";
 import { GITHUB_CONTRIBUTION_GRAPH } from "@/constant/github-contribution-graph";
+import { env } from "@/env";
 import { useRevealOnView } from "@/hooks/use-reveal-on-view";
 import { createGridItem } from "@/lib/grid/item-factory";
 import type { GridItemCommandHandler } from "@/lib/grid/item-registry";
@@ -22,6 +23,7 @@ import type {
 } from "@/lib/grid/types";
 
 const FEATURE_ASSET_BASE_URL =
+	env.VITE_R2_PUBLIC_URL ??
 	"https://pub-166ebfc3d7814935bb3933545a02637d.r2.dev";
 const FEATURE_LINK_ICON_BASE_URL = `${FEATURE_ASSET_BASE_URL}/assets/link-provider-icon`;
 const FEATURE_BREAKPOINTS: readonly Breakpoint[] = ["wide", "compact"];
