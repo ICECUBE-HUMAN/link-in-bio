@@ -9,8 +9,8 @@ import {
 	InputGroupButton,
 	InputGroupInput,
 } from "@/components/ui/input-group";
-import { env } from "@/env";
 import { authClient } from "@/lib/auth/auth-client";
+import { DEFAULT_SITE_NAME } from "@/lib/seo/metadata";
 
 type LogInSectionProps = {
 	redirectTo: string;
@@ -159,7 +159,7 @@ export default function LogInSection({ redirectTo }: LogInSectionProps) {
 	}
 
 	return (
-		<main className="relative mx-auto flex min-h-dvh w-full items-center justify-center overflow-y-auto overscroll-none px-5 py-6">
+		<main className="relative mx-auto flex min-h-dvh w-full items-center justify-center overflow-y-auto px-5 py-6">
 			<img
 				src="/images/t.png"
 				alt=""
@@ -176,7 +176,7 @@ export default function LogInSection({ redirectTo }: LogInSectionProps) {
 						<header className="flex flex-col gap-1 items-center">
 							<h1 className="text-2xl font-semibold">
 								Log in to{" "}
-								<span className="text-brand">{env.VITE_APP_TITLE}</span>
+								<span className="text-brand">{DEFAULT_SITE_NAME}</span>
 							</h1>
 							<p className="text-sm text-muted-foreground">
 								Create your beautiful page in seconds.
