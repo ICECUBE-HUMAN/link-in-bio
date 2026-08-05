@@ -107,6 +107,11 @@
 	--stagger-stagger: 40ms;
 	--stagger-blur: 3px;
 	--stagger-ease: cubic-bezier(0.22, 1, 0.36, 1);
+	--panel-open-dur: 400ms;
+	--panel-close-dur: 350ms;
+	--panel-translate-y: 16px;
+	--panel-blur: 2px;
+	--panel-ease: cubic-bezier(0.22, 1, 0.36, 1);
 	--background: oklch(1 0 0);
 	--foreground: oklch(0.145 0 0);
 	--card: oklch(1 0 0);

@@ -1,8 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-	createWebPageJsonLd,
-	createWebSiteJsonLd,
-} from "@/lib/seo/json-ld";
+import { createWebPageJsonLd, createWebSiteJsonLd } from "@/lib/seo/json-ld";
 import {
 	createSeo,
 	DEFAULT_SEO_DESCRIPTION,
@@ -13,11 +10,12 @@ import {
 import CTASection from "@/components/layout/sections/cta-section";
 import HeroSection from "@/components/layout/sections/hero-section";
 import FeatureSection from "@/components/layout/sections/feature-section";
+import { useRevealOnView } from "@/hooks/use-reveal-on-view";
 
 import { Footer } from "@/components/layout/shell/footer";
 
-
-const HOME_TITLE = "A Link in Bio, the most beautiful and clean you've ever seen";
+const HOME_TITLE =
+	"A Link in Bio, the most beautiful and clean you've ever seen";
 const HOME_KEYWORDS = [
 	"link in bio",
 	"personal page",
@@ -58,19 +56,28 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
+	const { ref: ctaRevealRef, isShown: isCtaShown } =
+		useRevealOnView<HTMLDivElement>({ threshold: 0.35 });
+
 	return (
 		<main>
 			<div className="flex min-h-lvh flex-col">
 				<section className="flex-1 px-5 pb-16">
-          <HeroSection />
-          <FeatureSection />
+					<HeroSection />
+					<FeatureSection />
 					{/*<MessageSection />*/}
-					<CTASection />
+					<div
+						ref={ctaRevealRef}
+						className="t-panel-slide"
+						data-open={isCtaShown ? "true" : "false"}
+					>
+						<CTASection />
+					</div>
 				</section>
-      </div>
-      <div className="px-5">
-        <Footer />
-      </div>
+			</div>
+			<div className="px-5">
+				<Footer />
+			</div>
 		</main>
 	);
 }
