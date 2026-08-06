@@ -10,13 +10,13 @@
     "dev": "bun run --parallel --filter @sinabro/frontend --filter @sinabro/backend dev",
     "dev:frontend": "bun run --filter @sinabro/frontend dev",
     "dev:backend": "bun run --filter @sinabro/backend dev",
-		"build": "bun run --filter @sinabro/frontend build",
+    "build": "bun run --filter @sinabro/frontend build",
     "check": "bun run --workspaces check",
-		"deploy:frontend": "bun run --filter @sinabro/frontend deploy",
-		"deploy:backend": "bun run --filter @sinabro/backend deploy"
+    "deploy:frontend": "bun run --filter @sinabro/frontend deploy",
+    "deploy:backend": "bun run --filter @sinabro/backend deploy"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.5",
-    "typescript": "^6.0.2"
+    "typescript": "^7.0.2"
   }
 }
