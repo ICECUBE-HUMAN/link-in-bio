@@ -3,6 +3,7 @@ import {
 	createDatabaseClient,
 	type DatabaseClient,
 } from "@db/index";
+import * as schema from "@db/schema";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
 import type { ExecutionContext } from "hono";
@@ -32,6 +33,11 @@ export const createAuth = (
 		}),
 		database: drizzleAdapter(db, {
 			provider: "pg",
+			schema: {
+				...schema,
+				creem_subscription:
+					schema.creemSubscription,
+			},
 		}),
 		baseURL: env.BETTER_AUTH_URL,
 		secret: env.BETTER_AUTH_SECRET,

@@ -44,7 +44,7 @@
 		]
 	},
 	"vars": {
-		"CREEM_TEST_MODE": "false",
+		"CREEM_TEST_MODE": "true",
 		"CREEM_SUCCESS_URL": "https://grabbin.me/"
 	},
 	"account_id": "849b4ba384d03f3c7d2bea5ed1ab9a3c",

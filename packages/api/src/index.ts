@@ -1,4 +1,11 @@
 import * as v from "valibot";
+
+export type { BillingPeriod } from "./billing";
+export {
+	billingPeriodSchema,
+	createCheckoutRequestSchema,
+} from "./billing";
+
 import * as grid from "./grid";
 
 export const reservedPageHandles = [
