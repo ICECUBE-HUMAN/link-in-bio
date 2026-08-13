@@ -46,7 +46,8 @@ export const getSession = createServerFn({ method: "GET" }).handler(
 );
 
 export const SESSION_QUERY_KEY = ["auth", "session"] as const;
-export const SESSION_STALE_TIME_MS = 30_000;
+// 변경: 세션 변경을 즉시 반영하기 위해 브라우저 세션 조회를 오래 보관하지 않는다.
+export const SESSION_STALE_TIME_MS = 0;
 
 export function getSessionQueryOptions() {
 	return queryOptions({

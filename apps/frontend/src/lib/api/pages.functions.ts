@@ -122,6 +122,7 @@ export function getPageByHandleQueryOptions(handle: string) {
 					handle: normalizedHandle,
 				},
 			}),
-		staleTime: 30_000,
+		// 변경: 공개 페이지 수정 후 오래된 페이지 데이터를 재사용하지 않는다.
+		staleTime: 0,
 	});
 }

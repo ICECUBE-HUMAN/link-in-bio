@@ -55,6 +55,7 @@ export const getPublicPage = async ({
 				mapPageItemResponse(
 					item,
 					publicBaseUrl,
+					false,
 				),
 			),
 		},

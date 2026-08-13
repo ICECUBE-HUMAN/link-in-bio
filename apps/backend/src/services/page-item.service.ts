@@ -49,6 +49,7 @@ export const listPageItems = async (
 export const mapPageItemResponse = (
 	item: typeof pageItems.$inferSelect,
 	publicBaseUrl?: string,
+	validate = true,
 ): PageItemResponse => {
 	const data = {
 		...item.data,
@@ -66,20 +67,19 @@ export const mapPageItemResponse = (
 			data.mediaUrl = mediaUrl;
 	}
 
-	return v.parse(
-		pageItemResponseSchema,
-		{
-			id: item.id,
-			type: item.type,
-			data,
-			style: item.style,
-			layouts: item.layouts,
-			createdAt:
-				item.createdAt.toISOString(),
-			updatedAt:
-				item.updatedAt.toISOString(),
-		},
-	);
+	const response = {
+		id: item.id,
+		type: item.type,
+		data,
+		style: item.style,
+		layouts: item.layouts,
+		createdAt: item.createdAt.toISOString(),
+		updatedAt: item.updatedAt.toISOString(),
+	};
+
+	return validate
+		? v.parse(pageItemResponseSchema, response)
+		: (response as PageItemResponse);
 };
 
 const assertUniqueBatchIds = (

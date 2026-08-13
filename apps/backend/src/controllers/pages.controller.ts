@@ -228,12 +228,17 @@ export const pagesController =
 					viewerUserId:
 						c.get("user")?.id ?? null,
 				});
-			return c.json(
+			const result = c.json(
 				v.parse(
 					pageByHandleResponseSchema,
 					response,
 				),
 			);
+			result.headers.set(
+				"cache-control",
+				"no-store",
+			);
+			return result;
 		})
 		.post("/", async (c) => {
 			const sessionUser =

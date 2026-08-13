@@ -7,6 +7,12 @@ export const authController =
 		["GET", "POST"],
 		"/*",
 		(c) => {
+			if (
+				c.req.path === "/auth/get-session" &&
+				!c.req.header("cookie")
+			)
+				return c.json(null);
+
 			const executionCtx = (() => {
 				try {
 					return c.executionCtx;
