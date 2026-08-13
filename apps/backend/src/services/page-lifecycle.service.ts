@@ -1,7 +1,6 @@
 import {
 	buildPlanAccess,
 	getPlanAccess,
-	PRO_PRODUCT_IDS,
 } from "@core/billing";
 import type { DatabaseClient } from "@db/index";
 import {
@@ -9,6 +8,7 @@ import {
 	pages,
 	user as userTable,
 } from "@db/schema";
+import { PRO_PRODUCT_IDS } from "@sinabro/plan";
 import {
 	and,
 	eq,

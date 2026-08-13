@@ -6,6 +6,7 @@ import {
 import { pagesController } from "@controllers/pages.controller";
 import type { AppEnv } from "@core/app-factory";
 import { errorHandler } from "@middlewares/error-handler.middleware";
+import { PRO_MONTHLY_PRODUCT_ID } from "@sinabro/plan";
 import { Hono } from "hono";
 
 type TestUser = {
@@ -711,7 +712,7 @@ describe("pagesController", () => {
 			subscriptions: [
 				{
 					status: "active",
-					productId: "prod_1M7K6uOQxjMu006ypD04R",
+					productId: PRO_MONTHLY_PRODUCT_ID,
 					periodStart: now,
 					periodEnd: new Date("2026-08-26T00:00:00.000Z"),
 					cancelAtPeriodEnd: false,

@@ -1,17 +1,29 @@
 import type {
 	HandleAvailabilityResponse,
 	MyPageResponse,
+	OwnedPageSummary,
 	PageByHandleResponse,
 	PageResponse,
 } from "@sinabro/api";
 import { isReservedPageHandle, pageHandleSchema } from "@sinabro/api";
-import { useQueryClient } from "@tanstack/react-query";
-import { ChevronLeftIcon } from "lucide-react";
+import { PRO_MONTHLY_PRODUCT_ID, PRO_PAGE_LIMIT } from "@sinabro/plan";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { ChevronLeftIcon, PlusIcon, StarIcon, TrashIcon } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Check, CheckCircle, Gear, Loader, XCircle } from "reicon-react";
 import { createUISFX } from "uisfx";
 import * as v from "valibot";
+
+import { CreatePageFlow } from "@/components/page/create-page-flow";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import { Field } from "@/components/ui/field";
 import {
 	InputGroup,
@@ -25,17 +37,22 @@ import {
 } from "@/components/ui/popover";
 import { env } from "@/env";
 import {
+	changePrimaryPage,
 	checkPageHandleAvailability,
+	deletePage,
+	getOwnedPages,
 	getPageByHandleQueryOptions,
 	MY_PAGE_QUERY_KEY,
+	OWNED_PAGES_QUERY_KEY,
 } from "@/lib/api/pages.functions";
 import { updatePage } from "@/lib/api/pages-api";
+import { getProfileImageUrl } from "@/lib/api/profile-image-api";
 import { clearSessionQuery } from "@/lib/api/session.functions";
 import { authClient } from "@/lib/auth/auth-client";
 import { getHandleAvailabilityStatus } from "@/lib/page/new-page-state";
 import { SharedLayoutBg } from "../motion/shared-layout-bg";
 
-type SettingsView = "menu" | "delete" | "handle";
+type SettingsView = "menu" | "pages" | "delete" | "handle";
 
 const DELETE_CONFIRMATION_CLICKS = 3;
 
@@ -69,6 +86,55 @@ export function PageSettingsMenu({
 	const [view, setView] = useState<SettingsView>("menu");
 	const [open, setOpen] = useState(false);
 	const [isHandleSuccess, setIsHandleSuccess] = useState(false);
+	const [isChangingPlan, setIsChangingPlan] = useState(false);
+	const [billingError, setBillingError] = useState<string | null>(null);
+	const { data: ownedPagesResult } = useQuery({
+		queryKey: OWNED_PAGES_QUERY_KEY,
+		queryFn: getOwnedPages,
+		enabled: !localOnly,
+	});
+	const ownedPages = ownedPagesResult?.pages ?? [];
+	const sortedPages = [...ownedPages].sort(
+		(a, b) => Number(b.isPrimary) - Number(a.isPrimary),
+	);
+	const planName = ownedPagesResult?.hasAccess ? "Pro" : "Free";
+	const canManagePages = ownedPagesResult?.hasAccess === true;
+	const refreshOwnedPages = async () => {
+		await Promise.all([
+			queryClient.invalidateQueries({ queryKey: OWNED_PAGES_QUERY_KEY }),
+			queryClient.invalidateQueries({ queryKey: MY_PAGE_QUERY_KEY }),
+		]);
+	};
+	const changePlan = async () => {
+		setBillingError(null);
+		setIsChangingPlan(true);
+		try {
+			const billingState =
+				ownedPagesResult ??
+				(await queryClient.ensureQueryData({
+					queryKey: OWNED_PAGES_QUERY_KEY,
+					queryFn: getOwnedPages,
+				}));
+
+			if (!billingState.hasAccess) {
+				const { error } = await authClient.creem.createCheckout({
+					productId: PRO_MONTHLY_PRODUCT_ID,
+				});
+				if (error)
+					setBillingError("Billing could not be started. Please try again.");
+				return;
+			}
+
+			const { error } = await authClient.creem.createPortal();
+			if (error) {
+				setBillingError("Billing portal could not be opened.");
+			}
+		} catch {
+			setBillingError("Billing could not be opened. Please try again.");
+		} finally {
+			setIsChangingPlan(false);
+		}
+	};
 
 	return (
 		<Popover
@@ -79,6 +145,7 @@ export function PageSettingsMenu({
 				if (nextOpen) {
 					setView("menu");
 					setIsHandleSuccess(false);
+					setBillingError(null);
 				}
 			}}
 		>
@@ -92,12 +159,14 @@ export function PageSettingsMenu({
 			<PopoverContent
 				align="start"
 				sideOffset={12}
-				className={`${isHandleSuccess || view === "handle" ? "w-88" : view === "delete" ? "w-80" : "w-64"} t-resize overflow-hidden ${view === "delete" ? "p-4 rounded-4xl" : "p-2 rounded-2xl"} beautiful-shadow  bg-background`}
+				className={`${isHandleSuccess || view === "handle" ? "w-88" : view === "delete" || view === "pages" ? "w-80" : "w-64"} t-resize overflow-hidden ${view === "delete" ? "p-4 rounded-4xl" : "p-2 rounded-2xl"} beautiful-shadow  bg-background`}
 			>
 				<div
 					className="t-page-slide t-resize"
 					data-page={view === "menu" ? "1" : "2"}
 					data-view={view}
+					data-plan={planName.toLowerCase()}
+					data-billing-error={billingError ? "true" : undefined}
 					data-success={isHandleSuccess ? "true" : undefined}
 				>
 					<section className="t-page" data-page-id="1">
@@ -110,16 +179,60 @@ export function PageSettingsMenu({
 							<button
 								type="button"
 								disabled={readOnly}
-								className="w-full flex flex-col items-start justify-center rounded-lg font-normal h-15 gap-0"
+								className="w-full flex flex-col items-start justify-center rounded-lg font-medium h-15 gap-0"
 								onClick={() => setView("handle")}
 							>
 								<span>Change handle</span>
 								<span className="text-muted-foreground/80">/{page.handle}</span>
 							</button>
+							{canManagePages ? (
+								<button
+									type="button"
+									className="w-full flex flex-col items-start justify-center rounded-lg font-medium h-15 gap-0"
+									onClick={() => setView("pages")}
+								>
+									<span>Manage page</span>
+									<span className="text-muted-foreground/80">
+										{ownedPages.length}/{PRO_PAGE_LIMIT} available
+									</span>
+								</button>
+							) : null}
 							{!localOnly ? (
 								<button
 									type="button"
-									className="flex items-center w-full justify-start rounded-lg font-normal h-15"
+									disabled={isChangingPlan}
+									aria-busy={isChangingPlan}
+									aria-label={isChangingPlan ? "Opening billing" : undefined}
+									className="w-full flex flex-col items-start justify-center rounded-lg font-medium h-15 gap-0"
+									onClick={() => void changePlan()}
+								>
+									{isChangingPlan ? (
+										<span className="flex w-full items-center justify-center">
+											<Loader
+												weight="Filled"
+												className="animate-spin size-4"
+												aria-hidden="true"
+											/>
+										</span>
+									) : (
+										<>
+											<span>Change plan</span>
+											<span className="text-muted-foreground/80">
+												{planName}
+											</span>
+										</>
+									)}
+								</button>
+							) : null}
+							{billingError ? (
+								<p className="px-2 text-xs text-destructive" role="alert">
+									{billingError}
+								</p>
+							) : null}
+							{!localOnly ? (
+								<button
+									type="button"
+									className="flex items-center w-full justify-start rounded-lg font-medium h-15"
 									onClick={async () => {
 										ui.play("disconnect");
 										const { error } = await authClient.signOut();
@@ -139,7 +252,7 @@ export function PageSettingsMenu({
 							{!localOnly ? (
 								<button
 									type="button"
-									className="flex items-center w-full justify-start rounded-lg font-normal h-15 text-gray-bright"
+									className="flex items-center w-full justify-start rounded-lg font-medium h-15 text-gray-bright"
 									onClick={() => setView("delete")}
 								>
 									Delete Account
@@ -147,8 +260,14 @@ export function PageSettingsMenu({
 							) : null}
 						</SharedLayoutBg>
 					</section>
-					<section className="t-page p-1" data-page-id="2">
-						{view === "delete" ? (
+					<section className="t-page p-0" data-page-id="2">
+						{view === "pages" ? (
+							<PageManagementView
+								currentHandle={page.handle}
+								pages={sortedPages}
+								onRefresh={refreshOwnedPages}
+							/>
+						) : view === "delete" ? (
 							<DeleteAccountView onBack={() => setView("menu")} />
 						) : view === "handle" ? (
 							<ChangeHandleView
@@ -183,6 +302,148 @@ function BackButton({ onBack }: { onBack: () => void }) {
 		>
 			<ChevronLeftIcon className="stroke-2 size-5" />
 		</Button>
+	);
+}
+
+function PageManagementView({
+	currentHandle,
+	pages,
+	onRefresh,
+}: {
+	currentHandle: string;
+	pages: OwnedPageSummary[];
+	onRefresh: () => Promise<void>;
+}) {
+	const navigate = useNavigate();
+	const [error, setError] = useState<string | null>(null);
+	const [isCreateOpen, setIsCreateOpen] = useState(false);
+	const primaryPage = pages.find((page) => page.isPrimary);
+
+	async function makePrimary(page: OwnedPageSummary) {
+		setError(null);
+		try {
+			await changePrimaryPage({ data: { handle: page.handle } });
+			await onRefresh();
+		} catch (caught) {
+			setError(
+				caught instanceof Error ? caught.message : "Could not change page.",
+			);
+		}
+	}
+
+	async function remove(page: OwnedPageSummary) {
+		if (!window.confirm(`Delete /${page.handle}?`)) return;
+		setError(null);
+		try {
+			await deletePage({ data: { handle: page.handle } });
+			await onRefresh();
+			if (page.handle === currentHandle && primaryPage) {
+				await navigate({
+					to: "/$handle",
+					params: { handle: primaryPage.handle },
+				});
+			}
+		} catch (caught) {
+			setError(
+				caught instanceof Error ? caught.message : "Could not delete page.",
+			);
+		}
+	}
+
+	async function handleCreated(handle: string) {
+		setIsCreateOpen(false);
+		await onRefresh();
+		await navigate({ to: "/$handle", params: { handle } });
+	}
+
+	return (
+		<div className="flex h-full flex-col gap-1">
+			<div className="flex min-h-0 flex-1 flex-col gap-0">
+				{pages.map((ownedPage) => (
+					<div
+						key={ownedPage.id}
+						className="group flex items-center rounded-lg hover:bg-muted"
+					>
+						<Button
+							render={
+								<Link to="/$handle" params={{ handle: ownedPage.handle }} />
+							}
+							size={"lg"}
+							variant={"ghost"}
+							nativeButton={false}
+							className={`min-w-0 flex-1 rounded-lg h-15 hover:bg-transparent ${ownedPage.isPrimary ? "justify-between" : "justify-start"}`}
+						>
+							<div className="flex min-w-0 items-center gap-2">
+								<Avatar size="default" className="size-9">
+									<AvatarImage
+										src={getProfileImageUrl(ownedPage.image) ?? undefined}
+										alt=""
+									/>
+									<AvatarFallback />
+								</Avatar>
+								<div className="flex min-w-0 flex-col">
+									<span>{ownedPage.name}</span>
+									<span className="truncate text-muted-foreground/80">
+										/{ownedPage.handle}
+									</span>
+								</div>
+							</div>
+							{ownedPage.isPrimary ? (
+								<span
+									className="size-2 shrink-0 rounded-full bg-brand"
+									aria-hidden="true"
+								/>
+							) : null}
+						</Button>
+						{!ownedPage.isPrimary && (
+							<div className="space-x-1 pr-1.5">
+								<Button
+									type="button"
+									size="icon-sm"
+									variant="ghost"
+									aria-label={`Make /${ownedPage.handle} primary`}
+									onClick={() => void makePrimary(ownedPage)}
+								>
+									<StarIcon />
+								</Button>
+								<Button
+									type="button"
+									size="icon-sm"
+									variant="ghost"
+									aria-label={`Delete /${ownedPage.handle}`}
+									onClick={() => void remove(ownedPage)}
+								>
+									<TrashIcon className="stroke-2.5" />
+								</Button>
+							</div>
+						)}
+					</div>
+				))}
+			</div>
+
+			<Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+				<Button
+					type="button"
+					size={"lg"}
+					variant="ghost"
+					className="justify-between items-center rounded-lg h-15"
+					disabled={pages.length >= PRO_PAGE_LIMIT}
+					onClick={() => setIsCreateOpen(true)}
+				>
+					<span>Create page</span>
+					<PlusIcon />
+				</Button>
+				<DialogContent className="gap-0 overflow-hidden p-6 sm:max-w-md">
+					<DialogTitle className="sr-only">Create a new page</DialogTitle>
+					<DialogDescription className="sr-only">
+						Choose a handle and role for your new page.
+					</DialogDescription>
+					<CreatePageFlow onCreated={(handle) => void handleCreated(handle)} />
+				</DialogContent>
+			</Dialog>
+
+			{error ? <p className="text-xs text-destructive">{error}</p> : null}
+		</div>
 	);
 }
 

@@ -3,6 +3,7 @@ import {
 	creemSubscription,
 	pages,
 } from "@db/schema";
+import { PRO_PRODUCT_IDS } from "@sinabro/plan";
 import {
 	and,
 	eq,
@@ -13,15 +14,6 @@ const ACCESS_STATUSES = new Set([
 	"active",
 	"trialing",
 	"paid",
-]);
-
-export const PRO_MONTHLY_PRODUCT_ID =
-	"prod_1M7K6uOQxjMu006ypD04R";
-export const PRO_YEARLY_PRODUCT_ID =
-	"prod_6oaKuPlsztLLAQt3Y5BlqD";
-export const PRO_PRODUCT_IDS = new Set([
-	PRO_MONTHLY_PRODUCT_ID,
-	PRO_YEARLY_PRODUCT_ID,
 ]);
 
 type Subscription = Pick<

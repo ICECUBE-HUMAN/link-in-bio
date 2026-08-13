@@ -34,6 +34,7 @@ export const mapOwnedPageSummary = (
 	id: page.id,
 	handle: page.handle,
 	name: page.name,
+	image: page.image ?? null,
 	isPrimary: page.id === primaryPageId,
 	deletionScheduledAt:
 		page.deletionScheduledAt?.toISOString() ??

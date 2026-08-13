@@ -12,6 +12,7 @@ import {
 	pageHandleSchema,
 	type UpdatePageRequest,
 } from "@sinabro/api";
+import { PRO_PAGE_LIMIT } from "@sinabro/plan";
 import {
 	and,
 	eq,
@@ -247,7 +248,7 @@ export const assertPageCreationAllowed =
 		});
 		if (
 			access.hasAccess &&
-			ownedPages.length < 3
+			ownedPages.length < PRO_PAGE_LIMIT
 		)
 			return currentUser;
 		throw new ForbiddenError(

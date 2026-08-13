@@ -14,7 +14,6 @@ import { toast } from "sonner";
 import { GridSection } from "@/components/grid/grid-section";
 import { EditableParagraph } from "@/components/page/editable-paragraph";
 import { PageImageEditor } from "@/components/page/page-image-editor";
-import { PagePicker } from "@/components/page/page-picker";
 import { PageSettingsMenu } from "@/components/page/page-settings-menu";
 import Toolbar from "@/components/page/toolbar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -238,8 +237,7 @@ function HandlePageContent({
 		!loaderData.isDemo &&
 		(ownedPagesResult === undefined ||
 			!ownedPage ||
-			(!ownedPagesResult.hasAccess &&
-				!ownedPage.isPrimary));
+			(!ownedPagesResult.hasAccess && !ownedPage.isPrimary));
 	const editorMode = readOnly ? "view" : mode;
 	const [isAsideShown, setIsAsideShown] = useState(false);
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -475,10 +473,12 @@ function HandlePageContent({
 					className={`hidden items-center gap-2 z-10 ${layoutClasses.controls}`}
 					aria-label="Page controls"
 				>
+					{readOnly && ownedPage && !ownedPage.isPrimary ? (
+						<div className="text-xs text-muted-foreground">
+							Non-primary pages are read-only and will be deleted soon.
+						</div>
+					) : null}
 					<div className="flex items-center gap-0">
-						{isCurrentUserPage ? (
-							<PagePicker currentHandle={page.handle} />
-						) : null}
 						{isCurrentUserPage ? (
 							<Tooltip disabled={isSettingsOpen}>
 								<TooltipTrigger render={<span className="inline-flex" />}>

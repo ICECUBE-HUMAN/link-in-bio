@@ -1,12 +1,12 @@
 import { creemClient } from "@creem_io/better-auth/client";
-import { createAuthClient } from "better-auth/client";
+import { createCreemAuthClient } from "@creem_io/better-auth/create-creem-auth-client";
 import {
 	inferAdditionalFields,
 	magicLinkClient,
 } from "better-auth/client/plugins";
 import { getApiBaseUrl } from "@/lib/site/api-base-url";
 
-export const authClient = createAuthClient({
+export const authClient = createCreemAuthClient({
 	baseURL: getApiBaseUrl(),
 	basePath: "/auth",
 	fetchOptions: {
@@ -21,6 +21,9 @@ export const authClient = createAuthClient({
 					type: "string",
 				},
 				primaryPageId: {
+					type: "string",
+				},
+				creemCustomerId: {
 					type: "string",
 				},
 			},

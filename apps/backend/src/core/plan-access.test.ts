@@ -3,6 +3,7 @@ import {
 	expect,
 	it,
 } from "bun:test";
+import { PRO_MONTHLY_PRODUCT_ID } from "@sinabro/plan";
 import {
 	buildPlanAccess,
 	getPlanAccess,
@@ -18,8 +19,7 @@ const subscription = (
 	> = {},
 ) => ({
 	status: "active",
-	productId:
-		"prod_1M7K6uOQxjMu006ypD04R",
+	productId: PRO_MONTHLY_PRODUCT_ID,
 	periodStart: new Date(
 		"2026-08-01T00:00:00.000Z",
 	),

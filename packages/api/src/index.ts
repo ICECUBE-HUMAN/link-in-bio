@@ -1,11 +1,5 @@
 import * as v from "valibot";
 
-export type { BillingPeriod } from "./billing";
-export {
-	billingPeriodSchema,
-	createCheckoutRequestSchema,
-} from "./billing";
-
 import * as grid from "./grid";
 
 export const reservedPageHandles = [
@@ -145,6 +139,7 @@ export const ownedPageSummarySchema = v.object({
 	id: v.string(),
 	handle: pageHandleSchema,
 	name: v.nullable(v.string()),
+	image: v.nullable(v.string()),
 	isPrimary: v.boolean(),
 	deletionScheduledAt: v.nullable(v.string()),
 	createdAt: v.string(),
