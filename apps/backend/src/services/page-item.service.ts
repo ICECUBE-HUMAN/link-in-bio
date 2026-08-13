@@ -33,6 +33,7 @@ import {
 import { getPublicItemMediaUrl } from "./item-media.service";
 import { prepareLinkItem } from "./link-metadata.service";
 import { assertOwnedPage } from "./page.service";
+import { assertPageWritable } from "./page-lifecycle.service";
 
 export const listPageItems = async (
 	db: AppEnv["Variables"]["db"],
@@ -73,12 +74,17 @@ export const mapPageItemResponse = (
 		data,
 		style: item.style,
 		layouts: item.layouts,
-		createdAt: item.createdAt.toISOString(),
-		updatedAt: item.updatedAt.toISOString(),
+		createdAt:
+			item.createdAt.toISOString(),
+		updatedAt:
+			item.updatedAt.toISOString(),
 	};
 
 	return validate
-		? v.parse(pageItemResponseSchema, response)
+		? v.parse(
+				pageItemResponseSchema,
+				response,
+			)
 		: (response as PageItemResponse);
 };
 
@@ -218,6 +224,11 @@ export const persistPageItemBatch =
 							handle,
 							userId,
 						);
+					await assertPageWritable({
+						db: tx as unknown as DatabaseClient,
+						userId,
+						page,
+					});
 					const existing =
 						await tx.query.pageItems.findMany(
 							{

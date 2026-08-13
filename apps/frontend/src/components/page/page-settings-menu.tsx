@@ -44,6 +44,7 @@ type PageSettingsMenuProps = {
 	onChanged: (page: PageResponse) => void;
 	onOpenChange?: (open: boolean) => void;
 	localOnly?: boolean;
+	readOnly?: boolean;
 };
 
 const handleAvailabilityIcons = {
@@ -57,6 +58,7 @@ export function PageSettingsMenu({
 	onChanged,
 	onOpenChange,
 	localOnly = false,
+	readOnly = false,
 }: PageSettingsMenuProps) {
 	const ui = createUISFX({
 		pack: "minimal",
@@ -107,6 +109,7 @@ export function PageSettingsMenu({
 							) : null}
 							<button
 								type="button"
+								disabled={readOnly}
 								className="w-full flex flex-col items-start justify-center rounded-lg font-normal h-15 gap-0"
 								onClick={() => setView("handle")}
 							>

@@ -4,10 +4,19 @@ import { healthController } from "@controllers/health.controller";
 import { pageItemsController } from "@controllers/page-items.controller";
 import { pagesController } from "@controllers/pages.controller";
 import { appFactory } from "@core/app-factory";
-import { isItemMediaKey } from "@core/r2";
+import {
+	isItemMediaKey,
+	isProfileImageCropKey,
+	isProfileImageKey,
+	isProfileImageStagingKey,
+} from "@core/r2";
 import { createDatabaseClient } from "@db/index";
+import { pages } from "@db/schema";
 import { errorHandler } from "@middlewares/error-handler.middleware";
 import { notFoundHandler } from "@middlewares/not-found.middleware";
+import { lte } from "drizzle-orm";
+import { deleteOwnedPage } from "./services/page.service";
+import { reconcileUserPageLifecycle } from "./services/page-lifecycle.service";
 
 const app = appFactory
 	.createApp()
@@ -33,6 +42,15 @@ export const queue = async (
 				if (
 					isItemMediaKey(
 						message.body.objectKey,
+					) ||
+					isProfileImageKey(
+						message.body.objectKey,
+					) ||
+					isProfileImageCropKey(
+						message.body.objectKey,
+					) ||
+					isProfileImageStagingKey(
+						message.body.objectKey,
 					)
 				) {
 					await env.IMAGES.delete(
@@ -52,6 +70,46 @@ export const scheduled = async (
 	env: CloudflareBindings,
 ) => {
 	const db = createDatabaseClient(env);
+	const now = new Date();
+	const scheduledPages =
+		await db.query.pages.findMany({
+			where: lte(
+				pages.deletionScheduledAt,
+				now,
+			),
+			columns: {
+				userId: true,
+				handle: true,
+			},
+		});
+	const userIds = new Set(
+		scheduledPages.map(
+			(page) => page.userId,
+		),
+	);
+	for (const userId of userIds)
+		await reconcileUserPageLifecycle({
+			db,
+			userId,
+			now,
+		});
+	for (const page of scheduledPages) {
+		try {
+			await deleteOwnedPage({
+				env,
+				db,
+				userId: page.userId,
+				handle: page.handle,
+				queue:
+					env.ITEM_MEDIA_DELETE_QUEUE,
+			});
+		} catch (error) {
+			console.error(
+				"[page] scheduled cleanup failed",
+				error,
+			);
+		}
+	}
 	const referencedKeys =
 		new Set<string>();
 	const items =
@@ -74,6 +132,25 @@ export const scheduled = async (
 				item.data.objectKey,
 			);
 	}
+	const referencedPages =
+		await db.query.pages.findMany({
+			columns: {
+				image: true,
+				imageSource: true,
+			},
+		});
+	for (const page of referencedPages)
+		for (const key of [
+			page.image,
+			page.imageSource,
+		])
+			if (
+				key &&
+				(isProfileImageKey(key) ||
+					isProfileImageCropKey(key) ||
+					isProfileImageStagingKey(key))
+			)
+				referencedKeys.add(key);
 
 	const cutoff =
 		Date.now() -
@@ -88,7 +165,16 @@ export const scheduled = async (
 			});
 		for (const object of listed.objects)
 			if (
-				isItemMediaKey(object.key) &&
+				(isItemMediaKey(object.key) ||
+					isProfileImageKey(
+						object.key,
+					) ||
+					isProfileImageCropKey(
+						object.key,
+					) ||
+					isProfileImageStagingKey(
+						object.key,
+					)) &&
 				object.uploaded.getTime() <
 					cutoff &&
 				!referencedKeys.has(object.key)

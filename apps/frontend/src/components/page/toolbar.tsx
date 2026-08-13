@@ -43,6 +43,7 @@ type ToolbarProps = {
 	onBreakpointChange: (breakpoint: Breakpoint) => void;
 	onItemAdd: (itemType: ItemType, url?: string) => void;
 	onMediaSelect: (file: File) => void | Promise<void>;
+	readOnly?: boolean;
 };
 
 function normalizeLinkInput(value: string) {
@@ -60,6 +61,7 @@ export default function Toolbar({
 	onBreakpointChange,
 	onItemAdd,
 	onMediaSelect,
+	readOnly = false,
 }: ToolbarProps) {
 	const mediaInputRef = useRef<HTMLInputElement>(null);
 	const [view, setView] = useState<"toolbar" | "link" | "widget">("toolbar");
@@ -75,6 +77,7 @@ export default function Toolbar({
 			};
 
 	function submitLink(value: string) {
+		if (readOnly) return false;
 		const normalizedUrl = normalizeLinkInput(value);
 		if (!normalizedUrl) return false;
 		onItemAdd("link", normalizedUrl);
@@ -84,6 +87,7 @@ export default function Toolbar({
 	}
 
 	function handleMediaChange(event: ChangeEvent<HTMLInputElement>) {
+		if (readOnly) return;
 		const file = event.target.files?.[0];
 		event.target.value = "";
 		if (!file) return;
@@ -154,6 +158,7 @@ export default function Toolbar({
 									}}
 									autoFocus
 									autoComplete="off"
+									disabled={readOnly}
 								/>
 								<InputGroupAddon align="inline-end" className="pr-1.5">
 									<InputGroupButton
@@ -224,29 +229,44 @@ export default function Toolbar({
 									)}
 								</div>
 								<div className="flex items-center gap-0 text-muted-foreground">
-									<ToolbarButton label="Link" onClick={() => setView("link")}>
+									<ToolbarButton
+										disabled={readOnly}
+										label="Link"
+										onClick={() => setView("link")}
+									>
 										<LinkCircle3 weight="Outline" className="size-5" />
 									</ToolbarButton>
 									<ToolbarButton
 										label="Section Title"
+										disabled={readOnly}
 										onClick={() => onItemAdd("section")}
 									>
 										<Document2 weight="Outline" className="size-5" />
 									</ToolbarButton>
-									<ToolbarButton label="Text" onClick={() => onItemAdd("text")}>
+									<ToolbarButton
+										disabled={readOnly}
+										label="Text"
+										onClick={() => onItemAdd("text")}
+									>
 										<TextCircle weight="Outline" className="size-5" />
 									</ToolbarButton>
 									<ToolbarButton
 										label="Gallery"
+										disabled={readOnly}
 										onClick={() => mediaInputRef.current?.click()}
 									>
 										<GalleryCircle weight="Outline" className="size-5" />
 									</ToolbarButton>
-									<ToolbarButton label="Map" onClick={() => onItemAdd("map")}>
+									<ToolbarButton
+										disabled={readOnly}
+										label="Map"
+										onClick={() => onItemAdd("map")}
+									>
 										<Globe weight="Outline" className="size-5" />
 									</ToolbarButton>
 									<ToolbarButton
 										label="Widget"
+										disabled={readOnly}
 										onClick={() => setView("widget")}
 									>
 										<Widget4 weight="Outline" className="size-5" />
@@ -300,12 +320,14 @@ function ToolbarButton({
 	children,
 	className,
 	onClick,
+	disabled = false,
 	variant = "ghost",
 }: {
 	label: string;
 	children: React.ReactNode;
 	className?: string;
 	onClick?: () => void;
+	disabled?: boolean;
 	variant?: "brand" | "ghost";
 }) {
 	return (
@@ -321,6 +343,7 @@ function ToolbarButton({
 							className,
 						)}
 						onClick={onClick}
+						disabled={disabled}
 					/>
 				}
 			>

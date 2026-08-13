@@ -1,7 +1,9 @@
 import type { AppEnv } from "@core/app-factory";
 import type { AuthUser } from "@core/auth";
+import { getPlanAccess } from "@core/billing";
 import type { DatabaseClient } from "@db/index";
 import {
+	pageItems,
 	pages,
 	user as userTable,
 } from "@db/schema";
@@ -14,9 +16,11 @@ import {
 	and,
 	eq,
 	isNull,
+	sql,
 } from "drizzle-orm";
 import * as v from "valibot";
 import {
+	isItemMediaKey,
 	isProfileImageCropKey,
 	isProfileImageKey,
 	isProfileImageStagingKey,
@@ -28,6 +32,7 @@ import {
 	UnauthorizedError,
 	UnprocessableEntityError,
 } from "../exceptions/http-exceptions";
+import { assertPageWritable } from "./page-lifecycle.service";
 
 const isUniqueHandleViolation = (
 	error: unknown,
@@ -46,6 +51,24 @@ const isUniqueHandleViolation = (
 		maybePgError.constraint ===
 			"pages_handle_idx"
 	);
+};
+
+const lockUserRow = async (
+	tx: unknown,
+	userId: string,
+) => {
+	const execute = (
+		tx as { execute?: unknown }
+	).execute;
+	if (typeof execute === "function")
+		await (
+			execute as (
+				query: unknown,
+			) => Promise<unknown>
+		).call(
+			tx,
+			sql`select id from "user" where id = ${userId} for update`,
+		);
 };
 
 const deleteProfileImagesBestEffort =
@@ -177,6 +200,315 @@ export const assertEligibleUser =
 		return currentUser;
 	};
 
+export const assertPageCreationAllowed =
+	async ({
+		db,
+		userId,
+	}: {
+		db: DatabaseClient;
+		userId: string;
+	}) => {
+		const currentUser =
+			await db.query.user.findFirst({
+				where: eq(userTable.id, userId),
+				columns: {
+					id: true,
+					primaryPageId: true,
+				},
+			});
+		if (!currentUser)
+			throw new UnauthorizedError();
+		if (!currentUser.primaryPageId)
+			return currentUser;
+
+		const pageQuery = (
+			db.query as unknown as {
+				pages?: {
+					findMany?: (
+						config: unknown,
+					) => Promise<unknown[]>;
+				};
+			}
+		).pages;
+		const ownedPages =
+			typeof pageQuery?.findMany ===
+			"function"
+				? await pageQuery.findMany({
+						where: eq(
+							pages.userId,
+							userId,
+						),
+						columns: { id: true },
+					})
+				: [];
+		const access = await getPlanAccess({
+			db,
+			userId,
+		});
+		if (
+			access.hasAccess &&
+			ownedPages.length < 3
+		)
+			return currentUser;
+		throw new ForbiddenError(
+			"Your plan allows no more pages.",
+			"PAGE_LIMIT_REACHED",
+		);
+	};
+
+export const listOwnedPages = async ({
+	db,
+	userId,
+}: {
+	db: DatabaseClient;
+	userId: string;
+}) => {
+	const currentUser =
+		await db.query.user.findFirst({
+			where: eq(userTable.id, userId),
+			columns: { primaryPageId: true },
+		});
+	if (!currentUser)
+		throw new UnauthorizedError();
+	return {
+		primaryPageId:
+			currentUser.primaryPageId,
+		pages:
+			await db.query.pages.findMany({
+				where: eq(pages.userId, userId),
+				orderBy: (page, { asc }) => [
+					asc(page.createdAt),
+					asc(page.id),
+				],
+			}),
+	};
+};
+
+export const changePrimaryPage =
+	async ({
+		db,
+		userId,
+		handle,
+	}: {
+		db: DatabaseClient;
+		userId: string;
+		handle: string;
+	}) =>
+		db.transaction(async (tx) => {
+			await lockUserRow(tx, userId);
+			const currentUser =
+				await tx.query.user.findFirst({
+					where: eq(
+						userTable.id,
+						userId,
+					),
+				});
+			if (!currentUser)
+				throw new UnauthorizedError();
+			const access =
+				await getPlanAccess({
+					db: tx as unknown as DatabaseClient,
+					userId,
+				});
+			if (!access.hasAccess)
+				throw new ForbiddenError(
+					"Only Pro users can change the primary page.",
+					"PRIMARY_CHANGE_FORBIDDEN",
+				);
+			const target =
+				await tx.query.pages.findFirst({
+					where: and(
+						eq(pages.userId, userId),
+						eq(pages.handle, handle),
+					),
+				});
+			if (!target)
+				throw new NotFoundError("Page");
+			if (
+				target.id ===
+				currentUser.primaryPageId
+			)
+				return;
+
+			const previousPrimary =
+				currentUser.primaryPageId
+					? await tx.query.pages.findFirst(
+							{
+								where: and(
+									eq(
+										pages.userId,
+										userId,
+									),
+									eq(
+										pages.id,
+										currentUser.primaryPageId,
+									),
+								),
+							},
+						)
+					: null;
+			await tx
+				.update(userTable)
+				.set({
+					primaryPageId: target.id,
+					updatedAt: new Date(),
+				})
+				.where(
+					eq(userTable.id, userId),
+				);
+			await tx
+				.update(pages)
+				.set({
+					lifecycleStatus: "active",
+					deletionScheduledAt: null,
+				})
+				.where(eq(pages.id, target.id));
+			if (previousPrimary)
+				await tx
+					.update(pages)
+					.set({
+						lifecycleStatus: "active",
+						deletionScheduledAt:
+							target.deletionScheduledAt ??
+							previousPrimary.deletionScheduledAt,
+					})
+					.where(
+						eq(
+							pages.id,
+							previousPrimary.id,
+						),
+					);
+		});
+
+export const deleteOwnedPage = async ({
+	env,
+	db,
+	userId,
+	handle,
+	queue,
+	executionCtx,
+}: {
+	env: AppEnv["Bindings"];
+	db: DatabaseClient;
+	userId: string;
+	handle: string;
+	queue?: Queue;
+	executionCtx?: Pick<
+		ExecutionContext<unknown>,
+		"waitUntil"
+	>;
+}) => {
+	const objectKeys =
+		await db.transaction(async (tx) => {
+			await lockUserRow(tx, userId);
+			const currentUser =
+				await tx.query.user.findFirst({
+					where: eq(
+						userTable.id,
+						userId,
+					),
+				});
+			if (!currentUser)
+				throw new UnauthorizedError();
+			const page =
+				await tx.query.pages.findFirst({
+					where: and(
+						eq(pages.userId, userId),
+						eq(pages.handle, handle),
+					),
+				});
+			if (!page)
+				throw new NotFoundError("Page");
+			if (
+				page.id ===
+				currentUser.primaryPageId
+			)
+				throw new ForbiddenError(
+					"The primary page cannot be deleted.",
+					"PRIMARY_PAGE_DELETE_FORBIDDEN",
+				);
+			const access =
+				await getPlanAccess({
+					db: tx as unknown as DatabaseClient,
+					userId,
+				});
+			if (
+				!access.hasAccess &&
+				!access.gracePeriod
+			)
+				throw new ForbiddenError(
+					"Page deletion is not available on this plan.",
+					"PAGE_DELETE_FORBIDDEN",
+				);
+			const items =
+				await tx.query.pageItems.findMany(
+					{
+						where: eq(
+							pageItems.pageId,
+							page.id,
+						),
+						columns: {
+							type: true,
+							data: true,
+						},
+					},
+				);
+			const keys = [
+				page.image,
+				page.imageSource,
+			];
+			for (const item of items) {
+				const key = (
+					item.data as {
+						objectKey?: unknown;
+					}
+				).objectKey;
+				if (
+					item.type === "media" &&
+					typeof key === "string"
+				)
+					keys.push(key);
+			}
+			await tx
+				.delete(pages)
+				.where(eq(pages.id, page.id));
+			return [...new Set(keys)].filter(
+				(key): key is string =>
+					typeof key === "string" &&
+					key.startsWith(
+						`users/${userId}/${page.id}/`,
+					) &&
+					(isItemMediaKey(key) ||
+						isProfileImageKey(key) ||
+						isProfileImageCropKey(
+							key,
+						) ||
+						isProfileImageStagingKey(
+							key,
+						)),
+			);
+		});
+
+	if (queue && objectKeys.length) {
+		const enqueue = queue
+			.sendBatch(
+				objectKeys.map((objectKey) => ({
+					body: { objectKey },
+				})),
+			)
+			.catch((error) =>
+				console.error(
+					"[page] asset cleanup enqueue failed",
+					error,
+				),
+			);
+		if (executionCtx)
+			executionCtx.waitUntil(enqueue);
+		else await enqueue;
+	}
+	void env;
+};
+
 export const updatePage = async ({
 	env,
 	db,
@@ -247,6 +579,11 @@ export const updatePage = async ({
 					throw new NotFoundError(
 						"Page",
 					);
+				await assertPageWritable({
+					db: tx as unknown as DatabaseClient,
+					userId,
+					page: existingPage,
+				});
 				if (
 					isCropOnlyUpdate &&
 					!existingPage.image &&
@@ -357,6 +694,13 @@ export const createPage = async ({
 	try {
 		return await db.transaction(
 			async (tx) => {
+				await lockUserRow(tx, user.id);
+				await assertPageCreationAllowed(
+					{
+						db: tx as unknown as DatabaseClient,
+						userId: user.id,
+					},
+				);
 				const existingPage =
 					await tx.query.pages.findFirst(
 						{

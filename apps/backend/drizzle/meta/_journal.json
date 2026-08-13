@@ -71,6 +71,13 @@
       "when": 1786597637069,
       "tag": "0009_sparkling_white_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1786607597419,
+      "tag": "0010_broad_hellfire_club",
+      "breakpoints": true
     }
   ]
 }

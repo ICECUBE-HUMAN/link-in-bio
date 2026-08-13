@@ -8,16 +8,16 @@ import {
 import type { Context } from "hono";
 import { Hono } from "hono";
 import * as v from "valibot";
+import { UnprocessableEntityError } from "../exceptions/http-exceptions";
 import {
-	UnauthorizedError,
-	UnprocessableEntityError,
-} from "../exceptions/http-exceptions";
+	requireAuthenticatedUser,
+	requireWritableOwnedPage,
+} from "../middlewares/page-access.middleware";
 import {
 	completeItemMediaUpload,
 	createItemMediaUpload,
 } from "../services/item-media.service";
 import { enrichPageItemMetadata } from "../services/link-metadata.service";
-import { assertOwnedPage } from "../services/page.service";
 import {
 	mapPageItemResponse,
 	persistPageItemBatch,
@@ -38,12 +38,28 @@ const readJson = async (
 
 export const pageItemsController =
 	new Hono<AppEnv>()
+		.use(
+			"/:handle/metadata",
+			requireWritableOwnedPage,
+		)
+		.use(
+			"/:handle/items/upload",
+			requireWritableOwnedPage,
+		)
+		.use(
+			"/:handle/items/upload/complete",
+			requireWritableOwnedPage,
+		)
+		.use(
+			"/:handle/batch",
+			requireAuthenticatedUser,
+		)
 		.post(
 			"/:handle/metadata",
 			async (c) => {
-				const user = c.get("user");
-				if (!user)
-					throw new UnauthorizedError();
+				const user = c.get(
+					"authenticatedUser",
+				);
 				const parsed = v.safeParse(
 					pageItemMetadataRequestSchema,
 					await readJson(c),
@@ -79,15 +95,10 @@ export const pageItemsController =
 		.post(
 			"/:handle/items/upload",
 			async (c) => {
-				const user = c.get("user");
-				if (!user)
-					throw new UnauthorizedError();
-				const page =
-					await assertOwnedPage(
-						c.get("db"),
-						c.req.param("handle"),
-						user.id,
-					);
+				const user = c.get(
+					"authenticatedUser",
+				);
+				const page = c.get("ownedPage");
 				const parsed = v.safeParse(
 					pageItemUploadRequestSchema,
 					await readJson(c),
@@ -110,15 +121,10 @@ export const pageItemsController =
 		.post(
 			"/:handle/items/upload/complete",
 			async (c) => {
-				const user = c.get("user");
-				if (!user)
-					throw new UnauthorizedError();
-				const page =
-					await assertOwnedPage(
-						c.get("db"),
-						c.req.param("handle"),
-						user.id,
-					);
+				const user = c.get(
+					"authenticatedUser",
+				);
+				const page = c.get("ownedPage");
 				const parsed = v.safeParse(
 					pageItemUploadCompleteRequestSchema,
 					await readJson(c),
@@ -144,9 +150,9 @@ export const pageItemsController =
 		.patch(
 			"/:handle/batch",
 			async (c) => {
-				const user = c.get("user");
-				if (!user)
-					throw new UnauthorizedError();
+				const user = c.get(
+					"authenticatedUser",
+				);
 				const parsed = v.safeParse(
 					pageItemBatchRequestSchema,
 					await readJson(c),

@@ -247,6 +247,15 @@ export const pages = pgTable(
 			"image_crop",
 		).$type<ProfileImageCrop | null>(),
 		role: text("role"),
+		lifecycleStatus: text(
+			"lifecycle_status",
+		)
+			.$type<"active" | "read_only">()
+			.default("active")
+			.notNull(),
+		deletionScheduledAt: timestamp(
+			"deletion_scheduled_at",
+		),
 		createdAt: timestamp("created_at")
 			.defaultNow()
 			.notNull(),
@@ -265,6 +274,9 @@ export const pages = pgTable(
 		index("pages_userId_idx").on(
 			table.userId,
 		),
+		index(
+			"pages_deletion_scheduled_at_idx",
+		).on(table.deletionScheduledAt),
 	],
 );
 

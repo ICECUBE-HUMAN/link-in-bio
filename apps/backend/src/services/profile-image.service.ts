@@ -19,6 +19,7 @@ import {
 	UnprocessableEntityError,
 } from "../exceptions/http-exceptions";
 import { assertOwnedPage } from "./page.service";
+import { assertPageWritable } from "./page-lifecycle.service";
 
 const profileImagePrefix = (
 	userId: string,
@@ -106,6 +107,11 @@ export const createProfileImageUpload =
 			handle,
 			userId,
 		);
+		await assertPageWritable({
+			db,
+			userId,
+			page,
+		});
 		if (
 			input.size >
 				MAX_PROFILE_IMAGE_SIZE ||
@@ -160,6 +166,11 @@ export const completeProfileImageUpload =
 			handle,
 			userId,
 		);
+		await assertPageWritable({
+			db,
+			userId,
+			page,
+		});
 		const expectedUpdatedAt = new Date(
 			input.expectedUpdatedAt,
 		);

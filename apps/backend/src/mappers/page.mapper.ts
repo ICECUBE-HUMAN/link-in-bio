@@ -1,5 +1,8 @@
 import type { pages } from "@db/schema";
-import type { PageResponse } from "@sinabro/api";
+import type {
+	OwnedPageSummary,
+	PageResponse,
+} from "@sinabro/api";
 
 export const mapPageResponse = (
 	page: typeof pages.$inferSelect,
@@ -23,3 +26,21 @@ export const mapPublicPageResponse = (
 	page: typeof pages.$inferSelect,
 ): PageResponse =>
 	mapPageResponse(page);
+
+export const mapOwnedPageSummary = (
+	page: typeof pages.$inferSelect,
+	primaryPageId: string | null,
+): OwnedPageSummary => ({
+	id: page.id,
+	handle: page.handle,
+	name: page.name,
+	isPrimary: page.id === primaryPageId,
+	lifecycleStatus: page.lifecycleStatus,
+	deletionScheduledAt:
+		page.deletionScheduledAt?.toISOString() ??
+		null,
+	createdAt:
+		page.createdAt.toISOString(),
+	updatedAt:
+		page.updatedAt.toISOString(),
+});

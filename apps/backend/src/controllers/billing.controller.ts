@@ -1,5 +1,9 @@
 import type { AppEnv } from "@core/app-factory";
-import { buildBillingStatus } from "@core/billing";
+import {
+	buildBillingStatus,
+	PRO_MONTHLY_PRODUCT_ID,
+	PRO_YEARLY_PRODUCT_ID,
+} from "@core/billing";
 import { createCreemClient } from "@creem_io/better-auth/server";
 import { creemSubscription } from "@db/schema";
 import { createCheckoutRequestSchema } from "@sinabro/api";
@@ -13,8 +17,8 @@ import {
 } from "../exceptions/http-exceptions";
 
 const CREEM_PRODUCT_IDS = {
-	monthly: "prod_1M7K6uOQxjMu006ypD04R",
-	yearly: "prod_6oaKuPlsztLLAQt3Y5BlqD",
+	monthly: PRO_MONTHLY_PRODUCT_ID,
+	yearly: PRO_YEARLY_PRODUCT_ID,
 } as const;
 
 type CreateCheckoutInput = {
