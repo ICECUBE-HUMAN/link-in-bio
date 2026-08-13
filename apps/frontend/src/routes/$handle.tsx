@@ -1,6 +1,6 @@
 import type { PageItemResponse, PageResponse } from "@sinabro/api";
 import { MAX_ITEM_MEDIA_SIZE } from "@sinabro/api";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	createFileRoute,
 	Link,
@@ -13,11 +13,13 @@ import { Send, StackPerspective } from "reicon-react";
 import { toast } from "sonner";
 import { GridSection } from "@/components/grid/grid-section";
 import { EditableParagraph } from "@/components/page/editable-paragraph";
+import { MyPageButton } from "@/components/page/my-page-button";
 import { PageImageEditor } from "@/components/page/page-image-editor";
+import { PageManagementMenu } from "@/components/page/page-management-menu";
 import { PageSettingsMenu } from "@/components/page/page-settings-menu";
 import Toolbar from "@/components/page/toolbar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import {
 	Tooltip,
 	TooltipContent,
@@ -25,7 +27,7 @@ import {
 } from "@/components/ui/tooltip";
 import { uploadPageItemMedia } from "@/lib/api/item-media-api";
 import {
-	getMyPage,
+	changePrimaryPage,
 	getOwnedPages,
 	getPageByHandleQueryOptions,
 	MY_PAGE_QUERY_KEY,
@@ -56,6 +58,8 @@ type HandleLoaderData = {
 	isCurrentUserPage: boolean;
 	isDemo: boolean;
 };
+
+type PrimaryActionState = "idle" | "setting" | "success" | "fading" | "hidden";
 
 function getFaviconUrl(imageUrl: string) {
 	return `/api/favicon?v=3&image=${encodeURIComponent(imageUrl)}`;
@@ -209,6 +213,7 @@ function HandlePageContent({
 	onPageChange: (page: PageResponse) => void;
 }) {
 	const { page } = loaderData;
+	const queryClient = useQueryClient();
 	const { data: sessionResult } = useQuery({
 		...getSessionQueryOptions(),
 		enabled: !loaderData.isDemo,
@@ -217,12 +222,6 @@ function HandlePageContent({
 		? sessionResult.data?.user.id === page.userId
 		: loaderData.isCurrentUserPage;
 	const isSignedIn = Boolean(sessionResult?.data?.user);
-	const { data: myPageResult } = useQuery({
-		queryKey: MY_PAGE_QUERY_KEY,
-		queryFn: getMyPage,
-		enabled: isSignedIn && !isCurrentUserPage,
-	});
-	const myPage = myPageResult?.page;
 	const mode = getPageMode(isCurrentUserPage);
 	const { data: ownedPagesResult } = useQuery({
 		queryKey: OWNED_PAGES_QUERY_KEY,
@@ -232,6 +231,69 @@ function HandlePageContent({
 	const ownedPage = ownedPagesResult?.pages.find(
 		(candidate) => candidate.handle === page.handle,
 	);
+	const [primaryActionState, setPrimaryActionState] =
+		useState<PrimaryActionState>("idle");
+	const primaryActionTimerRef = useRef<number | null>(null);
+	const primaryActionPageHandleRef = useRef(page.handle);
+
+	useEffect(() => {
+		if (primaryActionPageHandleRef.current !== page.handle) {
+			primaryActionPageHandleRef.current = page.handle;
+			setPrimaryActionState("idle");
+		}
+		if (primaryActionTimerRef.current !== null) {
+			window.clearTimeout(primaryActionTimerRef.current);
+			primaryActionTimerRef.current = null;
+		}
+
+		return () => {
+			if (primaryActionTimerRef.current !== null) {
+				window.clearTimeout(primaryActionTimerRef.current);
+				primaryActionTimerRef.current = null;
+			}
+		};
+	}, [page.handle]);
+
+	const showPrimaryAction =
+		isCurrentUserPage &&
+		!loaderData.isDemo &&
+		ownedPage !== undefined &&
+		primaryActionState !== "hidden" &&
+		(!ownedPage.isPrimary ||
+			primaryActionState === "success" ||
+			primaryActionState === "fading");
+
+	async function handleSetPrimaryPage() {
+		if (!ownedPage || ownedPage.isPrimary || primaryActionState !== "idle")
+			return;
+
+		setPrimaryActionState("setting");
+		try {
+			await changePrimaryPage({ data: { handle: page.handle } });
+		} catch (caught) {
+			setPrimaryActionState("idle");
+			toast.error(
+				caught instanceof Error
+					? caught.message
+					: "Could not set this as your primary page.",
+			);
+			return;
+		}
+
+		setPrimaryActionState("success");
+		void Promise.all([
+			queryClient.invalidateQueries({ queryKey: OWNED_PAGES_QUERY_KEY }),
+			queryClient.invalidateQueries({ queryKey: MY_PAGE_QUERY_KEY }),
+		]);
+		primaryActionTimerRef.current = window.setTimeout(() => {
+			setPrimaryActionState("fading");
+			primaryActionTimerRef.current = window.setTimeout(() => {
+				setPrimaryActionState("hidden");
+				primaryActionTimerRef.current = null;
+			}, 500);
+		}, 1800);
+	}
+
 	const readOnly =
 		isCurrentUserPage &&
 		!loaderData.isDemo &&
@@ -414,6 +476,37 @@ function HandlePageContent({
 								className={`t-stagger-line t-stagger-line--3 px-0.5 text-base leading-6 text-primary/80 ${layoutClasses.bio}`}
 							/>
 						</div>
+						{showPrimaryAction ? (
+							<div
+								className={`mt-20 w-fit transition-opacity duration-500 ease-out motion-reduce:transition-none z-100 ${primaryActionState === "fading" ? "opacity-0" : "opacity-100"}`}
+							>
+								<Button
+									type="button"
+									variant="secondary"
+									className="t-copy-button w-fit rounded-lg text-muted-foreground"
+									data-state={
+										primaryActionState === "success" ||
+										primaryActionState === "fading"
+											? "copied"
+											: "idle"
+									}
+									disabled={primaryActionState === "setting"}
+									aria-busy={primaryActionState === "setting"}
+									onClick={() => void handleSetPrimaryPage()}
+								>
+									<span className="t-copy-feedback" aria-live="polite">
+										<span className="t-copy-labels">
+											<span className="t-copy-label t-copy-label-idle inline-flex items-center gap-1.5">
+												set as primary page
+											</span>
+											<span className="t-copy-label t-copy-label-copied">
+												Now it's your primary page!
+											</span>
+										</span>
+									</span>
+								</Button>
+							</div>
+						) : null}
 					</aside>
 				</div>
 
@@ -436,7 +529,7 @@ function HandlePageContent({
 				</section>
 
 				{!isSignedIn && !loaderData.isDemo ? (
-					<div className="flex w-full max-w-[28rem] flex-col items-center gap-3 px-6 pb-[calc(2rem+env(safe-area-inset-bottom))] min-[90rem]:hidden">
+					<div className="flex w-full max-w-md flex-col items-center gap-3 px-6 pb-[calc(2rem+env(safe-area-inset-bottom))] min-[90rem]:hidden">
 						<Button
 							render={
 								<Link
@@ -492,26 +585,7 @@ function HandlePageContent({
 								</TooltipTrigger>
 								<TooltipContent>Settings</TooltipContent>
 							</Tooltip>
-						) : isSignedIn && myPage ? (
-							<Button
-								render={
-									<Link to="/$handle" params={{ handle: myPage.handle }} />
-								}
-								variant="ghost"
-								nativeButton={false}
-								size="sm"
-								className="text-muted-foreground/80 rounded-md gap-1.5"
-							>
-								<Avatar size="xs">
-									<AvatarImage
-										src={getProfileImageUrl(myPage.image) ?? undefined}
-										alt=""
-									/>
-									<AvatarFallback />
-								</Avatar>
-								<span>My page</span>
-							</Button>
-						) : isSignedIn ? null : (
+						) : !isSignedIn ? (
 							<Button
 								render={
 									<Link
@@ -527,7 +601,7 @@ function HandlePageContent({
 								size="sm"
 								className="rounded-md"
 							/>
-						)}
+						) : null}
 						<Tooltip>
 							<TooltipTrigger
 								render={
@@ -560,6 +634,19 @@ function HandlePageContent({
 							</TooltipTrigger>
 							<TooltipContent>Feedback</TooltipContent>
 						</Tooltip>
+						<Separator
+							orientation="vertical"
+							className={
+								"data-vertical:w-[2.5px] data-vertical:my-2! rounded-lg mx-1 bg-border/80"
+							}
+						/>
+						{isSignedIn ? (
+							isCurrentUserPage ? (
+								<PageManagementMenu triggerPage={page} />
+							) : (
+								<MyPageButton />
+							)
+						) : null}
 					</div>
 				</aside>
 			) : null}

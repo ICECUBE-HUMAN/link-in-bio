@@ -1,40 +1,20 @@
 import type {
 	HandleAvailabilityResponse,
 	MyPageResponse,
-	OwnedPageSummary,
 	PageByHandleResponse,
 	PageResponse,
 } from "@sinabro/api";
 import { isReservedPageHandle, pageHandleSchema } from "@sinabro/api";
-import { PRO_MONTHLY_PRODUCT_ID, PRO_PAGE_LIMIT } from "@sinabro/plan";
+import { PRO_MONTHLY_PRODUCT_ID } from "@sinabro/plan";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate } from "@tanstack/react-router";
-import {
-	BadgeCheckIcon,
-	ChevronLeftIcon,
-	PlusIcon,
-	StarIcon,
-	TrashIcon,
-} from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { ChevronLeftIcon } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Check, CheckCircle, Gear, Loader, XCircle } from "reicon-react";
 import { createUISFX } from "uisfx";
 import * as v from "valibot";
 
-import { CreatePageFlow } from "@/components/page/create-page-flow";
-import {
-	Avatar,
-	AvatarBadge,
-	AvatarFallback,
-	AvatarImage,
-} from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogTitle,
-} from "@/components/ui/dialog";
 import { Field } from "@/components/ui/field";
 import {
 	InputGroup,
@@ -44,11 +24,12 @@ import {
 import {
 	Popover,
 	PopoverContent,
+	PopoverDescription,
+	PopoverTitle,
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { env } from "@/env";
 import {
-	changePrimaryPage,
 	checkPageHandleAvailability,
 	deletePage,
 	getOwnedPages,
@@ -57,13 +38,12 @@ import {
 	OWNED_PAGES_QUERY_KEY,
 } from "@/lib/api/pages.functions";
 import { updatePage } from "@/lib/api/pages-api";
-import { getProfileImageUrl } from "@/lib/api/profile-image-api";
 import { clearSessionQuery } from "@/lib/api/session.functions";
 import { authClient } from "@/lib/auth/auth-client";
 import { getHandleAvailabilityStatus } from "@/lib/page/new-page-state";
 import { SharedLayoutBg } from "../motion/shared-layout-bg";
 
-type SettingsView = "menu" | "pages" | "delete" | "handle";
+type SettingsView = "menu" | "delete" | "handle";
 
 const DELETE_CONFIRMATION_CLICKS = 3;
 
@@ -94,27 +74,52 @@ export function PageSettingsMenu({
 	});
 
 	const queryClient = useQueryClient();
+	const navigate = useNavigate();
 	const [view, setView] = useState<SettingsView>("menu");
 	const [open, setOpen] = useState(false);
 	const [isHandleSuccess, setIsHandleSuccess] = useState(false);
 	const [isChangingPlan, setIsChangingPlan] = useState(false);
 	const [billingError, setBillingError] = useState<string | null>(null);
+	const [isPageDeleteOpen, setIsPageDeleteOpen] = useState(false);
+	const [isDeletingPage, setIsDeletingPage] = useState(false);
+	const [pageDeleteError, setPageDeleteError] = useState<string | null>(null);
 	const { data: ownedPagesResult } = useQuery({
 		queryKey: OWNED_PAGES_QUERY_KEY,
 		queryFn: getOwnedPages,
 		enabled: !localOnly,
 	});
 	const ownedPages = ownedPagesResult?.pages ?? [];
-	const sortedPages = [...ownedPages].sort(
-		(a, b) => Number(b.isPrimary) - Number(a.isPrimary),
-	);
+	const primaryPage = ownedPages.find((ownedPage) => ownedPage.isPrimary);
+	const isPrimaryPage =
+		ownedPagesResult === undefined || primaryPage?.handle === page.handle;
 	const planName = ownedPagesResult?.hasAccess ? "Pro" : "Free";
-	const canManagePages = ownedPagesResult?.hasAccess === true;
 	const refreshOwnedPages = async () => {
 		await Promise.all([
 			queryClient.invalidateQueries({ queryKey: OWNED_PAGES_QUERY_KEY }),
 			queryClient.invalidateQueries({ queryKey: MY_PAGE_QUERY_KEY }),
 		]);
+	};
+	const deleteCurrentPage = async () => {
+		setIsDeletingPage(true);
+		setPageDeleteError(null);
+		try {
+			await deletePage({ data: { handle: page.handle } });
+			await refreshOwnedPages();
+			setIsPageDeleteOpen(false);
+			setOpen(false);
+			if (primaryPage) {
+				await navigate({
+					to: "/$handle",
+					params: { handle: primaryPage.handle },
+				});
+			}
+		} catch (caught) {
+			setPageDeleteError(
+				caught instanceof Error ? caught.message : "Could not delete page.",
+			);
+		} finally {
+			setIsDeletingPage(false);
+		}
 	};
 	const changePlan = async () => {
 		setBillingError(null);
@@ -170,7 +175,7 @@ export function PageSettingsMenu({
 			<PopoverContent
 				align="start"
 				sideOffset={12}
-				className={`${isHandleSuccess || view === "handle" ? "w-88" : view === "delete" || view === "pages" ? "w-80" : "w-64"} t-resize overflow-hidden ${view === "delete" ? "p-4 rounded-4xl" : "p-2 rounded-2xl"} beautiful-shadow  bg-background`}
+				className={`${isHandleSuccess || view === "handle" ? "w-88" : view === "delete" ? "w-80" : "w-64"} t-resize overflow-hidden ${view === "delete" ? "p-4 rounded-4xl" : "p-2 rounded-2xl"} beautiful-shadow  bg-background`}
 			>
 				<div
 					className="t-page-slide t-resize"
@@ -181,104 +186,133 @@ export function PageSettingsMenu({
 					data-success={isHandleSuccess ? "true" : undefined}
 				>
 					<section className="t-page" data-page-id="1">
-						<SharedLayoutBg className="px-5">
-							{localOnly ? (
-								<div className="flex h-15 items-center text-sm text-muted-foreground">
-									Demo mode · changes stay in this browser
-								</div>
-							) : null}
-							<button
-								type="button"
-								disabled={readOnly}
-								className="w-full flex flex-col items-start justify-center rounded-lg font-medium h-15 gap-0"
-								onClick={() => setView("handle")}
-							>
-								<span>Change handle</span>
-								<span className="text-muted-foreground/80">/{page.handle}</span>
-							</button>
-							{canManagePages ? (
+						<Popover
+							open={isPageDeleteOpen}
+							onOpenChange={(nextOpen) => {
+								setIsPageDeleteOpen(nextOpen);
+								if (nextOpen) setPageDeleteError(null);
+							}}
+						>
+							<SharedLayoutBg className="px-5">
+								{localOnly ? (
+									<div className="flex h-15 items-center text-sm text-muted-foreground">
+										Demo mode · changes stay in this browser
+									</div>
+								) : null}
 								<button
 									type="button"
+									disabled={readOnly}
 									className="w-full flex flex-col items-start justify-center rounded-lg font-medium h-15 gap-0"
-									onClick={() => setView("pages")}
+									onClick={() => setView("handle")}
 								>
-									<span>Manage page</span>
+									<span>Change handle</span>
 									<span className="text-muted-foreground/80">
-										{ownedPages.length}/{PRO_PAGE_LIMIT} available
+										/{page.handle}
 									</span>
 								</button>
-							) : null}
-							{!localOnly ? (
-								<button
-									type="button"
-									disabled={isChangingPlan}
-									aria-busy={isChangingPlan}
-									aria-label={isChangingPlan ? "Opening billing" : undefined}
-									className="w-full flex flex-col items-start justify-center rounded-lg font-medium h-15 gap-0"
-									onClick={() => void changePlan()}
-								>
-									{isChangingPlan ? (
-										<span className="flex w-full items-center justify-center">
-											<Loader
-												weight="Filled"
-												className="animate-spin size-4"
-												aria-hidden="true"
-											/>
-										</span>
-									) : (
-										<>
-											<span>Change plan</span>
-											<span className="text-muted-foreground/80">
-												{planName}
+								{!localOnly ? (
+									<button
+										type="button"
+										disabled={isChangingPlan}
+										aria-busy={isChangingPlan}
+										aria-label={isChangingPlan ? "Opening billing" : undefined}
+										className="w-full flex flex-col items-start justify-center rounded-lg font-medium h-15 gap-0"
+										onClick={() => void changePlan()}
+									>
+										{isChangingPlan ? (
+											<span className="flex w-full items-center justify-center">
+												<Loader
+													weight="Filled"
+													className="animate-spin size-4"
+													aria-hidden="true"
+												/>
 											</span>
-										</>
-									)}
-								</button>
-							) : null}
-							{billingError ? (
-								<p className="px-2 text-xs text-destructive" role="alert">
-									{billingError}
-								</p>
-							) : null}
-							{!localOnly ? (
-								<button
-									type="button"
-									className="flex items-center w-full justify-start rounded-lg font-medium h-15"
-									onClick={async () => {
-										ui.play("disconnect");
-										const { error } = await authClient.signOut();
-										if (error) return;
+										) : (
+											<>
+												<span>Change plan</span>
+												<span className="text-muted-foreground/80">
+													{planName}
+												</span>
+											</>
+										)}
+									</button>
+								) : null}
+								{billingError ? (
+									<p className="px-2 text-xs text-destructive" role="alert">
+										{billingError}
+									</p>
+								) : null}
+								{!localOnly ? (
+									<button
+										type="button"
+										className="flex items-center w-full justify-start rounded-lg font-medium h-15"
+										onClick={async () => {
+											ui.play("disconnect");
+											const { error } = await authClient.signOut();
+											if (error) return;
 
-										await clearSessionQuery(queryClient);
-										queryClient.resetQueries({
-											queryKey: MY_PAGE_QUERY_KEY,
-											exact: true,
-										});
-										setOpen(false);
-									}}
+											await clearSessionQuery(queryClient);
+											queryClient.resetQueries({
+												queryKey: MY_PAGE_QUERY_KEY,
+												exact: true,
+											});
+											setOpen(false);
+										}}
+									>
+										Log out
+									</button>
+								) : null}
+								{!localOnly ? (
+									<PopoverTrigger
+										render={<button type="button" />}
+										disabled={isPrimaryPage}
+										className="w-full flex flex-col items-start justify-center rounded-lg font-medium h-15 gap-0 text-gray-bright"
+									>
+										<span>Delete page</span>
+									</PopoverTrigger>
+								) : null}
+								{!localOnly ? (
+									<button
+										type="button"
+										className="flex items-center w-full justify-start rounded-lg font-medium h-15 text-gray-bright"
+										onClick={() => setView("delete")}
+									>
+										Delete Account
+									</button>
+								) : null}
+							</SharedLayoutBg>
+							<PopoverContent
+								side="right"
+								align="start"
+								sideOffset={12}
+								className="w-80 rounded-2xl p-4 bg-background smooth-shadow-ring-lg shadow-neutral-600 smooth-ring-neutral-300/20 gap-1"
+							>
+								<PopoverTitle className="text-xl font-semibold">
+									Delete page?
+								</PopoverTitle>
+								<PopoverDescription className="text-base text-primary">
+									Your contents will be permanently removed.
+								</PopoverDescription>
+								{pageDeleteError ? (
+									<p className="mt-3 text-xs text-destructive" role="alert">
+										{pageDeleteError}
+									</p>
+								) : null}
+								<Button
+									variant="destructive"
+									size="lg"
+									className="mt-6 relative w-full overflow-hidden rounded-lg h-12 text-base"
+									disabled={isDeletingPage}
+									aria-busy={isDeletingPage}
+									onClick={() => void deleteCurrentPage()}
 								>
-									Log out
-								</button>
-							) : null}
-							{!localOnly ? (
-								<button
-									type="button"
-									className="flex items-center w-full justify-start rounded-lg font-medium h-15 text-gray-bright"
-									onClick={() => setView("delete")}
-								>
-									Delete Account
-								</button>
-							) : null}
-						</SharedLayoutBg>
+									{isDeletingPage ? "Deleting page" : "Delete page"}
+								</Button>
+							</PopoverContent>
+						</Popover>
 					</section>
 					<section className="t-page p-0" data-page-id="2">
-						{view === "pages" ? (
-							<PageManagementView
-								currentHandle={page.handle}
-								pages={sortedPages}
-								onRefresh={refreshOwnedPages}
-							/>
-						) : view === "delete" ? (
+						{view === "delete" ? (
 							<DeleteAccountView onBack={() => setView("menu")} />
 						) : view === "handle" ? (
 							<ChangeHandleView
@@ -313,150 +347,6 @@ function BackButton({ onBack }: { onBack: () => void }) {
 		>
 			<ChevronLeftIcon className="stroke-2 size-5" />
 		</Button>
-	);
-}
-
-function PageManagementView({
-	currentHandle,
-	pages,
-	onRefresh,
-}: {
-	currentHandle: string;
-	pages: OwnedPageSummary[];
-	onRefresh: () => Promise<void>;
-}) {
-	const navigate = useNavigate();
-	const [error, setError] = useState<string | null>(null);
-	const [isCreateOpen, setIsCreateOpen] = useState(false);
-	const primaryPage = pages.find((page) => page.isPrimary);
-
-	async function makePrimary(page: OwnedPageSummary) {
-		setError(null);
-		try {
-			await changePrimaryPage({ data: { handle: page.handle } });
-			await onRefresh();
-		} catch (caught) {
-			setError(
-				caught instanceof Error ? caught.message : "Could not change page.",
-			);
-		}
-	}
-
-	async function remove(page: OwnedPageSummary) {
-		if (!window.confirm(`Delete /${page.handle}?`)) return;
-		setError(null);
-		try {
-			await deletePage({ data: { handle: page.handle } });
-			await onRefresh();
-			if (page.handle === currentHandle && primaryPage) {
-				await navigate({
-					to: "/$handle",
-					params: { handle: primaryPage.handle },
-				});
-			}
-		} catch (caught) {
-			setError(
-				caught instanceof Error ? caught.message : "Could not delete page.",
-			);
-		}
-	}
-
-	async function handleCreated(handle: string) {
-		setIsCreateOpen(false);
-		await onRefresh();
-		await navigate({ to: "/$handle", params: { handle } });
-	}
-
-	return (
-		<div className="flex h-full flex-col gap-1">
-			<div className="flex min-h-0 flex-1 flex-col gap-0">
-				{pages.map((ownedPage) => (
-					<div
-						key={ownedPage.id}
-						className="group flex items-center rounded-lg hover:bg-muted"
-					>
-						<Button
-							render={
-								<Link to="/$handle" params={{ handle: ownedPage.handle }} />
-							}
-							size={"lg"}
-							variant={"ghost"}
-							nativeButton={false}
-							className={`min-w-0 flex-1 rounded-lg h-15 hover:bg-transparent ${ownedPage.isPrimary ? "justify-between" : "justify-start"}`}
-						>
-							<div className="flex min-w-0 items-center gap-2">
-								<Avatar size="default" className="size-9">
-									<AvatarImage
-										src={getProfileImageUrl(ownedPage.image) ?? undefined}
-										alt=""
-									/>
-									<AvatarFallback />
-									{ownedPage.isPrimary ? (
-										<AvatarBadge className="size-5! -right-1 -bottom-1 [&>svg]:size-full bg-transparent ring-0">
-											<BadgeCheckIcon
-												className="stroke-white fill-brand size-full!"
-												aria-hidden="true"
-											/>
-										</AvatarBadge>
-									) : null}
-								</Avatar>
-								<div className="flex min-w-0 flex-col">
-									<span>{ownedPage.name}</span>
-									<span className="truncate text-muted-foreground/80">
-										/{ownedPage.handle}
-									</span>
-								</div>
-							</div>
-						</Button>
-						{!ownedPage.isPrimary && (
-							<div className="space-x-1 pr-1.5">
-								<Button
-									type="button"
-									size="icon-sm"
-									variant="ghost"
-									aria-label={`Make /${ownedPage.handle} primary`}
-									onClick={() => void makePrimary(ownedPage)}
-								>
-									<StarIcon />
-								</Button>
-								<Button
-									type="button"
-									size="icon-sm"
-									variant="ghost"
-									aria-label={`Delete /${ownedPage.handle}`}
-									onClick={() => void remove(ownedPage)}
-								>
-									<TrashIcon className="stroke-2.5" />
-								</Button>
-							</div>
-						)}
-					</div>
-				))}
-			</div>
-
-			<Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-				<Button
-					type="button"
-					size={"lg"}
-					variant="ghost"
-					className="justify-between items-center rounded-lg h-15"
-					disabled={pages.length >= PRO_PAGE_LIMIT}
-					onClick={() => setIsCreateOpen(true)}
-				>
-					<span>Create page</span>
-					<PlusIcon />
-				</Button>
-				<DialogContent className="gap-0 overflow-hidden p-6 sm:max-w-md">
-					<DialogTitle className="sr-only">Create a new page</DialogTitle>
-					<DialogDescription className="sr-only">
-						Choose a handle and role for your new page.
-					</DialogDescription>
-					<CreatePageFlow onCreated={(handle) => void handleCreated(handle)} />
-				</DialogContent>
-			</Dialog>
-
-			{error ? <p className="text-xs text-destructive">{error}</p> : null}
-		</div>
 	);
 }
 
