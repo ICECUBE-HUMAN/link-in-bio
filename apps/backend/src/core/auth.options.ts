@@ -9,6 +9,11 @@ import type { DatabaseClient } from "@db/index";
 import type { BetterAuthOptions } from "better-auth/minimal";
 import { magicLink } from "better-auth/plugins/magic-link";
 import type { AppBindings } from "types/type";
+import {
+	reconcileUserPageLifecycle,
+	restoreUserPagesAfterResubscribe,
+	scheduleUserPagesAfterCancellation,
+} from "../services/page-lifecycle.service";
 import { syncCreemWebhookState } from "./creem-webhook";
 import {
 	sendDeleteAccountVerificationEmail,
@@ -36,6 +41,58 @@ export const betterAuthOptions = (
 		"localhost",
 		"127.0.0.1",
 	].includes(frontendHostname);
+	const applySubscriptionLifecycle =
+		async (
+			result: Awaited<
+				ReturnType<
+					typeof syncCreemWebhookState
+				>
+			>,
+			cancelAtPeriodEnd: boolean,
+		) => {
+			if (!result?.accepted) return;
+			const status =
+				result.state.status.toLowerCase();
+			const cancellation =
+				cancelAtPeriodEnd ||
+				[
+					"canceled",
+					"expired",
+					"unpaid",
+					"paused",
+					"scheduled_cancel",
+				].includes(status);
+			if (
+				cancellation &&
+				result.state.periodEnd
+			) {
+				const periodEnd = new Date(
+					result.state.periodEnd,
+				);
+				await scheduleUserPagesAfterCancellation(
+					{
+						db,
+						userId: result.userId,
+						periodEnd,
+					},
+				);
+				if (periodEnd <= new Date())
+					await reconcileUserPageLifecycle(
+						{
+							db,
+							userId: result.userId,
+						},
+					);
+				return;
+			}
+			await restoreUserPagesAfterResubscribe(
+				{
+					db,
+					userId: result.userId,
+				},
+			);
+		};
+
 	const syncSubscriptionEvent = async (
 		data: {
 			webhookId: string;
@@ -54,21 +111,28 @@ export const betterAuthOptions = (
 				| string;
 		},
 		cancelAtPeriodEnd = false,
-	) =>
-		syncCreemWebhookState(db, {
-			webhookId: data.webhookId,
-			webhookCreatedAt:
-				data.webhookCreatedAt,
-			creemSubscriptionId: data.id,
-			status: data.status,
-			productId: data.product.id,
-			creemCustomerId: data.customer.id,
-			periodStart:
-				data.current_period_start_date,
-			periodEnd:
-				data.current_period_end_date,
+	) => {
+		const result =
+			await syncCreemWebhookState(db, {
+				webhookId: data.webhookId,
+				webhookCreatedAt:
+					data.webhookCreatedAt,
+				creemSubscriptionId: data.id,
+				status: data.status,
+				productId: data.product.id,
+				creemCustomerId:
+					data.customer.id,
+				periodStart:
+					data.current_period_start_date,
+				periodEnd:
+					data.current_period_end_date,
+				cancelAtPeriodEnd,
+			});
+		await applySubscriptionLifecycle(
+			result,
 			cancelAtPeriodEnd,
-		});
+		);
+	};
 
 	return {
 		/**
@@ -158,26 +222,32 @@ export const betterAuthOptions = (
 					const subscription =
 						data.subscription;
 					if (!subscription) return;
-					await syncCreemWebhookState(
-						db,
-						{
-							webhookId: data.webhookId,
-							webhookCreatedAt:
-								data.webhookCreatedAt,
-							creemSubscriptionId:
-								subscription.id,
-							status:
-								subscription.status,
-							productId:
-								data.product.id,
-							creemCustomerId:
-								data.customer?.id ??
-								null,
-							periodStart:
-								subscription.current_period_start_date,
-							periodEnd:
-								subscription.current_period_end_date,
-						},
+					const result =
+						await syncCreemWebhookState(
+							db,
+							{
+								webhookId:
+									data.webhookId,
+								webhookCreatedAt:
+									data.webhookCreatedAt,
+								creemSubscriptionId:
+									subscription.id,
+								status:
+									subscription.status,
+								productId:
+									data.product.id,
+								creemCustomerId:
+									data.customer?.id ??
+									null,
+								periodStart:
+									subscription.current_period_start_date,
+								periodEnd:
+									subscription.current_period_end_date,
+							},
+						);
+					await applySubscriptionLifecycle(
+						result,
+						false,
 					);
 				},
 				onSubscriptionActive:

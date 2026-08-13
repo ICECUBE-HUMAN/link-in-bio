@@ -3,6 +3,7 @@ import type {
 	AuthUser,
 } from "@core/auth";
 import type { DatabaseClient } from "@db/index";
+import type { pages } from "@db/schema";
 import { authSessionMiddleware } from "@middlewares/auth-session.middleware";
 import { corsMiddleware } from "@middlewares/cors.middleware";
 import { csrfMiddleware } from "@middlewares/csrf.middleware";
@@ -23,6 +24,8 @@ export type AppEnv = {
 		db: DatabaseClient;
 		session: AuthSessionData | null;
 		user: AuthUser | null;
+		authenticatedUser: AuthUser;
+		ownedPage: typeof pages.$inferSelect;
 	};
 };
 

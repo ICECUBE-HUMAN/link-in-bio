@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { GridSection } from "@/components/grid/grid-section";
 import { EditableParagraph } from "@/components/page/editable-paragraph";
 import { PageImageEditor } from "@/components/page/page-image-editor";
+import { PagePicker } from "@/components/page/page-picker";
 import { PageSettingsMenu } from "@/components/page/page-settings-menu";
 import Toolbar from "@/components/page/toolbar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,8 +27,10 @@ import {
 import { uploadPageItemMedia } from "@/lib/api/item-media-api";
 import {
 	getMyPage,
+	getOwnedPages,
 	getPageByHandleQueryOptions,
 	MY_PAGE_QUERY_KEY,
+	OWNED_PAGES_QUERY_KEY,
 } from "@/lib/api/pages.functions";
 import { getProfileImageUrl } from "@/lib/api/profile-image-api";
 import { getSessionQueryOptions } from "@/lib/api/session.functions";
@@ -75,12 +78,12 @@ function getPublicPageDescription(page: PageResponse) {
 function hasPublicPageContent(page: PageResponse, items: PageItemResponse[]) {
 	return Boolean(
 		page.name?.trim() ||
-		page.bio?.trim() ||
-		items.some((item) => {
-			if (item.type === "text") return item.data.text.trim();
-			if (item.type === "section") return item.data.title.trim();
-			return true;
-		}),
+			page.bio?.trim() ||
+			items.some((item) => {
+				if (item.type === "text") return item.data.text.trim();
+				if (item.type === "section") return item.data.title.trim();
+				return true;
+			}),
 	);
 }
 
@@ -137,7 +140,8 @@ export const Route = createFileRoute("/$handle")({
 			? `/${encodeURIComponent(loaderData.page.handle)}`
 			: undefined;
 		const noIndex = loaderData
-			? loaderData.isDemo || !hasPublicPageContent(loaderData.page, loaderData.items)
+			? loaderData.isDemo ||
+				!hasPublicPageContent(loaderData.page, loaderData.items)
 			: false;
 
 		const seo = createSeo({
@@ -221,6 +225,21 @@ function HandlePageContent({
 	});
 	const myPage = myPageResult?.page;
 	const mode = getPageMode(isCurrentUserPage);
+	const { data: ownedPagesResult } = useQuery({
+		queryKey: OWNED_PAGES_QUERY_KEY,
+		queryFn: getOwnedPages,
+		enabled: isCurrentUserPage && !loaderData.isDemo,
+	});
+	const ownedPage = ownedPagesResult?.pages.find(
+		(candidate) => candidate.handle === page.handle,
+	);
+	const readOnly =
+		isCurrentUserPage &&
+		!loaderData.isDemo &&
+		(ownedPagesResult === undefined ||
+			!ownedPage ||
+			ownedPage?.lifecycleStatus === "read_only");
+	const editorMode = readOnly ? "view" : mode;
 	const [isAsideShown, setIsAsideShown] = useState(false);
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 	const [previewBreakpoint, setPreviewBreakpoint] =
@@ -233,6 +252,7 @@ function HandlePageContent({
 			handle: page.handle,
 			enabled: mode === "edit",
 			persist: !loaderData.isDemo,
+			readOnly,
 		});
 	const {
 		items,
@@ -249,8 +269,8 @@ function HandlePageContent({
 		initialItems: loaderData.items,
 		handle: page.handle,
 		breakpoint: previewBreakpoint,
-		enabled: mode === "edit",
-		persistItems: !loaderData.isDemo,
+		enabled: editorMode === "edit",
+		persistItems: !loaderData.isDemo && !readOnly,
 	});
 	const { enrichingItemIds, enrichLinkItem } = useLinkMetadataEnrichment({
 		handle: page.handle,
@@ -366,7 +386,7 @@ function HandlePageContent({
 								initialImageSource={draft.imageSource}
 								initialImageCrop={draft.imageCrop}
 								handle={page.handle}
-								mode={mode}
+								mode={editorMode}
 								breakpoint={previewBreakpoint}
 								onImageChange={updateFields}
 								onImageCommit={commitFields}
@@ -379,7 +399,7 @@ function HandlePageContent({
 							<EditableParagraph
 								value={draft.name}
 								placeholder="Name"
-								mode={mode}
+								mode={editorMode}
 								onChange={(name) => updateField("name", name)}
 								rows={1}
 								spellCheck={false}
@@ -388,7 +408,7 @@ function HandlePageContent({
 							<EditableParagraph
 								value={draft.bio}
 								placeholder="Tell about you"
-								mode={mode}
+								mode={editorMode}
 								onChange={(bio) => updateField("bio", bio)}
 								rows={2}
 								spellCheck={false}
@@ -456,6 +476,9 @@ function HandlePageContent({
 				>
 					<div className="flex items-center gap-0">
 						{isCurrentUserPage ? (
+							<PagePicker currentHandle={page.handle} />
+						) : null}
+						{isCurrentUserPage ? (
 							<Tooltip disabled={isSettingsOpen}>
 								<TooltipTrigger render={<span className="inline-flex" />}>
 									<PageSettingsMenu
@@ -463,6 +486,7 @@ function HandlePageContent({
 										onChanged={onPageChange}
 										onOpenChange={setIsSettingsOpen}
 										localOnly={loaderData.isDemo}
+										readOnly={readOnly}
 									/>
 								</TooltipTrigger>
 								<TooltipContent>Settings</TooltipContent>
@@ -539,9 +563,10 @@ function HandlePageContent({
 				</aside>
 			) : null}
 
-			{mode === "edit" ? (
+			{editorMode === "edit" ? (
 				<Toolbar
 					page={page}
+					readOnly={readOnly}
 					breakpoint={previewBreakpoint}
 					isSaving={status === "saving" || gridStatus === "saving"}
 					onItemAdd={(itemType, url) => {

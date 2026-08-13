@@ -6,6 +6,7 @@ import {
 	isReservedPageHandle,
 	type MyPageResponse,
 	myPageResponseSchema,
+	ownedPageListResponseSchema,
 	pageByHandleResponseSchema,
 	pageHandleSchema,
 	profileImageCompleteRequestSchema,
@@ -24,14 +25,21 @@ import {
 	UnauthorizedError,
 	UnprocessableEntityError,
 } from "../exceptions/http-exceptions";
-import { mapPageResponse } from "../mappers/page.mapper";
 import {
-	assertEligibleUser,
+	mapOwnedPageSummary,
+	mapPageResponse,
+} from "../mappers/page.mapper";
+import {
+	assertPageCreationAllowed,
+	changePrimaryPage,
 	createPage,
+	deleteOwnedPage,
 	getPrimaryPage,
+	listOwnedPages,
 	updatePage,
 } from "../services/page.service";
 import { checkPageHandle } from "../services/page-handle.service";
+import { reconcileUserPageLifecycle } from "../services/page-lifecycle.service";
 import {
 	completeProfileImageUpload,
 	createProfileImageUpload,
@@ -97,6 +105,60 @@ export const pagesController =
 				},
 			) satisfies MyPageResponse;
 			return c.json(response);
+		})
+		.get("/", async (c) => {
+			const user = requireUser(c);
+			await reconcileUserPageLifecycle({
+				db: c.get("db"),
+				userId: user.id,
+			});
+			const { pages, primaryPageId } =
+				await listOwnedPages({
+					db: c.get("db"),
+					userId: user.id,
+				});
+			return c.json(
+				v.parse(
+					ownedPageListResponseSchema,
+					{
+						pages: pages.map((page) =>
+							mapOwnedPageSummary(
+								page,
+								primaryPageId,
+							),
+						),
+					},
+				),
+			);
+		})
+		.patch(
+			"/:handle/primary",
+			async (c) => {
+				const user = requireUser(c);
+				await changePrimaryPage({
+					db: c.get("db"),
+					userId: user.id,
+					handle: parseHandle(
+						c.req.param("handle"),
+					),
+				});
+				return c.body(null, 204);
+			},
+		)
+		.delete("/:handle", async (c) => {
+			const user = requireUser(c);
+			await deleteOwnedPage({
+				env: c.env,
+				db: c.get("db"),
+				userId: user.id,
+				handle: parseHandle(
+					c.req.param("handle"),
+				),
+				queue:
+					c.env.ITEM_MEDIA_DELETE_QUEUE,
+				executionCtx: c.executionCtx,
+			});
+			return c.body(null, 204);
 		})
 		.patch("/:handle", async (c) => {
 			const user = requireUser(c);
@@ -244,14 +306,12 @@ export const pagesController =
 			const sessionUser =
 				requireUser(c);
 			const currentUser =
-				await assertEligibleUser({
-					db: c.get("db"),
-					userId: sessionUser.id,
-					sessionPrimaryPageId:
-						getPrimaryPageId(
-							sessionUser,
-						),
-				});
+				await assertPageCreationAllowed(
+					{
+						db: c.get("db"),
+						userId: sessionUser.id,
+					},
+				);
 			const parsed = v.safeParse(
 				createPageRequestSchema,
 				await c.req.json(),

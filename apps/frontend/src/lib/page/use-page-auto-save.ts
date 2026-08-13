@@ -19,6 +19,7 @@ type UsePageAutoSaveOptions = {
 	handle: string;
 	enabled?: boolean;
 	persist?: boolean;
+	readOnly?: boolean;
 };
 
 export function getEditablePageFields(page: PageResponse): EditablePageFields {
@@ -48,6 +49,7 @@ export function usePageAutoSave({
 	handle,
 	enabled = true,
 	persist = true,
+	readOnly = false,
 }: UsePageAutoSaveOptions) {
 	const queryClient = useQueryClient();
 	const [draft, setDraft] = useState<EditablePageFields>(() =>
@@ -129,7 +131,7 @@ export function usePageAutoSave({
 
 	const commitFields = useCallback(
 		(changes: Partial<EditablePageFields>) => {
-			if (!enabled) return;
+			if (!enabled || readOnly) return;
 
 			const nextDraft = {
 				...draftRef.current,
@@ -146,13 +148,13 @@ export function usePageAutoSave({
 			applyOptimisticUpdate(changes);
 			setStatus(Object.keys(pendingRef.current).length > 0 ? "dirty" : "saved");
 		},
-		[applyOptimisticUpdate, enabled],
+		[applyOptimisticUpdate, enabled, readOnly],
 	);
 
 	const savePendingChanges = useCallback(async () => {
 		const changes = pendingRef.current;
 		pendingRef.current = {};
-		if (Object.keys(changes).length === 0) return;
+		if (readOnly || Object.keys(changes).length === 0) return;
 		if (!persist) {
 			setStatus("saved");
 			return;
@@ -217,7 +219,7 @@ export function usePageAutoSave({
 				setStatus("error");
 			}
 		}
-	}, [handle, pageMutation, persist, queryClient]);
+	}, [handle, pageMutation, persist, queryClient, readOnly]);
 
 	const scheduleSave = useCallback(() => {
 		if (timerRef.current) clearTimeout(timerRef.current);
@@ -229,7 +231,7 @@ export function usePageAutoSave({
 
 	const updateFields = useCallback(
 		(changes: Partial<EditablePageFields>) => {
-			if (!enabled) return;
+			if (!enabled || readOnly) return;
 
 			const nextDraft = {
 				...draftRef.current,
@@ -252,7 +254,7 @@ export function usePageAutoSave({
 			setStatus("dirty");
 			scheduleSave();
 		},
-		[applyOptimisticUpdate, enabled, persist, scheduleSave],
+		[applyOptimisticUpdate, enabled, persist, readOnly, scheduleSave],
 	);
 
 	const updateField = useCallback(

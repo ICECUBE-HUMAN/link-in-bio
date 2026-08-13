@@ -204,4 +204,10 @@ export const syncCreemWebhookState =
 							),
 				),
 			);
+		return {
+			accepted:
+				decision.action === "accept",
+			userId: subscription.referenceId,
+			state: decision.state,
+		};
 	};

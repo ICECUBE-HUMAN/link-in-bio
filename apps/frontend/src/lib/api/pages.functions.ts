@@ -5,6 +5,8 @@ import {
 	handleAvailabilityResponseSchema,
 	myPageResponseSchema,
 	normalizePageHandle,
+	type OwnedPageListResponse,
+	ownedPageListResponseSchema,
 	type PageByHandleResponse,
 	pageByHandleResponseSchema,
 } from "@sinabro/api";
@@ -85,6 +87,21 @@ export const getMyPage = createServerFn({ method: "GET" }).handler(async () => {
 	return v.parse(myPageResponseSchema, await response.json());
 });
 
+export const getOwnedPages = createServerFn({ method: "GET" }).handler(
+	async (): Promise<OwnedPageListResponse> => {
+		const response = await fetchBackend("/pages", {
+			method: "GET",
+			headers: createCookieHeaders(),
+		});
+		if (response.status === 401) return { pages: [] };
+		if (!response.ok)
+			throw new Error(
+				`Owned pages request failed with status ${response.status}.`,
+			);
+		return v.parse(ownedPageListResponseSchema, await response.json());
+	},
+);
+
 export const getPageByHandle = createServerFn({ method: "GET" })
 	.validator((data: { handle: string }) => ({
 		handle: normalizePageHandle(data.handle),
@@ -110,6 +127,7 @@ export const getPageByHandle = createServerFn({ method: "GET" })
 	});
 
 export const MY_PAGE_QUERY_KEY = ["pages", "me"] as const;
+export const OWNED_PAGES_QUERY_KEY = ["pages", "owned"] as const;
 
 export function getPageByHandleQueryOptions(handle: string) {
 	const normalizedHandle = normalizePageHandle(handle);
