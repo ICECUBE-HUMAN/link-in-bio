@@ -170,9 +170,9 @@
 	min-height: 0;
 }
 .t-page-slide[data-page="1"] { height: 180px; }
-.t-page-slide[data-page="1"][data-plan="free"] { height: 240px; }
+.t-page-slide[data-page="1"][data-plan="free"] { height: 300px; }
 .t-page-slide[data-page="1"][data-plan="pro"] { height: 300px; }
-.t-page-slide[data-page="1"][data-plan="free"][data-billing-error="true"] { height: 264px; }
+.t-page-slide[data-page="1"][data-plan="free"][data-billing-error="true"] { height: 324px; }
 .t-page-slide[data-page="1"][data-plan="pro"][data-billing-error="true"] { height: 324px; }
 .t-page-slide[data-page="2"] { height: 156px; }
 .t-page-slide[data-page="2"][data-view="pages"] { height: 244px; }
