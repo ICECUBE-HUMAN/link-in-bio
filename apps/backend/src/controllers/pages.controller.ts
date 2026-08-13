@@ -1,4 +1,5 @@
 import type { AppEnv } from "@core/app-factory";
+import { getPlanAccess } from "@core/billing";
 import {
 	type CreatePageResponse,
 	createPageRequestSchema,
@@ -112,15 +113,22 @@ export const pagesController =
 				db: c.get("db"),
 				userId: user.id,
 			});
-			const { pages, primaryPageId } =
-				await listOwnedPages({
-					db: c.get("db"),
-					userId: user.id,
-				});
+			const [{ pages, primaryPageId }, access] =
+				await Promise.all([
+					listOwnedPages({
+						db: c.get("db"),
+						userId: user.id,
+					}),
+					getPlanAccess({
+						db: c.get("db"),
+						userId: user.id,
+					}),
+				]);
 			return c.json(
 				v.parse(
 					ownedPageListResponseSchema,
 					{
+						hasAccess: access.hasAccess,
 						pages: pages.map((page) =>
 							mapOwnedPageSummary(
 								page,

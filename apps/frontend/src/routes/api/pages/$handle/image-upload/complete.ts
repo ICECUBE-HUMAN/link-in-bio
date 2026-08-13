@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { fetchBackend } from "@/lib/api/backend-client.server";
+import {
+	fetchBackend,
+	getBackendRequestHeaders,
+} from "@/lib/api/backend-client.server";
 
 export const Route = createFileRoute(
 	"/api/pages/$handle/image-upload/complete",
@@ -7,12 +10,7 @@ export const Route = createFileRoute(
 	server: {
 		handlers: {
 			POST: async ({ request, params }) => {
-				const headers = new Headers();
-				const cookie = request.headers.get("cookie");
-				const contentType = request.headers.get("content-type");
-
-				if (cookie) headers.set("cookie", cookie);
-				if (contentType) headers.set("content-type", contentType);
+				const headers = getBackendRequestHeaders(request);
 
 				return fetchBackend(
 					`/pages/${encodeURIComponent(params.handle)}/image-upload/complete`,

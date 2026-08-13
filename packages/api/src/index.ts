@@ -141,21 +141,11 @@ export const pageResponseSchema = v.object({
 
 export type PageResponse = v.InferOutput<typeof pageResponseSchema>;
 
-export const pageLifecycleStatusSchema = v.union([
-	v.literal("active"),
-	v.literal("read_only"),
-]);
-
-export type PageLifecycleStatus = v.InferOutput<
-	typeof pageLifecycleStatusSchema
->;
-
 export const ownedPageSummarySchema = v.object({
 	id: v.string(),
 	handle: pageHandleSchema,
 	name: v.nullable(v.string()),
 	isPrimary: v.boolean(),
-	lifecycleStatus: pageLifecycleStatusSchema,
 	deletionScheduledAt: v.nullable(v.string()),
 	createdAt: v.string(),
 	updatedAt: v.string(),
@@ -164,6 +154,7 @@ export const ownedPageSummarySchema = v.object({
 export type OwnedPageSummary = v.InferOutput<typeof ownedPageSummarySchema>;
 
 export const ownedPageListResponseSchema = v.object({
+	hasAccess: v.boolean(),
 	pages: v.array(ownedPageSummarySchema),
 });
 

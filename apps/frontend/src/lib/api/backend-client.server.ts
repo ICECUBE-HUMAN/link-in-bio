@@ -38,3 +38,12 @@ export function fetchBackend(path: string, init?: RequestInit) {
 
 	return fetch(url, init);
 }
+
+export function getBackendRequestHeaders(request: Request) {
+	const headers = new Headers();
+	for (const name of ["cookie", "origin", "content-type"]) {
+		const value = request.headers.get(name);
+		if (value) headers.set(name, value);
+	}
+	return headers;
+}

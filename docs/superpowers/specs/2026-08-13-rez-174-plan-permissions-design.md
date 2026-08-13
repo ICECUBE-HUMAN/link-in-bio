@@ -55,21 +55,9 @@ Grabbin은 Cloudflare Worker + Hono + Drizzle + PostgreSQL 구조다. Better Aut
 
 ### 3.2 페이지 상태
 
-`pages`에 다음 필드를 추가한다.
+`pages`에는 `deletion_scheduled_at`만 저장한다. 이는 primary가 아닌 페이지를 실제 삭제할 시각이며, 취소 웹훅에서 `periodEnd + 7일`로 미리 기록한다.
 
-- `lifecycle_status`: `active` 또는 `read_only`
-- `deletion_scheduled_at`: 삭제 예정 시각 또는 `NULL`
-
-상태 의미는 다음과 같다.
-
-| 상태 | 의미 |
-| --- | --- |
-| `active` | 소유자가 페이지 정보를 편집하고 아이템을 변경할 수 있음 |
-| `read_only` | 공개 페이지는 유지하지만 소유자 쓰기 요청을 거부함 |
-
-`deletion_scheduled_at`은 해당 페이지가 삭제 대상이 되는 시각이다. 페이지가 아직 `active`인 결제 기간 중에도 웹훅이 일정을 미리 기록할 수 있다. 실제 읽기 전용 전환은 `periodEnd` 이후에 수행한다.
-
-`active`만으로 쓰기 권한을 결정하지 않는다. 모든 쓰기 요청은 최신 구독 권한과 유예기간 중 primary 예외를 함께 확인한다.
+읽기 권한을 별도 열로 저장하지 않는다. 모든 쓰기 요청과 프론트 표시 모두 최신 구독 접근 여부와 `user.primaryPageId`를 기준으로 계산한다. 결제 기간에는 모든 페이지를 수정할 수 있고, 기간 종료 뒤 유예기간에는 current primary만 수정할 수 있다.
 
 ### 3.3 primary page
 
@@ -106,7 +94,7 @@ PostgreSQL Function/Trigger는 사용하지 않는다. 현재 DB 쓰기 주체�
 
 ### 5.1 페이지 목록
 
-`GET /pages`를 추가한다. 응답에는 소유 페이지 목록, `isPrimary`, `lifecycleStatus`, `deletionScheduledAt`, handle, 이름, 생성·수정 시각을 포함한다. `isPrimary`는 `user.primaryPageId`와 비교해 계산한다.
+`GET /pages`를 추가한다. 응답에는 현재 결제 접근 여부 `hasAccess`와 소유 페이지 목록의 `isPrimary`, `deletionScheduledAt`, handle, 이름, 생성·수정 시각을 포함한다. `isPrimary`는 `user.primaryPageId`와 비교해 계산한다.
 
 기존 `GET /pages/me`는 현재 primary page 조회 용도로 유지해 기존 호출을 깨지 않는다. 새 페이지 선택 메뉴는 `GET /pages`를 사용한다.
 
@@ -137,7 +125,7 @@ REZ-175에서 서명, 중복, 순서가 보호된 이벤트만 이 흐름에 들
 
 ### 6.1 취소 웹훅
 
-구독 취소 이벤트를 처리할 때 구독의 `periodEnd`를 기준으로 `periodEnd + 7일`을 삭제 예정 시각으로 기록한다. 현재 primary는 해당 시각을 갖지 않고, 당시의 non-primary 페이지에 일정을 기록한다. 페이지는 결제 기간 종료 전까지 `active`다.
+구독 취소 이벤트를 처리할 때 구독의 `periodEnd`를 기준으로 `periodEnd + 7일`을 삭제 예정 시각으로 기록한다. 현재 primary는 해당 시각을 갖지 않고, 당시의 non-primary 페이지에 일정을 기록한다. 결제 기간 종료 전까지는 구독 접근 권한으로 모든 페이지 편집을 허용한다.
 
 결제 기간 중 primary가 바뀌면 같은 트랜잭션에서 pending downgrade 일정을 보정한다. 기간 종료 시점에는 전체 페이지를 다시 계산해 현재 primary에는 `NULL`, 나머지 페이지에는 같은 삭제 예정 시각을 둔다.
 
@@ -147,10 +135,7 @@ REZ-175에서 서명, 중복, 순서가 보호된 이벤트만 이 흐름에 들
 
 유효한 Pro 구독이 확인되면 사용자 행을 잠그고 남아 있는 모든 페이지의 예약 상태를 해제한다.
 
-```text
-lifecycle_status = 'active'
-deletion_scheduled_at = NULL
-```
+`deletion_scheduled_at`을 `NULL`로 되돌린다.
 
 이미 직접 삭제된 페이지는 복구하지 않는다. 복구와 삭제가 경쟁하면 두 작업 모두 사용자 행과 현재 구독 상태를 다시 확인한다.
 
@@ -162,7 +147,7 @@ deletion_scheduled_at = NULL
 
 1. `periodEnd`가 지난 계정을 찾는다.
 2. 사용자 행을 잠그고 최신 구독과 primary를 다시 읽는다.
-3. Pro가 아니면 primary 외 페이지를 `read_only`로 전환하고 삭제 일정을 보정한다.
+3. Pro가 아니면 primary 외 페이지의 삭제 일정을 보정한다. 쓰기 권한은 구독 접근 여부와 primary 여부로 계산한다.
 4. `deletion_scheduled_at <= now`인 페이지를 최신 primary가 아닌지 다시 확인한다.
 5. 페이지의 프로필 이미지, 프로필 이미지 원본, 아이템 미디어 R2 키를 수집한다.
 6. 페이지와 하위 아이템을 DB 트랜잭션에서 삭제한다.
@@ -194,12 +179,11 @@ DB 삭제 후 Queue 전송이 실패해도 데이터 손실은 없다. 기존 or
 
 마이그레이션은 다음만 추가한다.
 
-- `pages.lifecycle_status`의 기본값 `active`, not null
 - `pages.deletion_scheduled_at` nullable timestamp
 - 정기 조회를 위한 삭제 예정 시각 인덱스
-- 기존 모든 페이지를 `active`와 `NULL`로 backfill
+- 기존 모든 페이지의 삭제 예정 시각은 `NULL`
 
-기존 `user.primaryPageId` 값은 변경하지 않는다. 기존 계정의 페이지가 이미 하나인 현재 데이터에서는 모든 페이지를 `active`로 유지한다.
+기존 `user.primaryPageId` 값은 변경하지 않는다. 기존 계정의 페이지가 이미 하나인 현재 데이터에서는 삭제 예정 시각을 `NULL`로 유지한다.
 
 프론트 테스트 코드는 작성하지 않는다. 백엔드 정책·서비스·컨트롤러 테스트와 수동 QA 문서를 구현 계획에서 구체화한다.
 
@@ -256,7 +240,7 @@ DB 삭제 후 Queue 전송이 실패해도 데이터 손실은 없다. 기존 or
 - **RESTORE-001**
   - Given: B가 읽기 전용이고 삭제 예정 시각이 아직 지나지 않았다.
   - When: 유효한 Pro 재구독 웹훅을 처리한다.
-  - Then: 남아 있는 B가 `active`가 되고 `deletionScheduledAt`이 `NULL`이 된다.
+- Then: 남아 있는 B의 삭제 예정 시각이 `NULL`이 되고, 최신 구독 접근 여부와 primary 여부 계산상 다시 편집 가능하다.
   - Evidence: 웹훅 응답·로그, DB 구독·페이지 행, 편집 요청 성공.
 
 - **CLEANUP-001**

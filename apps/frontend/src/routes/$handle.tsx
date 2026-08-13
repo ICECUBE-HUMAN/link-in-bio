@@ -238,7 +238,8 @@ function HandlePageContent({
 		!loaderData.isDemo &&
 		(ownedPagesResult === undefined ||
 			!ownedPage ||
-			ownedPage?.lifecycleStatus === "read_only");
+			(!ownedPagesResult.hasAccess &&
+				!ownedPage.isPrimary));
 	const editorMode = readOnly ? "view" : mode;
 	const [isAsideShown, setIsAsideShown] = useState(false);
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);

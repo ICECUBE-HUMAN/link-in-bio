@@ -1,0 +1,1 @@
+ALTER TABLE "pages" DROP COLUMN "lifecycle_status";

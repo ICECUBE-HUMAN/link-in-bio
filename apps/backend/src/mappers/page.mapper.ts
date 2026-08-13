@@ -35,7 +35,6 @@ export const mapOwnedPageSummary = (
 	handle: page.handle,
 	name: page.name,
 	isPrimary: page.id === primaryPageId,
-	lifecycleStatus: page.lifecycleStatus,
 	deletionScheduledAt:
 		page.deletionScheduledAt?.toISOString() ??
 		null,

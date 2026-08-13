@@ -25,33 +25,3 @@ export async function updatePage(
 
 	return parsePageUpdateResponse(await response.json());
 }
-
-export type PageApiError = Error & { code?: string };
-
-async function throwPageApiError(response: Response): Promise<never> {
-	const body = (await response.json().catch(() => null)) as {
-		error?: { code?: string; message?: string };
-	} | null;
-	const error = new Error(
-		body?.error?.message ??
-			`Page request failed with status ${response.status}.`,
-	) as PageApiError;
-	error.code = body?.error?.code;
-	throw error;
-}
-
-export async function changePrimaryPage(handle: string): Promise<void> {
-	const response = await fetch(
-		`/api/pages/${encodeURIComponent(normalizePageHandle(handle))}/primary`,
-		{ method: "PATCH", credentials: "include" },
-	);
-	if (!response.ok) await throwPageApiError(response);
-}
-
-export async function deletePage(handle: string): Promise<void> {
-	const response = await fetch(
-		`/api/pages/${encodeURIComponent(normalizePageHandle(handle))}`,
-		{ method: "DELETE", credentials: "include" },
-	);
-	if (!response.ok) await throwPageApiError(response);
-}

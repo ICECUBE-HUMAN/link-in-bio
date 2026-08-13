@@ -8,7 +8,7 @@ Free·Pro·유예기간·재구독 상태에서 페이지 생성, primary 변경
 
 - 환경: 로컬 Worker 또는 검증용 Preview, Creem Test Mode, 최신 migration 적용 DB
 - 계정: Free 계정 1개, Pro 계정 1개, 재구독 웹훅을 받을 수 있는 Pro 계정 1개
-- 기준선 기록: `user.id`, `primaryPageId`, 페이지 ID·handle·`lifecycleStatus`, `deletionScheduledAt`, 구독 `productId`·`periodEnd`, 페이지 아이템과 R2 키
+- 기준선 기록: `user.id`, `primaryPageId`, 페이지 ID·handle·`deletionScheduledAt`, 구독 `productId`·`periodEnd`, 페이지 아이템과 R2 키
 - 삭제 시 주의: `DELETE-001`, `DELETE-002`, `CLEANUP-001` 실행 전 DB와 R2 기준선을 저장하고, 검증 후 남은 Test 계정·페이지를 정리한다.
 - 결과 값: `Pass` / `Fail` / `Blocked` / `Not Run`
 
@@ -26,9 +26,9 @@ Free·Pro·유예기간·재구독 상태에서 페이지 생성, primary 변경
 ### PLAN-002 — Pro 세 번째 허용, 네 번째 차단
 
 - Given: Pro 계정에 페이지 두 개가 있다.
-- When: 세 번째 페이지를 만들고 네 번째를 시도한다.
-- Then: 세 번째는 성공하고 네 번째는 거부된다.
-- Evidence: HTTP 응답, 페이지 목록, DB 페이지 수.
+- When: `/$handle`의 페이지 선택 영역에서 `New page`를 열어 핸들·역할 단계를 마치고, 네 번째를 시도한다.
+- Then: 세 번째는 새 핸들 페이지로 이동하며 성공하고, 페이지가 세 개이면 `New page`가 보이지 않고 서버도 네 번째를 거부한다.
+- Evidence: 생성 창 화면, HTTP 응답, 생성 뒤 페이지 목록·URL, DB 페이지 수.
 - Result: `Not Run`
 - Follow-up Issue: Fail 또는 Blocked이면 이 줄에 issue ID를 기록한다.
 
@@ -46,7 +46,7 @@ Free·Pro·유예기간·재구독 상태에서 페이지 생성, primary 변경
 - Given: Free 전환 후 primary A와 추가 페이지 B가 있다.
 - When: B를 primary로 바꾸려 한다.
 - Then: UI와 직접 HTTP 모두 거부되고 B는 읽기 전용으로 유지된다.
-- Evidence: UI 잠금, 오류 코드, DB lifecycle 상태.
+- Evidence: UI 잠금, 오류 코드, DB `primaryPageId`·`deletionScheduledAt`.
 - Result: `Not Run`
 - Follow-up Issue: Fail 또는 Blocked이면 이 줄에 issue ID를 기록한다.
 
@@ -81,7 +81,7 @@ Free·Pro·유예기간·재구독 상태에서 페이지 생성, primary 변경
 
 - Given: B가 읽기 전용이고 삭제 예정 시각이 아직 지나지 않았다.
 - When: 유효한 Pro 재구독 웹훅을 처리한다.
-- Then: 남아 있는 B가 `active`가 되고 `deletionScheduledAt`이 `NULL`이 된다.
+- Then: 남아 있는 B의 쓰기가 다시 허용되고 `deletionScheduledAt`이 `NULL`이 된다.
 - Evidence: 웹훅 응답·로그, DB 구독·페이지 행, 편집 요청 성공.
 - Result: `Not Run`
 - Follow-up Issue: Fail 또는 Blocked이면 이 줄에 issue ID를 기록한다.
@@ -117,8 +117,8 @@ Free·Pro·유예기간·재구독 상태에서 페이지 생성, primary 변경
 
 ## 현재 자동 검증 기록
 
-- Backend `bun test`: `Pass` — 108 tests, 0 failures.
-- Backend TypeScript 5.9 compatibility check: `Blocked` — 기존 `billing.controller.ts`의 Creem SDK `checkoutUrl` 타입 오류 1건과 기존 billing controller test 타입 오류 1건.
-- Frontend build: `Blocked` — 기존 `framer-motion` 모듈 누락.
-- Frontend typecheck: `Blocked` — 기존 `framer-motion` 및 API upload 응답 `unknown` 오류.
+- Backend `bun test`: `Pass` — 110 tests, 0 failures.
+- Backend TypeScript compatibility check: `Blocked` — 현재 TypeScript 7이 기존 `baseUrl`과 `paths` 설정을 허용하지 않는다.
+- Frontend build: `Pass` — `bun run build` 성공.
+- Frontend typecheck: `Not Run` — 프런트엔드 테스트·별도 타입 검사는 프로젝트 지침에 따라 추가 실행하지 않음. 빌드가 이번 변경의 모듈·타입 연결을 확인했다.
 - Frontend tests: `Not Run` — 프로젝트 지침에 따라 추가·실행하지 않음.

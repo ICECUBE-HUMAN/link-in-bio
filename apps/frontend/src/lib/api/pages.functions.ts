@@ -19,9 +19,13 @@ import { fetchBackend } from "./backend-client.server";
 function createCookieHeaders() {
 	const headers = new Headers();
 	const cookie = getRequestHeader("cookie");
+	const origin = getRequestHeader("origin");
 
 	if (cookie) {
 		headers.set("cookie", cookie);
+	}
+	if (origin) {
+		headers.set("origin", origin);
 	}
 
 	return headers;
@@ -70,6 +74,42 @@ export const createPage = createServerFn({ method: "POST" })
 		return v.parse(createPageResponseSchema, await response.json());
 	});
 
+export const changePrimaryPage = createServerFn({ method: "POST" })
+	.validator((data: { handle: string }) => ({
+		handle: normalizePageHandle(data.handle),
+	}))
+	.handler(async ({ data }) => {
+		const response = await fetchBackend(
+			`/pages/${encodeURIComponent(data.handle)}/primary`,
+			{
+				method: "PATCH",
+				headers: createCookieHeaders(),
+			},
+		);
+		if (!response.ok) {
+			throw new Error(
+				`Primary page change failed with status ${response.status}.`,
+			);
+		}
+	});
+
+export const deletePage = createServerFn({ method: "POST" })
+	.validator((data: { handle: string }) => ({
+		handle: normalizePageHandle(data.handle),
+	}))
+	.handler(async ({ data }) => {
+		const response = await fetchBackend(
+			`/pages/${encodeURIComponent(data.handle)}`,
+			{
+				method: "DELETE",
+				headers: createCookieHeaders(),
+			},
+		);
+		if (!response.ok) {
+			throw new Error(`Page deletion failed with status ${response.status}.`);
+		}
+	});
+
 export const getMyPage = createServerFn({ method: "GET" }).handler(async () => {
 	const response = await fetchBackend("/pages/me", {
 		method: "GET",
@@ -93,7 +133,7 @@ export const getOwnedPages = createServerFn({ method: "GET" }).handler(
 			method: "GET",
 			headers: createCookieHeaders(),
 		});
-		if (response.status === 401) return { pages: [] };
+		if (response.status === 401) return { hasAccess: false, pages: [] };
 		if (!response.ok)
 			throw new Error(
 				`Owned pages request failed with status ${response.status}.`,

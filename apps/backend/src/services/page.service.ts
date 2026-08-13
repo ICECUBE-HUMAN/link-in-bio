@@ -359,7 +359,6 @@ export const changePrimaryPage =
 			await tx
 				.update(pages)
 				.set({
-					lifecycleStatus: "active",
 					deletionScheduledAt: null,
 				})
 				.where(eq(pages.id, target.id));
@@ -367,7 +366,6 @@ export const changePrimaryPage =
 				await tx
 					.update(pages)
 					.set({
-						lifecycleStatus: "active",
 						deletionScheduledAt:
 							target.deletionScheduledAt ??
 							previousPrimary.deletionScheduledAt,
@@ -695,7 +693,7 @@ export const createPage = async ({
 		return await db.transaction(
 			async (tx) => {
 				await lockUserRow(tx, user.id);
-				await assertPageCreationAllowed(
+				const currentUser = await assertPageCreationAllowed(
 					{
 						db: tx as unknown as DatabaseClient,
 						userId: user.id,
@@ -727,28 +725,30 @@ export const createPage = async ({
 						role: input.role ?? null,
 					})
 					.returning();
-				const [updatedUser] = await tx
-					.update(userTable)
-					.set({
-						primaryPageId: page.id,
-						updatedAt: new Date(),
-					})
-					.where(
-						and(
-							eq(userTable.id, user.id),
-							isNull(
-								userTable.primaryPageId,
+				if (!currentUser.primaryPageId) {
+					const [updatedUser] = await tx
+						.update(userTable)
+						.set({
+							primaryPageId: page.id,
+							updatedAt: new Date(),
+						})
+						.where(
+							and(
+								eq(userTable.id, user.id),
+								isNull(
+									userTable.primaryPageId,
+								),
 							),
-						),
-					)
-					.returning({
-						id: userTable.id,
-					});
-				if (!updatedUser)
-					throw new ForbiddenError(
-						"Primary page already exists.",
-						"PRIMARY_PAGE_ALREADY_EXISTS",
-					);
+						)
+						.returning({
+							id: userTable.id,
+						});
+					if (!updatedUser)
+						throw new ForbiddenError(
+							"Primary page already exists.",
+							"PRIMARY_PAGE_ALREADY_EXISTS",
+						);
+				}
 				return page;
 			},
 		);

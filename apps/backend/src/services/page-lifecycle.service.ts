@@ -165,7 +165,6 @@ export const scheduleUserPagesAfterCancellation =
 			await tx
 				.update(pages)
 				.set({
-					lifecycleStatus: "active",
 					deletionScheduledAt:
 						deletionDeadline(periodEnd),
 				})
@@ -184,7 +183,6 @@ export const scheduleUserPagesAfterCancellation =
 				await tx
 					.update(pages)
 					.set({
-						lifecycleStatus: "active",
 						deletionScheduledAt: null,
 					})
 					.where(
@@ -212,7 +210,6 @@ export const restoreUserPagesAfterResubscribe =
 			await tx
 				.update(pages)
 				.set({
-					lifecycleStatus: "active",
 					deletionScheduledAt: null,
 				})
 				.where(
@@ -261,7 +258,6 @@ export const reconcileUserPageLifecycle =
 				await tx
 					.update(pages)
 					.set({
-						lifecycleStatus: "active",
 						deletionScheduledAt: null,
 					})
 					.where(
@@ -282,7 +278,6 @@ export const reconcileUserPageLifecycle =
 			await tx
 				.update(pages)
 				.set({
-					lifecycleStatus: "read_only",
 					deletionScheduledAt:
 						deletionDeadline(
 							access.periodEnd,
@@ -303,7 +298,6 @@ export const reconcileUserPageLifecycle =
 				await tx
 					.update(pages)
 					.set({
-						lifecycleStatus: "active",
 						deletionScheduledAt: null,
 					})
 					.where(

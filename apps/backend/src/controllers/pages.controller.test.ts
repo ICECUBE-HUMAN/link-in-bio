@@ -105,9 +105,17 @@ function findHandleEqualityValue(
 function createFakeDb({
 	currentUser,
 	existingPages = [],
+	subscriptions = [],
 }: {
 	currentUser: TestUser;
 	existingPages?: TestPage[];
+	subscriptions?: Array<{
+		status: string;
+		productId: string;
+		periodStart: Date | null;
+		periodEnd: Date | null;
+		cancelAtPeriodEnd: boolean;
+	}>;
 }) {
 	const insertedPages: TestPage[] = [];
 	const state = {
@@ -153,6 +161,14 @@ function createFakeDb({
 						null
 					);
 				},
+				findMany: async () => [
+					...state.existingPages,
+					...state.insertedPages,
+				],
+			},
+			creemSubscription: {
+				findMany: async () =>
+					subscriptions,
 			},
 			pageItems: {
 				findMany: async () => [],
@@ -668,6 +684,55 @@ describe("pagesController", () => {
 		expect(
 			state.currentUser.primaryPageId,
 		).toBe(body.page.id);
+	});
+
+	it("creates a secondary page without replacing the primary page", async () => {
+		const user = {
+			id: "user_1",
+			name: "Kim",
+			email: "kim@example.com",
+			primaryPageId: "page_1",
+		};
+		const { db, state } = createFakeDb({
+			currentUser: user,
+			existingPages: [
+				{
+					id: "page_1",
+					userId: "user_1",
+					handle: "kim",
+					name: "Kim",
+					bio: null,
+					image: null,
+					role: null,
+					createdAt: now,
+					updatedAt: now,
+				},
+			],
+			subscriptions: [
+				{
+					status: "active",
+					productId: "prod_1M7K6uOQxjMu006ypD04R",
+					periodStart: now,
+					periodEnd: new Date("2026-08-26T00:00:00.000Z"),
+					cancelAtPeriodEnd: false,
+				},
+			],
+		});
+		const app = createTestApp({ db, user });
+
+		const response = await app.request("/pages", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				handle: "second-page",
+				name: null,
+				role: null,
+			}),
+		});
+
+		expect(response.status).toBe(201);
+		expect(state.currentUser.primaryPageId).toBe("page_1");
+		expect(state.insertedPages).toHaveLength(1);
 	});
 
 	it("patches the signed-in user's page at /pages/:handle", async () => {

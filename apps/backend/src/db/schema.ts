@@ -247,12 +247,6 @@ export const pages = pgTable(
 			"image_crop",
 		).$type<ProfileImageCrop | null>(),
 		role: text("role"),
-		lifecycleStatus: text(
-			"lifecycle_status",
-		)
-			.$type<"active" | "read_only">()
-			.default("active")
-			.notNull(),
 		deletionScheduledAt: timestamp(
 			"deletion_scheduled_at",
 		),

@@ -8,6 +8,8 @@
 
 **Tech Stack:** TypeScript, Hono, Drizzle ORM, PostgreSQL through Hyperdrive, Better Auth Creem plugin, Cloudflare Worker Cron and Queue, Valibot, TanStack Query, TanStack Start, React, Bun tests.
 
+> **2026-08-13 구현 변경:** `pages.lifecycle_status`와 `PageLifecycleStatus`는 제거한다. `GET /pages`는 `hasAccess`와 `isPrimary`를 반환하고, 읽기 전용 여부는 두 값으로 계산한다. `deletion_scheduled_at`만 삭제 예약과 정기 정리에 저장한다. 아래의 이전 lifecycle 상태 열 언급은 이 변경으로 대체한다.
+
 ## Global Constraints
 
 - Do not add `user.plan`, `pages.isPrimary`, Supabase Functions, or Supabase Triggers.
@@ -53,6 +55,31 @@
 | `apps/frontend/src/components/page/page-picker.tsx` | New minimal page list/transition UI in the existing editor menu |
 | `apps/frontend/src/lib/page/use-page-auto-save.ts` | Prevent local autosave attempts for a read-only page and refresh after server denial |
 | `docs/qa/2026-08-13-rez-174-plan-permissions-qa.md` | Manual BDD QA record using the design's fixed scenario IDs |
+
+## 2026-08-13 confirmed page-creation UI slice
+
+**Goal:** Let an eligible owner create a second or third page from the existing `/$handle` editor without visiting `/new`.
+
+**Architecture:** Extract the existing handle and role-selection steps from `apps/frontend/src/routes/new.tsx` into one shared page component. Keep `/new` as the first-page route and retain its success screen. `PagePicker`, which is rendered by `/$handle.tsx`, opens the same shared steps in a dialog and navigates to the newly created handle after the server accepts it.
+
+**Constraints:** Do not add a frontend test under `AGENTS.md`. Do not duplicate creation validation or page-limit rules in the browser: hide the entry point when `hasAccess` is false or there are already three pages, and retain the existing server response as the authority.
+
+### Task 7: Reuse the new-page steps in the editor
+
+**Files:**
+- Create: `apps/frontend/src/components/page/create-page-flow.tsx`
+- Modify: `apps/frontend/src/routes/new.tsx`
+- Modify: `apps/frontend/src/components/page/page-picker.tsx`
+
+**Interfaces:**
+- `CreatePageFlow` accepts `onCreated(handle: string): void | Promise<void>` and calls it only after `createPage` succeeds.
+- `/new` passes `setCreatedHandle` and continues to show its existing success screen.
+- `PagePicker` invalidates owned-page/session queries, closes its dialog, then navigates to `/$handle` with the new handle.
+
+- [x] Extract the current handle availability check, handle form, role form, and `createPage` call into `CreatePageFlow`; keep the 400 ms availability wait and existing error copy.
+- [x] Replace the duplicated steps in `/new` with `CreatePageFlow`, preserving its current success screen and confetti behavior.
+- [x] Add a `New page` button to `PagePicker` only when `hasAccess` is true and fewer than three pages exist. Open `CreatePageFlow` in the existing dialog primitive; on success, refresh page data and navigate to the new page.
+- [x] Run targeted Biome lint and the existing backend test suite. Record the manual UI scenario in the REZ-174 QA document; frontend tests remain intentionally excluded.
 
 ---
 
