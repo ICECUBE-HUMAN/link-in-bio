@@ -11,8 +11,8 @@
 - 실제 결제 상품은 Creem의 `productId`를 기준으로 한다.
 - `prod_1M7K6uOQxjMu006ypD04R`를 Pro 월간 상품 ID로 연결한다.
 - `prod_6oaKuPlsztLLAQt3Y5BlqD`를 Pro 연간 상품 ID로 연결한다.
-- Free 카드에는 페이지 1개, 핵심 위젯 전체, wide/compact 편집, 오늘자 페이지뷰, Grabbin 하위 도메인과 브랜딩을 표시한다.
-- Pro 카드에는 페이지 3개, 핵심 위젯 전체, wide/compact 편집, 오늘자 페이지뷰, 커스텀 도메인과 Grabbin 브랜딩 제거를 표시한다.
+- Free 카드에는 페이지 1개, 핵심 위젯 전체, wide/compact 편집을 표시하고 오늘자 페이지뷰는 진행 중 아이콘으로 표시한다.
+- Pro 카드에는 페이지 3개, 핵심 위젯 전체, wide/compact 편집을 표시하고 오늘자 페이지뷰와 커스텀 도메인은 진행 중 아이콘으로 표시한다.
 - 로그인한 사용자는 `authClient.creem.createCheckout` 호출 후 반환된 URL로 이동한다.
 - 로그인하지 않은 사용자는 기존 `/log-in`으로 이동한다.
 - Free 카드는 가입 CTA로 연결하고 유료 결제는 시작하지 않는다.

@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Check } from "lucide-react";
+import { Check, LoaderCircle } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,22 +20,24 @@ const PRO_PRICES: Record<
 	yearly: { label: "Yearly", price: "$60", suffix: "/ year" },
 };
 
-const FREE_FEATURES = [
-	"1 page",
-	"All core widgets",
-	"Wide & compact layouts",
-	"Today's page views",
-	"Grabbin subdomain",
-	"Grabbin branding",
+type PlanFeature = {
+	label: string;
+	status?: "in-progress";
+};
+
+const FREE_FEATURES: PlanFeature[] = [
+	{ label: "1 page" },
+	{ label: "All core widgets" },
+	{ label: "Wide & compact layouts" },
+	{ label: "Today's page views", status: "in-progress" },
 ];
 
-const PRO_FEATURES = [
-	"3 pages",
-	"All core widgets",
-	"Wide & compact layouts",
-	"Today's page views",
-	"Custom domain",
-	"Remove Grabbin branding",
+const PRO_FEATURES: PlanFeature[] = [
+	{ label: "3 pages" },
+	{ label: "All core widgets" },
+	{ label: "Wide & compact layouts" },
+	{ label: "Today's page views", status: "in-progress" },
+	{ label: "Custom domain", status: "in-progress" },
 ];
 
 export default function PlanSection() {
@@ -176,7 +178,7 @@ function PlanCard({
 	price: string;
 	suffix: string;
 	description: string;
-	features: string[];
+	features: PlanFeature[];
 	action: ReactNode;
 	highlighted?: boolean;
 }) {
@@ -205,15 +207,29 @@ function PlanCard({
 					<span className="text-sm font-medium text-gray-bright">{suffix}</span>
 				</div>
 				<ul className="flex flex-col gap-3 text-sm font-medium">
-					{features.map((feature) => (
-						<li key={feature} className="flex items-center gap-2">
-							<Check
-								className="size-4 shrink-0 text-brand"
-								aria-hidden="true"
-							/>
-							<span>{feature}</span>
-						</li>
-					))}
+					{features.map((feature) => {
+						const FeatureIcon =
+							feature.status === "in-progress" ? LoaderCircle : Check;
+
+						return (
+							<li key={feature.label} className="flex items-center gap-2">
+								<FeatureIcon
+									className={`size-4 shrink-0 ${
+										feature.status === "in-progress"
+											? "text-muted-foreground"
+											: "text-brand"
+									}`}
+									aria-hidden="true"
+								/>
+								<span>
+									{feature.status === "in-progress" ? (
+										<span className="sr-only">In progress: </span>
+									) : null}
+									{feature.label}
+								</span>
+							</li>
+						);
+					})}
 				</ul>
 			</div>
 			<div className="mt-auto">{action}</div>

@@ -28,7 +28,7 @@
 
 - [x] **Step 1: Define the local plan and billing-period data**
 
-  Add the monthly and yearly product ID constants. Define the confirmed `$6/month` and `$60/year` prices and the REZ-163 feature lists: Free has 1 page, core widgets, wide/compact layouts, today's page views, Grabbin subdomain, and branding; Pro has 3 pages, core widgets, wide/compact layouts, today's page views, custom domain, and no Grabbin branding.
+  Add the monthly and yearly product ID constants. Define the confirmed `$6/month` and `$60/year` prices and the REZ-163 feature lists: Free has 1 page, core widgets, and wide/compact layouts; Pro has 3 pages, core widgets, and wide/compact layouts. Mark today's page views on both plans and custom domain on Pro as in-progress features.
 
 - [x] **Step 2: Implement checkout behavior**
 
