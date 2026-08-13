@@ -9,6 +9,10 @@ interface __BaseEnv_CloudflareBindings {
 	BETTER_AUTH_SECRET: string;
 	DATABASE_URL: string;
 	FRONTEND_URL: string;
+	CREEM_API_KEY: string;
+	CREEM_WEBHOOK_SECRET: string;
+	CREEM_TEST_MODE: string;
+	CREEM_SUCCESS_URL: string;
 	GOOGLE_CLIENT_ID: string;
 	GOOGLE_CLIENT_SECRET: string;
 	TWITTER_CLIENT_ID: string;
@@ -38,7 +42,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "BETTER_AUTH_URL" | "BETTER_AUTH_SECRET" | "DATABASE_URL" | "FRONTEND_URL" | "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET" | "TWITTER_CLIENT_ID" | "TWITTER_CLIENT_SECRET" | "RESEND_API_KEY" | "RESEND_FROM_EMAIL" | "R2_ACCOUNT_ID" | "R2_ACCESS_KEY_ID" | "R2_SECRET_ACCESS_KEY" | "R2_PUBLIC_URL" | "YOUTUBE_API_KEY" | "CHZZK_CLIENT_ID" | "CHZZK_CLIENT_SECRET" | "TWITCH_CLIENT_ID" | "TWITCH_CLIENT_SECRET" | "GITHUB_TOKEN" | "PRODUCT_HUNT_TOKEN">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "BETTER_AUTH_URL" | "BETTER_AUTH_SECRET" | "DATABASE_URL" | "FRONTEND_URL" | "CREEM_API_KEY" | "CREEM_WEBHOOK_SECRET" | "CREEM_TEST_MODE" | "CREEM_SUCCESS_URL" | "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET" | "TWITTER_CLIENT_ID" | "TWITTER_CLIENT_SECRET" | "RESEND_API_KEY" | "RESEND_FROM_EMAIL" | "R2_ACCOUNT_ID" | "R2_ACCESS_KEY_ID" | "R2_SECRET_ACCESS_KEY" | "R2_PUBLIC_URL" | "YOUTUBE_API_KEY" | "CHZZK_CLIENT_ID" | "CHZZK_CLIENT_SECRET" | "TWITCH_CLIENT_ID" | "TWITCH_CLIENT_SECRET" | "GITHUB_TOKEN" | "PRODUCT_HUNT_TOKEN">> {}
 }
 
 // Begin runtime types

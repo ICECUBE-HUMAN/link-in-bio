@@ -1,3 +1,4 @@
+import { creemClient } from "@creem_io/better-auth/client";
 import { createAuthClient } from "better-auth/client";
 import {
 	inferAdditionalFields,
@@ -13,6 +14,7 @@ export const authClient = createAuthClient({
 	},
 	plugins: [
 		magicLinkClient(),
+		creemClient(),
 		inferAdditionalFields({
 			user: {
 				role: {

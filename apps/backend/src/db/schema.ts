@@ -25,6 +25,12 @@ export const user = pgTable("user", {
 	primaryPageId: text(
 		"primary_page_id",
 	),
+	creemCustomerId: text(
+		"creem_customer_id",
+	),
+	hadTrial: boolean("had_trial")
+		.default(false)
+		.notNull(),
 	role: text("role")
 		.default("user")
 		.notNull(),
@@ -166,6 +172,53 @@ export const providerTokens = pgTable(
 	},
 );
 
+export const creemSubscription =
+	pgTable(
+		"creem_subscription",
+		{
+			id: text("id").primaryKey(),
+			productId: text(
+				"product_id",
+			).notNull(),
+			referenceId: text("reference_id")
+				.notNull()
+				.references(() => user.id, {
+					onDelete: "cascade",
+				}),
+			creemCustomerId: text(
+				"creem_customer_id",
+			),
+			creemSubscriptionId: text(
+				"creem_subscription_id",
+			),
+			creemOrderId: text(
+				"creem_order_id",
+			),
+			status: text("status")
+				.default("pending")
+				.notNull(),
+			periodStart: timestamp(
+				"period_start",
+			),
+			periodEnd: timestamp(
+				"period_end",
+			),
+			cancelAtPeriodEnd: boolean(
+				"cancel_at_period_end",
+			)
+				.default(false)
+				.notNull(),
+		},
+		(table) => [
+			index(
+				"creem_subscription_reference_id_idx",
+			).on(table.referenceId),
+			uniqueIndex(
+				"creem_subscription_subscription_id_idx",
+			).on(table.creemSubscriptionId),
+		],
+	);
+
 export const pages = pgTable(
 	"pages",
 	{
@@ -268,6 +321,9 @@ export const userRelations = relations(
 		sessions: many(session),
 		accounts: many(account),
 		pages: many(pages),
+		creemSubscriptions: many(
+			creemSubscription,
+		),
 	}),
 );
 
@@ -305,3 +361,16 @@ export const pageItemsRelations =
 			references: [pages.id],
 		}),
 	}));
+
+export const creemSubscriptionRelations =
+	relations(
+		creemSubscription,
+		({ one }) => ({
+			user: one(user, {
+				fields: [
+					creemSubscription.referenceId,
+				],
+				references: [user.id],
+			}),
+		}),
+	);

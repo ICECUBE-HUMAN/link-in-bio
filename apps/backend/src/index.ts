@@ -1,4 +1,5 @@
 import { authController } from "@controllers/auth.controller";
+import { billingController } from "@controllers/billing.controller";
 import { healthController } from "@controllers/health.controller";
 import { pageItemsController } from "@controllers/page-items.controller";
 import { pagesController } from "@controllers/pages.controller";
@@ -13,6 +14,7 @@ const app = appFactory
 	.notFound(notFoundHandler)
 	.onError(errorHandler)
 	.route("/auth", authController)
+	.route("/billing", billingController)
 	.route("/pages", pagesController)
 	.route("/pages", pageItemsController)
 	.route("/", healthController);

@@ -4,6 +4,7 @@
  * Docs: https://www.better-auth.com/docs/reference/options
  */
 
+import { creem } from "@creem_io/better-auth";
 import type { BetterAuthOptions } from "better-auth/minimal";
 import { magicLink } from "better-auth/plugins/magic-link";
 import type { AppBindings } from "types/type";
@@ -101,6 +102,17 @@ export const betterAuthOptions = (
 					}
 					return task;
 				},
+			}),
+			creem({
+				apiKey: env.CREEM_API_KEY,
+				webhookSecret:
+					env.CREEM_WEBHOOK_SECRET,
+				testMode:
+					env.CREEM_TEST_MODE ===
+					"true",
+				defaultSuccessUrl:
+					env.CREEM_SUCCESS_URL,
+				persistSubscriptions: true,
 			}),
 		],
 		socialProviders: {
