@@ -1,4 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import CTASection from "@/components/layout/sections/cta-section";
+import FeatureSection from "@/components/layout/sections/feature-section";
+import HeroSection from "@/components/layout/sections/hero-section";
+import PlanSection from "@/components/layout/sections/plan-section";
+import { Footer } from "@/components/layout/shell/footer";
+import { useRevealOnView } from "@/hooks/use-reveal-on-view";
 import { createWebPageJsonLd, createWebSiteJsonLd } from "@/lib/seo/json-ld";
 import {
 	createSeo,
@@ -6,13 +12,6 @@ import {
 	DEFAULT_SITE_NAME,
 	DEFAULT_SOCIAL_IMAGE,
 } from "@/lib/seo/metadata";
-
-import CTASection from "@/components/layout/sections/cta-section";
-import HeroSection from "@/components/layout/sections/hero-section";
-import FeatureSection from "@/components/layout/sections/feature-section";
-import { useRevealOnView } from "@/hooks/use-reveal-on-view";
-
-import { Footer } from "@/components/layout/shell/footer";
 
 const HOME_TITLE =
 	"A Link in Bio, the most beautiful and clean you've ever seen";
@@ -65,6 +64,7 @@ function Home() {
 				<section className="flex-1 px-5 pb-16">
 					<HeroSection />
 					<FeatureSection />
+					<PlanSection />
 					{/*<MessageSection />*/}
 					<div
 						ref={ctaRevealRef}

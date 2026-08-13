@@ -9,8 +9,8 @@
 - `apps/frontend/src/components/layout/sections/plan-section.tsx`에 `PlanSection`을 만든다.
 - 카드 내용과 가격 표시 문구는 프론트 코드에 둔다.
 - 실제 결제 상품은 Creem의 `productId`를 기준으로 한다.
-- 현재 제공된 `prod_1M7K6uOQxjMu006ypD04R`는 Pro 월간 상품 ID로 연결한다.
-- 연간 상품 ID는 아직 없으므로 상수 한 곳에서 비워 두고, 상품 생성 후 해당 값만 교체한다.
+- `prod_1M7K6uOQxjMu006ypD04R`를 Pro 월간 상품 ID로 연결한다.
+- `prod_6oaKuPlsztLLAQt3Y5BlqD`를 Pro 연간 상품 ID로 연결한다.
 - 로그인한 사용자는 `authClient.creem.createCheckout` 호출 후 반환된 URL로 이동한다.
 - 로그인하지 않은 사용자는 기존 `/log-in`으로 이동한다.
 - Free 카드는 가입 CTA로 연결하고 유료 결제는 시작하지 않는다.
@@ -40,5 +40,5 @@ PlanSection
 - 홈 화면에 두 카드가 표시된다.
 - 모바일에서는 세로, 넓은 화면에서는 두 열로 배치된다.
 - 월간 선택은 지정된 상품 ID를 사용한다.
-- 연간 상품 ID가 비어 있으면 결제 버튼이 비활성화된다.
+- 월간·연간 선택에 맞는 상품 ID로 Checkout을 시작한다.
 - Checkout 응답 URL로 이동하고, 오류 시 버튼이 다시 활성화된다.
