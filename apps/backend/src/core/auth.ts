@@ -22,6 +22,7 @@ export const createAuth = (
 ) => {
 	return betterAuth({
 		...betterAuthOptions(env, {
+			db,
 			backgroundTaskHandler: (
 				promise,
 			) =>

@@ -1,3 +1,4 @@
+import type { CreemWebhookState } from "@core/creem-webhook";
 import type { ProfileImageCrop } from "@sinabro/api";
 import { relations } from "drizzle-orm";
 import {
@@ -208,6 +209,15 @@ export const creemSubscription =
 			)
 				.default(false)
 				.notNull(),
+			lastWebhookId: text(
+				"last_webhook_id",
+			),
+			lastWebhookCreatedAt: timestamp(
+				"last_webhook_created_at",
+			),
+			lastWebhookState: jsonb(
+				"last_webhook_state",
+			).$type<CreemWebhookState | null>(),
 		},
 		(table) => [
 			index(
