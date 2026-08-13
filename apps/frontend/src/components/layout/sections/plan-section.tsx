@@ -21,15 +21,21 @@ const PRO_PRICES: Record<
 };
 
 const FREE_FEATURES = [
-	"Create your personal page",
-	"Share your links",
-	"Customize your identity",
+	"1 page",
+	"All core widgets",
+	"Wide & compact layouts",
+	"Today's page views",
+	"Grabbin subdomain",
+	"Grabbin branding",
 ];
 
 const PRO_FEATURES = [
-	"Everything in Free",
-	"Advanced customization",
-	"More room to make it yours",
+	"3 pages",
+	"All core widgets",
+	"Wide & compact layouts",
+	"Today's page views",
+	"Custom domain",
+	"Remove Grabbin branding",
 ];
 
 export default function PlanSection() {
@@ -93,7 +99,7 @@ export default function PlanSection() {
 					name="Free"
 					price="$0"
 					suffix="forever"
-					description="Everything you need to get started."
+					description="A beautiful page to share who you are."
 					features={FREE_FEATURES}
 					action={
 						<Button
@@ -110,7 +116,7 @@ export default function PlanSection() {
 					name="Pro"
 					price={selectedPrice.price}
 					suffix={selectedPrice.suffix}
-					description="More space to make your identity stand out."
+					description="More pages and your own domain."
 					features={PRO_FEATURES}
 					highlighted
 					action={
