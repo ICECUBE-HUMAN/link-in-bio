@@ -1,11 +1,15 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "backend",
+	"name": "grabbin-api",
 	"main": "./src/index.ts",
 	"compatibility_date": "2026-07-02",
 	"compatibility_flags": [
 		"nodejs_compat"
 	],
+	"placement": {
+		"mode": "targeted",
+		"region": "aws:ap-northeast-2"
+	},
 	"routes": [
 		{
 			"pattern": "api.grabbin.me",

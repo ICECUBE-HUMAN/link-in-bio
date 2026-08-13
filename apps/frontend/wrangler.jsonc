@@ -1,8 +1,12 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "frontend",
+  "name": "grabbin",
   "compatibility_date": "2026-07-02",
   "compatibility_flags": ["nodejs_compat"],
+  "placement": {
+    "mode": "targeted",
+    "region": "aws:ap-northeast-2"
+  },
   "main": "@tanstack/react-start/server-entry",
   "routes": [
     {
@@ -13,7 +17,7 @@
   "services": [
     {
       "binding": "BACKEND",
-      "service": "backend"
+      "service": "grabbin-api"
     }
   ]
 }
