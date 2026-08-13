@@ -9,14 +9,25 @@ import { isReservedPageHandle, pageHandleSchema } from "@sinabro/api";
 import { PRO_MONTHLY_PRODUCT_ID, PRO_PAGE_LIMIT } from "@sinabro/plan";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronLeftIcon, PlusIcon, StarIcon, TrashIcon } from "lucide-react";
+import {
+	BadgeCheckIcon,
+	ChevronLeftIcon,
+	PlusIcon,
+	StarIcon,
+	TrashIcon,
+} from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Check, CheckCircle, Gear, Loader, XCircle } from "reicon-react";
 import { createUISFX } from "uisfx";
 import * as v from "valibot";
 
 import { CreatePageFlow } from "@/components/page/create-page-flow";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+	Avatar,
+	AvatarBadge,
+	AvatarFallback,
+	AvatarImage,
+} from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -380,6 +391,14 @@ function PageManagementView({
 										alt=""
 									/>
 									<AvatarFallback />
+									{ownedPage.isPrimary ? (
+										<AvatarBadge className="size-5! -right-1 -bottom-1 [&>svg]:size-full bg-transparent ring-0">
+											<BadgeCheckIcon
+												className="stroke-white fill-brand size-full!"
+												aria-hidden="true"
+											/>
+										</AvatarBadge>
+									) : null}
 								</Avatar>
 								<div className="flex min-w-0 flex-col">
 									<span>{ownedPage.name}</span>
@@ -388,12 +407,6 @@ function PageManagementView({
 									</span>
 								</div>
 							</div>
-							{ownedPage.isPrimary ? (
-								<span
-									className="size-2 shrink-0 rounded-full bg-brand"
-									aria-hidden="true"
-								/>
-							) : null}
 						</Button>
 						{!ownedPage.isPrimary && (
 							<div className="space-x-1 pr-1.5">
