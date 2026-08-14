@@ -627,7 +627,7 @@ function ChangeHandleView({
 
 	return (
 		<form
-			className="flex flex-col gap-3 h-full justify-between"
+			className="flex flex-col gap-3 h-full justify-between p-2"
 			onSubmit={(event) => void submit(event)}
 		>
 			<div className="flex items-center gap-1">
