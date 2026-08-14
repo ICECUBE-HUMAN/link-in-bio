@@ -20,7 +20,6 @@ import { PageManagementMenu } from "@/components/page/page-management-menu";
 import { PageSettingsMenu } from "@/components/page/page-settings-menu";
 import Toolbar from "@/components/page/toolbar";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Tooltip,
@@ -627,42 +626,11 @@ function HandlePageContent({
 						/>
 					</div>
 				</section>
-
-				{!isSignedIn && !loaderData.isDemo ? (
-					<div className="flex w-full max-w-md flex-col items-center gap-3 px-6 pb-[calc(2rem+env(safe-area-inset-bottom))] min-[90rem]:hidden">
-            <Button
-							render={
-								<Link
-									to="/log-in"
-									search={{ redirect: `/${page.handle}` }}
-								>
-								  Log in
-								</Link>
-							}
-							variant="ghost"
-							nativeButton={false}
-							size="sm"
-							className="rounded-md text-muted-foreground/80"
-						/>
-						{/*<Button
-							render={
-								<Link to="/explore">
-									<StackPerspective weight="Filled" />
-								</Link>
-							}
-							variant="ghost"
-							nativeButton={false}
-							size="icon-sm"
-							aria-label="Explore"
-							className="rounded-md text-muted-foreground/80"
-						/>*/}
-					</div>
-				) : null}
 			</motion.div>
 
 			{!loaderData.isDemo ? (
 				<aside
-					className={`hidden items-center gap-2 z-10 ${layoutClasses.controls}`}
+					className={`flex flex-col items-center gap-2 py-24 pt-0 z-10 min-[90rem]:flex-row min-[90rem]:py-0 ${layoutClasses.controls}`}
 					aria-label="Page controls"
 				>
 					{readOnly && ownedPage && !ownedPage.isPrimary ? (
@@ -670,37 +638,47 @@ function HandlePageContent({
 							Non-primary pages are read-only and will be deleted soon.
 						</div>
 					) : null}
-					<div className="flex items-center gap-0">
-						{isCurrentUserPage ? (
-							<Tooltip disabled={isSettingsOpen}>
-								<TooltipTrigger render={<span className="inline-flex" />}>
-									<PageSettingsMenu
-										page={page}
-										onChanged={onPageChange}
-										onOpenChange={setIsSettingsOpen}
-										localOnly={loaderData.isDemo}
-										readOnly={readOnly}
-									/>
-								</TooltipTrigger>
-								<TooltipContent>Settings</TooltipContent>
-							</Tooltip>
-						) : !isSignedIn ? (
-							<Button
-								render={
-									<Link
-										to="/log-in"
-										search={{ redirect: `/${page.handle}` }}
-									>
-									  Log in
-									</Link>
-								}
-								variant="ghost"
-								nativeButton={false}
-								size="sm"
-								className="rounded-md text-muted-foreground/80"
-							/>
-						) : null}
-						{/*<Tooltip>
+					<div
+						className={
+							isSignedIn
+								? "flex flex-col items-center gap-2 min-[90rem]:flex-row min-[90rem]:gap-0"
+								: "flex items-center gap-0"
+						}
+					>
+						<div
+							className={
+								isSignedIn
+									? "order-2 flex flex-row items-center justify-center gap-1 min-[90rem]:order-none min-[90rem]:contents"
+									: "contents"
+							}
+						>
+							{isCurrentUserPage ? (
+								<Tooltip disabled={isSettingsOpen}>
+									<TooltipTrigger render={<span className="inline-flex" />}>
+										<PageSettingsMenu
+											page={page}
+											onChanged={onPageChange}
+											onOpenChange={setIsSettingsOpen}
+											localOnly={loaderData.isDemo}
+											readOnly={readOnly}
+										/>
+									</TooltipTrigger>
+									<TooltipContent>Settings</TooltipContent>
+								</Tooltip>
+							) : !isSignedIn ? (
+								<Button
+									render={
+										<Link to="/log-in" search={{ redirect: `/${page.handle}` }}>
+											Log in
+										</Link>
+									}
+									variant="ghost"
+									nativeButton={false}
+									size="sm"
+									className="rounded-md text-muted-foreground/80"
+								/>
+							) : null}
+							{/*<Tooltip>
 							<TooltipTrigger
 								render={
 									<Button
@@ -717,63 +695,68 @@ function HandlePageContent({
 							</TooltipTrigger>
 							<TooltipContent>Explore</TooltipContent>
 						</Tooltip>*/}
-						<Tooltip>
-							<TooltipTrigger
-								render={
-									<Button
-										variant="ghost"
-										// size="icon-sm"
-										aria-label="Feedback"
-										className="text-muted-foreground/80 rounded-md"
-										render={
-											<a
-												href="https://discord.gg/U4NNF9hMms"
-												target="_blank"
-												rel="noreferrer"
-											>Community</a>
-										}
-									/>
-								}
-							/>
-							<TooltipContent>Send us feedback</TooltipContent>
-						</Tooltip>
-						<Separator
-							orientation="vertical"
-							className={
-								"data-vertical:w-[2.5px] data-vertical:my-2.5! rounded-lg mx-1 bg-border/80"
-							}
-						/>
-						{isSignedIn ? (
-							isCurrentUserPage ? (
-								<PageManagementMenu triggerPage={{ ...page, ...draft }} />
-							) : (
-								<MyPageButton />
-							)
-						) : null}
-						{showPublicViews ? (
 							<Tooltip>
 								<TooltipTrigger
 									render={
 										<Button
 											variant="ghost"
-											size="sm"
-											className="rounded-md text-sm text-muted-foreground/80"
-											aria-label={`${publicViewsQuery.data.todayViews} views today`}
+											// size="icon-sm"
+											aria-label="Feedback"
+											className="text-muted-foreground/80 rounded-md"
+											render={
+												<a
+													href="https://discord.gg/U4NNF9hMms"
+													target="_blank"
+													rel="noreferrer"
+												>
+													Community
+												</a>
+											}
 										/>
 									}
-								>
-									<SpinningCounter
-										value={publicViewsQuery.data.todayViews ?? 0}
-									/>
-									<span className="ml-1">views today</span>
-								</TooltipTrigger>
-								<TooltipContent>
-									{`${publicViewsQuery.data?.yesterdayViews ?? "—"} views yesterday`}
-								</TooltipContent>
+								/>
+								<TooltipContent>Send us feedback</TooltipContent>
 							</Tooltip>
-						) : showPublicViewsSkeleton ? (
-							<Skeleton className="h-8 w-24 rounded-md" />
-						) : null}
+							{showPublicViews ? (
+								<Tooltip>
+									<TooltipTrigger
+										render={
+											<Button
+												variant="ghost"
+												size="sm"
+												className="rounded-md text-sm text-muted-foreground/80"
+												aria-label={`${publicViewsQuery.data.todayViews} views today`}
+											/>
+										}
+									>
+										<SpinningCounter
+											value={publicViewsQuery.data.todayViews ?? 0}
+										/>
+										<span className="ml-1">views today</span>
+									</TooltipTrigger>
+									<TooltipContent>
+										{`${publicViewsQuery.data?.yesterdayViews ?? "—"} views yesterday`}
+									</TooltipContent>
+								</Tooltip>
+							) : showPublicViewsSkeleton ? (
+								<Skeleton className="h-8 w-24 rounded-md" />
+							) : null}
+						</div>
+						<div
+							className={
+								isSignedIn
+									? "order-1 flex flex-row items-center justify-center gap-1 min-[90rem]:order-none min-[90rem]:contents"
+									: "contents"
+							}
+						>
+							{isSignedIn ? (
+								isCurrentUserPage ? (
+									<PageManagementMenu triggerPage={{ ...page, ...draft }} />
+								) : (
+									<MyPageButton />
+								)
+							) : null}
+						</div>
 					</div>
 				</aside>
 			) : null}
