@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Send, StackPerspective } from "reicon-react";
+import { StackPerspective } from "reicon-react";
 import { toast } from "sonner";
 import { GridSection } from "@/components/grid/grid-section";
 import { EditableParagraph } from "@/components/page/editable-paragraph";
@@ -51,6 +51,7 @@ import {
 	DEFAULT_SITE_NAME,
 	truncateSeoText,
 } from "@/lib/seo/metadata";
+import { BotMessageSquareIcon } from "lucide-react";
 
 type HandleLoaderData = {
 	page: PageResponse;
@@ -602,7 +603,7 @@ function HandlePageContent({
 								className="rounded-md"
 							/>
 						) : null}
-						<Tooltip>
+						{/*<Tooltip>
 							<TooltipTrigger
 								render={
 									<Button
@@ -618,7 +619,7 @@ function HandlePageContent({
 								<StackPerspective weight="Filled" />
 							</TooltipTrigger>
 							<TooltipContent>Explore</TooltipContent>
-						</Tooltip>
+						</Tooltip>*/}
 						<Tooltip>
 							<TooltipTrigger
 								render={
@@ -626,23 +627,24 @@ function HandlePageContent({
 										variant="ghost"
 										size="icon-sm"
 										aria-label="Feedback"
-										className="text-muted-foreground/80 rounded-md"
+                    className="text-muted-foreground rounded-md"
+                    render={<a href="https://discord.gg/U4NNF9hMms" target="_blank" rel="noreferrer" />}
 									/>
 								}
 							>
-								<Send weight="Filled" />
+  							<BotMessageSquareIcon />
 							</TooltipTrigger>
-							<TooltipContent>Feedback</TooltipContent>
+							<TooltipContent>Send us feedback</TooltipContent>
 						</Tooltip>
 						<Separator
 							orientation="vertical"
 							className={
-								"data-vertical:w-[2.5px] data-vertical:my-2! rounded-lg mx-1 bg-border/80"
+								"data-vertical:w-[2.5px] data-vertical:my-2.5! rounded-lg mx-1 bg-border/80"
 							}
 						/>
 						{isSignedIn ? (
 							isCurrentUserPage ? (
-								<PageManagementMenu triggerPage={page} />
+								<PageManagementMenu triggerPage={{ ...page, ...draft }} />
 							) : (
 								<MyPageButton />
 							)

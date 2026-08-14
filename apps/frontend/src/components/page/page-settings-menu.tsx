@@ -8,9 +8,9 @@ import { isReservedPageHandle, pageHandleSchema } from "@sinabro/api";
 import { PRO_MONTHLY_PRODUCT_ID } from "@sinabro/plan";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { ChevronLeftIcon } from "lucide-react";
+import { ChevronLeftIcon, Settings2Icon } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { Check, CheckCircle, Gear, Loader, XCircle } from "reicon-react";
+import { Check, CheckCircle, Loader, XCircle } from "reicon-react";
 import { createUISFX } from "uisfx";
 import * as v from "valibot";
 
@@ -168,9 +168,9 @@ export function PageSettingsMenu({
 			<PopoverTrigger
 				render={<Button variant="ghost" size="icon-sm" />}
 				aria-label="Settings"
-				className="text-muted-foreground/80 rounded-md"
+				className="text-muted-foreground rounded-md"
 			>
-				<Gear weight="Filled" />
+				<Settings2Icon className="" />
 			</PopoverTrigger>
 			<PopoverContent
 				align="start"

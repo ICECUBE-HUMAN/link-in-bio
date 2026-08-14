@@ -100,6 +100,7 @@ export function PageManagementMenu({ triggerPage }: PageManagementMenuProps) {
 						pages={sortedPages}
 						canManagePages={data?.hasAccess === true}
 						onRefresh={refreshOwnedPages}
+						onPageSelect={() => setOpen(false)}
 					/>
 				)}
 			</PopoverContent>
@@ -111,10 +112,12 @@ export function PageManagementView({
 	pages,
 	canManagePages = true,
 	onRefresh,
+	onPageSelect,
 }: {
 	pages: OwnedPageSummary[];
 	canManagePages?: boolean;
 	onRefresh: () => Promise<void>;
+	onPageSelect: () => void;
 }) {
 	const navigate = useNavigate();
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -140,6 +143,7 @@ export function PageManagementView({
 							size="lg"
 							variant="ghost"
 							nativeButton={false}
+							onClick={onPageSelect}
 							className={`min-w-0 flex-1 rounded-lg h-15 hover:bg-transparent ${ownedPage.isPrimary ? "justify-between" : "justify-start"}`}
 						>
 							<div className="flex min-w-0 items-center gap-2">

@@ -7,14 +7,14 @@ const EXPLORE_DESCRIPTION =
 
 export const Route = createFileRoute("/explore/")({
 	staticData: {
-		header: {
-			label: "Explore",
-			order: 20,
-		},
-		footer: {
-			label: "Explore",
-			order: 15,
-		},
+		// header: {
+		// 	label: "Explore",
+		// 	order: 20,
+		// },
+		// footer: {
+		// 	label: "Explore",
+		// 	order: 15,
+		// },
 	},
 	head: () =>
 		createSeo({

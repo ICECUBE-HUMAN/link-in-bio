@@ -4,14 +4,14 @@ import { createSeo, DEFAULT_SITE_NAME } from "@/lib/seo/metadata";
 
 export const Route = createFileRoute("/update/")({
 	staticData: {
-		header: {
-			label: "Update",
-			order: 30,
-		},
-		footer: {
-			label: "Update",
-			order: 20,
-		},
+		// header: {
+		// 	label: "Update",
+		// 	order: 30,
+		// },
+		// footer: {
+		// 	label: "Update",
+		// 	order: 20,
+		// },
 	},
 	head: () =>
 		createSeo({
