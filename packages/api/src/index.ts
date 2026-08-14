@@ -172,6 +172,7 @@ export type UpdatePageResponse = v.InferOutput<typeof updatePageResponseSchema>;
 export const pageByHandleResponseSchema = v.object({
 	page: pageResponseSchema,
 	items: v.array(grid.pageItemResponseSchema),
+	visitorsEnabled: v.optional(v.boolean()),
 });
 
 export type PageByHandleResponse = v.InferOutput<

@@ -6,6 +6,7 @@ import {
 } from "@sinabro/api";
 import { eq } from "drizzle-orm";
 import * as v from "valibot";
+import { getPlanAccess } from "../core/billing";
 import { NotFoundError } from "../exceptions/http-exceptions";
 import {
 	mapPageResponse,
@@ -42,6 +43,11 @@ export const getPublicPage = async ({
 		});
 	if (!page)
 		throw new NotFoundError("Page");
+	const planAccess =
+		await getPlanAccess({
+			db,
+			userId: page.userId,
+		});
 	return v.parse(
 		pageByHandleResponseSchema,
 		{
@@ -58,6 +64,8 @@ export const getPublicPage = async ({
 					false,
 				),
 			),
+			visitorsEnabled:
+				planAccess.hasAccess,
 		},
 	);
 };

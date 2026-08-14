@@ -3,12 +3,14 @@ import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import * as v from "valibot";
 import { env as viteEnv } from "@/env";
+import { getPageByHandle } from "./pages.functions";
 
 const SIMPLE_ANALYTICS_API_URL = "https://simpleanalytics.com";
 const VISITORS_CACHE_TTL_MS = 900_000;
 
 const publicVisitorsInputSchema = v.object({
 	pageId: v.pipe(v.string(), v.uuid()),
+	handle: v.pipe(v.string(), v.minLength(1)),
 	timezone: v.string(),
 });
 
@@ -171,6 +173,26 @@ export const getPublicVisitors = createServerFn({ method: "GET" })
 		v.parse(publicVisitorsInputSchema, data),
 	)
 	.handler(async ({ data }): Promise<PublicVisitors> => {
+		const emptyResult = {
+			todayVisitors: null,
+			yesterdayVisitors: null,
+		};
+		let pageByHandle: Awaited<ReturnType<typeof getPageByHandle>>;
+		try {
+			pageByHandle = await getPageByHandle({
+				data: { handle: data.handle },
+			});
+		} catch {
+			return emptyResult;
+		}
+
+		if (
+			!pageByHandle ||
+			pageByHandle.page.id !== data.pageId ||
+			pageByHandle.visitorsEnabled !== true
+		)
+			return emptyResult;
+
 		const apiKey = cloudflareEnv.SIMPLE_ANALYTICS_API_KEY;
 		const hostname = viteEnv.VITE_APP_DOMAIN;
 
@@ -204,14 +226,16 @@ export const getPublicVisitors = createServerFn({ method: "GET" })
 
 export function getPublicVisitorsQueryOptions(
 	pageId: string,
+	handle: string,
 	timezone: string,
 ) {
 	return queryOptions({
-		queryKey: ["public-visitors", pageId, timezone] as const,
+		queryKey: ["public-visitors", pageId, handle, timezone] as const,
 		queryFn: () =>
 			getPublicVisitors({
 				data: {
 					pageId,
+					handle,
 					timezone,
 				},
 			}),

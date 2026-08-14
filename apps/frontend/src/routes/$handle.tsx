@@ -61,6 +61,7 @@ type HandleLoaderData = {
 	items: PageItemResponse[];
 	isCurrentUserPage: boolean;
 	isDemo: boolean;
+	visitorsEnabled: boolean;
 };
 
 type PrimaryActionState = "idle" | "setting" | "success" | "fading" | "hidden";
@@ -166,6 +167,7 @@ export const Route = createFileRoute("/$handle")({
 				items: demoPage.items,
 				isCurrentUserPage: true,
 				isDemo: true,
+				visitorsEnabled: false,
 			};
 		}
 
@@ -193,6 +195,7 @@ export const Route = createFileRoute("/$handle")({
 			items: result.items,
 			isCurrentUserPage: session?.user.id === result.page.userId,
 			isDemo: false,
+			visitorsEnabled: result.visitorsEnabled === true,
 		};
 	},
 	head: ({ loaderData }) => {
@@ -298,8 +301,9 @@ function HandlePageContent({
 	}, []);
 
 	const publicVisitorsQuery = useQuery({
-		...getPublicVisitorsQueryOptions(page.id, timezone ?? "UTC"),
-		enabled: timezone !== null && !loaderData.isDemo,
+		...getPublicVisitorsQueryOptions(page.id, page.handle, timezone ?? "UTC"),
+		enabled:
+			timezone !== null && !loaderData.isDemo && loaderData.visitorsEnabled,
 	});
 	const showPublicVisitors =
 		!publicVisitorsQuery.isError &&
@@ -308,6 +312,7 @@ function HandlePageContent({
 		publicVisitorsQuery.data.yesterdayVisitors !== null;
 	const showPublicVisitorsSkeleton =
 		!loaderData.isDemo &&
+		loaderData.visitorsEnabled &&
 		!publicVisitorsQuery.isError &&
 		!publicVisitorsQuery.isSuccess;
 
