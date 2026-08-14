@@ -232,9 +232,7 @@ function GridItemShellContent({
 					cardThemeStyle && "link-card-themed",
 					isChromeLess
 						? "border-0!"
-						: item.type === "media"
-							? "ring-0! border-0!"
-							: !isDragging && "ring-1 ring-black/5",
+						: !isDragging && item.type !== "media" && "ring-1 ring-black/5",
 					!isDragging &&
 						item.type === "map" &&
 						mapInteraction?.isLocationEditing &&
