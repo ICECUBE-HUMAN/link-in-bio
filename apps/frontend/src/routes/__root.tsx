@@ -3,15 +3,18 @@ import {
 	createRootRouteWithContext,
 	HeadContent,
 	Scripts,
+	useLocation,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { trackPageView } from "@/lib/analytics/simple-analytics";
 import {
 	createSeo,
 	DEFAULT_SEO_DESCRIPTION,
 	defaultHeadLinks,
 } from "@/lib/seo/metadata";
 import appCss from "../styles.css?url";
-import { TooltipProvider } from "@/components/ui/tooltip";
 
 interface MyRouterContext {
 	queryClient: QueryClient;
@@ -46,6 +49,13 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 			...defaultHeadLinks,
 			...rootSeo.links,
 		],
+		scripts: [
+			{
+				src: "https://scripts.simpleanalyticscdn.com/latest.js",
+				async: true,
+				"data-auto-collect": "false",
+			},
+		],
 	}),
 	shellComponent: RootDocument,
 });
@@ -56,15 +66,22 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			<head>
 				<HeadContent />
 			</head>
-      <body className="flex flex-col">
-        <TooltipProvider>
-          <main className="flex min-h-svh flex-col">
-            {children}
-          </main>
-        </TooltipProvider>
+			<body className="flex flex-col">
+				<SimpleAnalyticsTracker />
+				<TooltipProvider>
+					<main className="flex min-h-svh flex-col">{children}</main>
+				</TooltipProvider>
 				<Toaster position="bottom-center" />
 				<Scripts />
 			</body>
 		</html>
 	);
+}
+
+function SimpleAnalyticsTracker() {
+	const { pathname } = useLocation();
+
+	useEffect(() => trackPageView(pathname), [pathname]);
+
+	return null;
 }

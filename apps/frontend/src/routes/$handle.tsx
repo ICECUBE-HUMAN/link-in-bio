@@ -7,6 +7,7 @@ import {
 	notFound,
 	redirect,
 } from "@tanstack/react-router";
+import { BotMessageSquareIcon } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { StackPerspective } from "reicon-react";
@@ -20,11 +21,13 @@ import { PageSettingsMenu } from "@/components/page/page-settings-menu";
 import Toolbar from "@/components/page/toolbar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { trackPageIdPageView } from "@/lib/analytics/simple-analytics";
 import { uploadPageItemMedia } from "@/lib/api/item-media-api";
 import {
 	changePrimaryPage,
@@ -35,6 +38,7 @@ import {
 } from "@/lib/api/pages.functions";
 import { getProfileImageUrl } from "@/lib/api/profile-image-api";
 import { getSessionQueryOptions } from "@/lib/api/session.functions";
+import { getPublicVisitorsQueryOptions } from "@/lib/api/visitors.functions";
 import { getDemoPage } from "@/lib/demo/demo-page.functions";
 import { useGridEditorStore } from "@/lib/grid/editor-store";
 import type { Breakpoint } from "@/lib/grid/types";
@@ -51,7 +55,6 @@ import {
 	DEFAULT_SITE_NAME,
 	truncateSeoText,
 } from "@/lib/seo/metadata";
-import { BotMessageSquareIcon } from "lucide-react";
 
 type HandleLoaderData = {
 	page: PageResponse;
@@ -61,6 +64,69 @@ type HandleLoaderData = {
 };
 
 type PrimaryActionState = "idle" | "setting" | "success" | "fading" | "hidden";
+
+const REEL_SPINS = 3;
+const REEL_DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+const REEL_SEQUENCE = Array.from(
+	{ length: (REEL_SPINS + 1) * REEL_DIGITS.length },
+	(_, index) => REEL_DIGITS[index % REEL_DIGITS.length],
+);
+
+function SpinningCounter({ value }: { value: number }) {
+	const digitString = String(value);
+	const stripRefs = useRef<(HTMLSpanElement | null)[]>([]);
+
+	useEffect(() => {
+		for (const strip of stripRefs.current) {
+			if (!strip) continue;
+			strip.style.transition = "none";
+			strip.style.transform = "translateY(0)";
+			void strip.offsetHeight;
+		}
+
+		const frame = requestAnimationFrame(() => {
+			for (const [index, strip] of stripRefs.current.entries()) {
+				if (!strip) continue;
+
+				const styles = getComputedStyle(strip);
+				const cellSize =
+					Number.parseFloat(styles.getPropertyValue("--reel-cell")) || 30;
+				const stagger =
+					Number.parseFloat(styles.getPropertyValue("--reel-stagger")) || 90;
+				const digit = Number(digitString[index] ?? 0);
+
+				strip.style.transition = `transform var(--reel-dur) var(--reel-ease) ${index * stagger}ms`;
+				strip.style.transform = `translateY(-${(REEL_SPINS * 10 + digit) * cellSize}px)`;
+			}
+		});
+
+		return () => cancelAnimationFrame(frame);
+	}, [digitString]);
+
+	return (
+		<span className="t-reel" aria-hidden="true">
+			{[...digitString].map((_, index) => (
+				<span className="t-reel-col" key={`reel-${index.toString(36)}`}>
+					<span
+						className="t-reel-strip"
+						ref={(element) => {
+							stripRefs.current[index] = element;
+						}}
+					>
+						{REEL_SEQUENCE.map((digit, sequenceIndex) => (
+							<span
+								className="t-reel-digit"
+								key={`${digit}-${Math.floor(sequenceIndex / REEL_DIGITS.length)}`}
+							>
+								{digit}
+							</span>
+						))}
+					</span>
+				</span>
+			))}
+		</span>
+	);
+}
 
 function getFaviconUrl(imageUrl: string) {
 	return `/api/favicon?v=3&image=${encodeURIComponent(imageUrl)}`;
@@ -218,6 +284,33 @@ function HandlePageContent({
 }) {
 	const { page } = loaderData;
 	const queryClient = useQueryClient();
+	const trackedPageIdRef = useRef<string | null>(null);
+	const [timezone, setTimezone] = useState<string | null>(null);
+
+	useEffect(() => {
+		if (loaderData.isDemo || trackedPageIdRef.current === page.id) return;
+		trackedPageIdRef.current = page.id;
+		return trackPageIdPageView(page.id);
+	}, [loaderData.isDemo, page.id]);
+
+	useEffect(() => {
+		setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
+	}, []);
+
+	const publicVisitorsQuery = useQuery({
+		...getPublicVisitorsQueryOptions(page.id, timezone ?? "UTC"),
+		enabled: timezone !== null && !loaderData.isDemo,
+	});
+	const showPublicVisitors =
+		!publicVisitorsQuery.isError &&
+		publicVisitorsQuery.isSuccess &&
+		publicVisitorsQuery.data.todayVisitors !== null &&
+		publicVisitorsQuery.data.yesterdayVisitors !== null;
+	const showPublicVisitorsSkeleton =
+		!loaderData.isDemo &&
+		!publicVisitorsQuery.isError &&
+		!publicVisitorsQuery.isSuccess;
+
 	const { data: sessionResult } = useQuery({
 		...getSessionQueryOptions(),
 		enabled: !loaderData.isDemo,
@@ -630,12 +723,18 @@ function HandlePageContent({
 										variant="ghost"
 										size="icon-sm"
 										aria-label="Feedback"
-                    className="text-muted-foreground rounded-md"
-                    render={<a href="https://discord.gg/U4NNF9hMms" target="_blank" rel="noreferrer" />}
+										className="text-muted-foreground rounded-md"
+										render={
+											<a
+												href="https://discord.gg/U4NNF9hMms"
+												target="_blank"
+												rel="noreferrer"
+											/>
+										}
 									/>
 								}
 							>
-  							<BotMessageSquareIcon />
+								<BotMessageSquareIcon />
 							</TooltipTrigger>
 							<TooltipContent>Send us feedback</TooltipContent>
 						</Tooltip>
@@ -651,6 +750,30 @@ function HandlePageContent({
 							) : (
 								<MyPageButton />
 							)
+						) : null}
+						{showPublicVisitors ? (
+							<Tooltip>
+								<TooltipTrigger
+									render={
+										<Button
+											variant="ghost"
+											size="sm"
+											className="rounded-md text-sm text-muted-foreground/80"
+											aria-label={`${publicVisitorsQuery.data.todayVisitors} visitors today`}
+										/>
+									}
+								>
+									<SpinningCounter
+										value={publicVisitorsQuery.data.todayVisitors ?? 0}
+									/>
+									<span className="ml-1">visitors today</span>
+								</TooltipTrigger>
+								<TooltipContent>
+									{`${publicVisitorsQuery.data?.yesterdayVisitors ?? "—"} visitors yesterday`}
+								</TooltipContent>
+							</Tooltip>
+						) : showPublicVisitorsSkeleton ? (
+							<Skeleton className="h-8 w-24 rounded-md" />
 						) : null}
 					</div>
 				</aside>

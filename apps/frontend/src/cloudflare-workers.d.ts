@@ -4,5 +4,6 @@ declare module "cloudflare:workers" {
 			fetch: typeof fetch;
 		};
 		BETTER_AUTH_URL?: string;
+		SIMPLE_ANALYTICS_API_KEY?: string;
 	};
 }
