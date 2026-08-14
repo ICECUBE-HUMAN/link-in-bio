@@ -45,7 +45,25 @@ export function Footer() {
 									{route.label}
 								</Link>
 							</li>
-						))}
+            ))}
+            <li>
+              <a
+                href="https://discord.gg/U4NNF9hMms"
+								target="_blank"
+                rel="noreferrer"
+								className="transition-colors hover:text-foreground/70"
+              >
+                Community
+              </a>
+            </li>
+            <li>
+							<Link
+								to={'/pricing'}
+								className="transition-colors hover:text-foreground/70"
+							>
+								Pricing
+							</Link>
+						</li>
 					</ul>
         </nav>
 

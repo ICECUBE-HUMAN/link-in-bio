@@ -18,6 +18,7 @@ import { Route as ApiFaviconRouteImport } from './routes/api/favicon'
 import { Route as ApiProfileImageRouteImport } from './routes/api/profile-image'
 import { Route as ExploreIndexRouteImport } from './routes/explore/index'
 import { Route as LogInIndexRouteImport } from './routes/log-in/index'
+import { Route as PricingIndexRouteImport } from './routes/pricing/index'
 import { Route as UpdateIndexRouteImport } from './routes/update/index'
 import { Route as ApiPagesHandleRouteImport } from './routes/api/pages/$handle'
 import { Route as ApiPagesHandleImageUploadRouteImport } from './routes/api/pages/$handle/image-upload'
@@ -70,6 +71,11 @@ const LogInIndexRoute = LogInIndexRouteImport.update({
   path: '/log-in/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PricingIndexRoute = PricingIndexRouteImport.update({
+  id: '/pricing/',
+  path: '/pricing/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UpdateIndexRoute = UpdateIndexRouteImport.update({
   id: '/update/',
   path: '/update/',
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/api/profile-image': typeof ApiProfileImageRoute
   '/explore/': typeof ExploreIndexRoute
   '/log-in/': typeof LogInIndexRoute
+  '/pricing/': typeof PricingIndexRoute
   '/update/': typeof UpdateIndexRoute
   '/api/pages/$handle': typeof ApiPagesHandleRouteWithChildren
   '/api/pages/$handle/image-upload': typeof ApiPagesHandleImageUploadRouteWithChildren
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/api/profile-image': typeof ApiProfileImageRoute
   '/explore': typeof ExploreIndexRoute
   '/log-in': typeof LogInIndexRoute
+  '/pricing': typeof PricingIndexRoute
   '/update': typeof UpdateIndexRoute
   '/api/pages/$handle': typeof ApiPagesHandleRouteWithChildren
   '/api/pages/$handle/image-upload': typeof ApiPagesHandleImageUploadRouteWithChildren
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/api/profile-image': typeof ApiProfileImageRoute
   '/explore/': typeof ExploreIndexRoute
   '/log-in/': typeof LogInIndexRoute
+  '/pricing/': typeof PricingIndexRoute
   '/update/': typeof UpdateIndexRoute
   '/api/pages/$handle': typeof ApiPagesHandleRouteWithChildren
   '/api/pages/$handle/image-upload': typeof ApiPagesHandleImageUploadRouteWithChildren
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/api/profile-image'
     | '/explore/'
     | '/log-in/'
+    | '/pricing/'
     | '/update/'
     | '/api/pages/$handle'
     | '/api/pages/$handle/image-upload'
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/api/profile-image'
     | '/explore'
     | '/log-in'
+    | '/pricing'
     | '/update'
     | '/api/pages/$handle'
     | '/api/pages/$handle/image-upload'
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '/api/profile-image'
     | '/explore/'
     | '/log-in/'
+    | '/pricing/'
     | '/update/'
     | '/api/pages/$handle'
     | '/api/pages/$handle/image-upload'
@@ -221,6 +233,7 @@ export interface RootRouteChildren {
   ApiProfileImageRoute: typeof ApiProfileImageRoute
   ExploreIndexRoute: typeof ExploreIndexRoute
   LogInIndexRoute: typeof LogInIndexRoute
+  PricingIndexRoute: typeof PricingIndexRoute
   UpdateIndexRoute: typeof UpdateIndexRoute
   ApiPagesHandleRoute: typeof ApiPagesHandleRouteWithChildren
 }
@@ -288,6 +301,13 @@ declare module '@tanstack/react-router' {
       path: '/log-in'
       fullPath: '/log-in/'
       preLoaderRoute: typeof LogInIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing/': {
+      id: '/pricing/'
+      path: '/pricing'
+      fullPath: '/pricing/'
+      preLoaderRoute: typeof PricingIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/update/': {
@@ -389,6 +409,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiProfileImageRoute: ApiProfileImageRoute,
   ExploreIndexRoute: ExploreIndexRoute,
   LogInIndexRoute: LogInIndexRoute,
+  PricingIndexRoute: PricingIndexRoute,
   UpdateIndexRoute: UpdateIndexRoute,
   ApiPagesHandleRoute: ApiPagesHandleRouteWithChildren,
 }
