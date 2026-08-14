@@ -59,6 +59,9 @@ export function MediaItemRenderer({
 		height: 0,
 	});
 	const [draftCrop, setDraftCrop] = useState<NormalizedCrop | null>(null);
+	const [isCropClosing, setIsCropClosing] = useState(false);
+	const previousCropOpenRef = useRef(false);
+	const lastCropRef = useRef<NormalizedCrop | null>(null);
 
 	useEffect(() => {
 		const mediaFrame = mediaFrameRef.current;
@@ -141,27 +144,66 @@ export function MediaItemRenderer({
 	const renderedCrop = cropInteraction.isOpen
 		? (draftCrop ?? centeredCrop)
 		: (compatiblePersistedCrop ?? (persistedCrop ? centeredCrop : null));
+	const isClosingFrame = previousCropOpenRef.current && !cropInteraction.isOpen;
+	const isCropVisible =
+		cropInteraction.isOpen || isCropClosing || isClosingFrame;
+	const displayedCrop =
+		!cropInteraction.isOpen && isCropVisible
+			? (lastCropRef.current ?? renderedCrop)
+			: renderedCrop;
 	const cropStyle =
-		renderedCrop &&
+		displayedCrop &&
 		sourceSize &&
 		hasFrameSize &&
-		isMediaCropAspectCompatible(renderedCrop, sourceSize, frameSize)
-			? getMediaCropStyle(renderedCrop)
+		isMediaCropAspectCompatible(displayedCrop, sourceSize, frameSize)
+			? getMediaCropStyle(displayedCrop)
 			: undefined;
-	const cropRevealStyle = renderedCrop
+	const cropRevealStyle = displayedCrop
 		? ({
-				"--media-crop-reveal-top": `${renderedCrop.y}%`,
+				"--media-crop-reveal-top": `${displayedCrop.y}%`,
 				"--media-crop-reveal-right": `${Math.max(
 					0,
-					100 - renderedCrop.x - renderedCrop.width,
+					100 - displayedCrop.x - displayedCrop.width,
 				)}%`,
 				"--media-crop-reveal-bottom": `${Math.max(
 					0,
-					100 - renderedCrop.y - renderedCrop.height,
+					100 - displayedCrop.y - displayedCrop.height,
 				)}%`,
-				"--media-crop-reveal-left": `${renderedCrop.x}%`,
+				"--media-crop-reveal-left": `${displayedCrop.x}%`,
 			} as CSSProperties)
 		: undefined;
+
+	useLayoutEffect(() => {
+		previousCropOpenRef.current = cropInteraction.isOpen;
+		if (cropInteraction.isOpen && renderedCrop) {
+			lastCropRef.current = renderedCrop;
+		}
+	}, [cropInteraction.isOpen, renderedCrop]);
+
+	useEffect(() => {
+		if (isClosingFrame) setIsCropClosing(true);
+	}, [isClosingFrame]);
+
+	useEffect(() => {
+		if (cropInteraction.isOpen) {
+			setIsCropClosing(false);
+			return;
+		}
+		if (!isCropClosing) return;
+
+		const duration =
+			Number.parseFloat(
+				getComputedStyle(
+					mediaFrameRef.current ?? document.documentElement,
+				).getPropertyValue("--profile-image-reveal-dur"),
+			) || 400;
+		const timer = window.setTimeout(() => {
+			setIsCropClosing(false);
+			lastCropRef.current = null;
+		}, duration);
+
+		return () => window.clearTimeout(timer);
+	}, [cropInteraction.isOpen, isCropClosing]);
 	const canApply = Boolean(
 		mode === "edit" &&
 			onCommand &&
@@ -345,8 +387,8 @@ export function MediaItemRenderer({
 			data-media-preset={preset}
 			className={cn(
 				"relative size-full overflow-hidden rounded-[inherit] bg-muted/30",
-				!cropInteraction.isOpen && "surface-line",
-				cropInteraction.isOpen && "overflow-visible!",
+				!isCropVisible && "surface-line",
+				isCropVisible && "overflow-visible!",
 			)}
 		>
 			{cropStyle ? (
@@ -354,16 +396,18 @@ export function MediaItemRenderer({
 					data-media-crop-source="true"
 					className={cn(
 						"pointer-events-none absolute rounded-[inherit]",
-						cropInteraction.isOpen && "smooth-shadow-lg",
+						isCropVisible && "smooth-shadow-lg",
 					)}
 					style={cropStyle}
 				>
 					<div
 						className={cn(
 							"relative size-full overflow-hidden rounded-[inherit]",
-							cropInteraction.isOpen && "t-media-crop-reveal",
+							cropInteraction.isOpen
+								? "t-media-crop-reveal"
+								: isCropVisible && "t-media-crop-reveal is-closing",
 						)}
-						style={cropInteraction.isOpen ? cropRevealStyle : undefined}
+						style={isCropVisible ? cropRevealStyle : undefined}
 					>
 						{mediaElement}
 						{cropInteraction.isOpen && renderedCrop ? (
@@ -411,7 +455,7 @@ export function MediaItemRenderer({
 					</div>
 				) : null}
 			</div>
-			{mode === "edit" && cropInteraction.isOpen && cropStyle ? (
+			{mode === "edit" && isCropVisible && cropStyle ? (
 				<>
 					<button
 						type="button"
@@ -419,6 +463,7 @@ export function MediaItemRenderer({
 						aria-label="Drag media to crop"
 						className={cn(
 							"absolute z-20 m-0 block cursor-grab! touch-none appearance-none rounded-[inherit] border-0 bg-transparent p-0 outline-none",
+							isCropClosing && "pointer-events-none",
 							cropInteraction.isDragging && "cursor-grabbing!",
 							"focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black",
 						)}

@@ -162,12 +162,12 @@
 	backface-visibility: hidden;
 }
 
-/* Map editing is a deliberate toggle, so its lift and ring settle more gently than drag feedback. */
+/* Map editing and media cropping are deliberate toggles, so their lift settles gently. */
 .grid-item-card.map-item-interaction {
 	transition:
-		transform 250ms cubic-bezier(0.22, 1, 0.36, 1),
-		scale 250ms cubic-bezier(0.22, 1, 0.36, 1),
-		box-shadow 250ms cubic-bezier(0.22, 1, 0.36, 1);
+		transform var(--grid-drag-lift-duration) var(--grid-drag-lift-ease),
+		scale var(--grid-drag-lift-duration) var(--grid-drag-lift-ease),
+		box-shadow var(--grid-drag-lift-duration) var(--grid-drag-lift-ease);
 }
 
 .grid-item-pop-in.is-entering:not(.grid-item-initial-enter) {
@@ -204,6 +204,20 @@
 	transform: perspective(800px) translateY(-8px) scale(1.035)
 		rotateX(calc(1deg + var(--grid-drag-rotate-x)))
 		rotateZ(calc(0.35deg + var(--grid-drag-rotate-z)));
+	will-change: transform;
+}
+
+.grid-item-card.map-item-location-editing,
+.grid-item-card.media-crop-interaction {
+	/* Reuse the drag shadow while keeping the map's explicit ring intact. */
+	--tw-shadow: var(--smooth-shadow-xl);
+	box-shadow:
+		var(--tw-inset-shadow), var(--tw-inset-ring-shadow),
+		var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow) !important;
+	transition-duration: var(--grid-drag-lift-duration);
+	transition-timing-function: var(--grid-drag-lift-ease);
+	transform: perspective(800px) translateY(-8px) scale(1)
+		rotateX(var(--grid-drag-rotate-x)) rotateZ(var(--grid-drag-rotate-z));
 	will-change: transform;
 }
 

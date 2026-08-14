@@ -1,54 +1,24 @@
 import type { ProfileImageCrop } from "@sinabro/api";
 import { motion, useReducedMotion } from "motion/react";
-import { type RefObject, useEffect, useMemo, useState } from "react";
-import {
-	isSquareProfileImageCrop,
-	type ProfileImageSourceSize,
-} from "@/lib/image/crop-image";
+import { type RefObject, useEffect, useState } from "react";
+import type { ProfileImageSourceSize } from "@/lib/image/crop-image";
 
 type CropProfileImageDialogProps = {
 	open: boolean;
 	crop: ProfileImageCrop;
 	sourceSize: ProfileImageSourceSize | null;
 	anchorRef: RefObject<HTMLElement | null>;
-	cropSize: number;
 	applyRequestRef: { current: (() => void) | null };
 	onOpenChange: (open: boolean) => void;
 	onApply: (crop: ProfileImageCrop) => Promise<void>;
 	onApplyingChange: (isApplying: boolean) => void;
 };
 
-function getCropMaskStyle(
-	crop: ProfileImageCrop,
-	cropSize: number,
-	sourceSize: ProfileImageSourceSize | null,
-) {
-	if (!sourceSize || !isSquareProfileImageCrop(crop, sourceSize)) return null;
-
-	const mediaWidth = cropSize * (100 / crop.width);
-	const mediaHeight = cropSize * (100 / crop.height);
-	const mediaLeft = -cropSize * (crop.x / crop.width);
-	const mediaTop = -cropSize * (crop.y / crop.height);
-	const cropRadius = cropSize / 2;
-	const maskImage = `radial-gradient(circle ${cropRadius}px at ${-mediaLeft + cropRadius}px ${-mediaTop + cropRadius}px, transparent 0 ${Math.max(cropRadius - 1, 0)}px, black ${cropRadius + 1}px)`;
-
-	return {
-		left: mediaLeft,
-		top: mediaTop,
-		width: mediaWidth,
-		height: mediaHeight,
-		backgroundColor: "rgb(255 255 255 / 0.35)",
-		maskImage,
-		WebkitMaskImage: maskImage,
-	};
-}
-
 export function CropProfileImageDialog({
 	open,
 	crop,
 	sourceSize,
 	anchorRef,
-	cropSize,
 	applyRequestRef,
 	onOpenChange,
 	onApply,
@@ -57,10 +27,6 @@ export function CropProfileImageDialog({
 	const shouldReduceMotion = useReducedMotion();
 	const [isApplying, setIsApplying] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const cropMaskStyle = useMemo(
-		() => getCropMaskStyle(crop, cropSize, sourceSize),
-		[crop, cropSize, sourceSize],
-	);
 
 	useEffect(() => {
 		if (!open) return;
@@ -150,13 +116,6 @@ export function CropProfileImageDialog({
 			role="region"
 			aria-label="Crop profile image"
 		>
-			{cropMaskStyle ? (
-				<span
-					aria-hidden="true"
-					className="pointer-events-none absolute z-10"
-					style={cropMaskStyle}
-				/>
-			) : null}
 			<span
 				aria-hidden="true"
 				className="pointer-events-none absolute inset-0 z-20 rounded-full border-[3px] border-black shadow-none"

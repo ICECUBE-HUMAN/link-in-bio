@@ -656,15 +656,49 @@ export function PageImageEditor({
 						}
 					>
 						{renderedImageUrl ? (
-							<img
-								ref={sourceImageRef}
-								className={`${imageStyle ? "" : "size-full object-cover"} rounded-lg ${isCropOpen ? "smooth-shadow-lg" : ""}`}
-								style={imageStyle}
-								src={renderedImageUrl}
-								alt="Profile"
-								loading="eager"
-								onLoad={handleSourceImageLoad}
-							/>
+							imageStyle ? (
+								<div
+									data-profile-crop-source="true"
+									className={`pointer-events-none rounded-lg ${isCropOpen ? "smooth-shadow-lg" : ""}`}
+									style={imageStyle}
+								>
+									<img
+										ref={sourceImageRef}
+										className="size-full rounded-lg"
+										src={renderedImageUrl}
+										alt="Profile"
+										loading="eager"
+										onLoad={handleSourceImageLoad}
+									/>
+									{isCropOpen && renderedCrop ? (
+										<div
+											aria-hidden="true"
+											data-profile-crop-mask="true"
+											className="pointer-events-none absolute inset-0 z-10 overflow-hidden rounded-lg"
+										>
+											<span
+												className="pointer-events-none absolute rounded-full"
+												style={{
+													left: `${renderedCrop.x}%`,
+													top: `${renderedCrop.y}%`,
+													width: `${renderedCrop.width}%`,
+													height: `${renderedCrop.height}%`,
+													boxShadow: "0 0 0 9999px rgb(255 255 255 / 0.35)",
+												}}
+											/>
+										</div>
+									) : null}
+								</div>
+							) : (
+								<img
+									ref={sourceImageRef}
+									className="size-full rounded-lg object-cover"
+									src={renderedImageUrl}
+									alt="Profile"
+									loading="eager"
+									onLoad={handleSourceImageLoad}
+								/>
+							)
 						) : (
 							<div>
 								<HugeiconsIcon
@@ -724,7 +758,6 @@ export function PageImageEditor({
 						crop={crop}
 						sourceSize={sourceImageSize}
 						anchorRef={imageFrameRef}
-						cropSize={imageFrameSize}
 						applyRequestRef={cropApplyRequestRef}
 						onOpenChange={handleCropDialogChange}
 						onApply={handleCropApply}

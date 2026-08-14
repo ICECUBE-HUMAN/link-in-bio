@@ -150,6 +150,10 @@
 	will-change: clip-path;
 }
 
+.t-media-crop-reveal.is-closing {
+	animation-name: t-media-crop-reveal-close;
+}
+
 @keyframes t-media-crop-reveal-open {
 	from {
 		clip-path: inset(
@@ -162,6 +166,21 @@
 	}
 	to {
 		clip-path: inset(0 round var(--radius-2xl));
+	}
+}
+
+@keyframes t-media-crop-reveal-close {
+	from {
+		clip-path: inset(0 round var(--radius-2xl));
+	}
+	to {
+		clip-path: inset(
+			var(--media-crop-reveal-top)
+			var(--media-crop-reveal-right)
+			var(--media-crop-reveal-bottom)
+			var(--media-crop-reveal-left)
+			round var(--radius-2xl)
+		);
 	}
 }
 

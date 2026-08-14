@@ -227,6 +227,7 @@ function GridItemShellContent({
 						? "smooth-shadow-ring-xl shadow-neutral-600 smooth-ring-neutral-300/30 transition-all"
 						: !isChromeLess && "shadow-sm",
 					isMediaCropOpen && "overflow-visible!",
+					!isDragging && isMediaCropOpen && "media-crop-interaction",
 					item.type === "map" && "map-item-interaction",
 					cardThemeStyle && "link-card-themed",
 					isChromeLess
@@ -237,7 +238,7 @@ function GridItemShellContent({
 					!isDragging &&
 						item.type === "map" &&
 						mapInteraction?.isLocationEditing &&
-						"scale-[1.02] ring-3 ring-black",
+						"map-item-location-editing scale-[1.02] ring-3 ring-black",
 				)}
 				style={cardStyle}
 			>

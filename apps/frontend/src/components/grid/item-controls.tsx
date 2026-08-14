@@ -1,14 +1,4 @@
-import {
-	ChevronLeftIcon,
-	Gps01Icon,
-	Link02Icon,
-	Maximize01Icon,
-	MinusSignIcon,
-	PlusSignIcon,
-	Unlink02Icon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { CropIcon, TrashIcon } from "lucide-react";
+import { ChevronLeftIcon, CropIcon, LinkIcon, LocateFixedIcon, MinusIcon, MoveIcon, PlusIcon, TrashIcon, UnlinkIcon } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Fragment, useEffect, useState } from "react";
 import {
@@ -91,11 +81,7 @@ function MapItemExtraControls() {
 								"bg-brand! text-white! hover:bg-brand! hover:text-white!",
 						)}
 					>
-						<HugeiconsIcon
-							icon={Maximize01Icon}
-							strokeWidth={2.25}
-							className="size-4"
-						/>
+						<MoveIcon />
 					</Button>
 				}
 			/>
@@ -114,11 +100,7 @@ function MapItemExtraControls() {
 					onClick={zoomOut}
 					className="cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white"
 				>
-					<HugeiconsIcon
-						icon={MinusSignIcon}
-						strokeWidth={2.25}
-						className="size-4"
-					/>
+					<MinusIcon className="size-5" />
 				</Button>
 				<Button
 					type="button"
@@ -129,11 +111,7 @@ function MapItemExtraControls() {
 					onClick={zoomIn}
 					className="cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white"
 				>
-					<HugeiconsIcon
-						icon={PlusSignIcon}
-						strokeWidth={2.25}
-						className="size-4"
-					/>
+					<PlusIcon className="size-5" />
 				</Button>
 				<Button
 					type="button"
@@ -144,11 +122,7 @@ function MapItemExtraControls() {
 					onClick={locate}
 					className="cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white"
 				>
-					<HugeiconsIcon
-						icon={Gps01Icon}
-						strokeWidth={2.25}
-						className="size-4"
-					/>
+					<LocateFixedIcon className="size-5" />
 				</Button>
 			</PopoverContent>
 		</Popover>
@@ -233,11 +207,7 @@ export function ItemControls({
 							className="cursor-pointer! rounded-md text-white hover:bg-muted-foreground/40 hover:text-background/90"
 							onClick={closeLinkView}
 						>
-							<HugeiconsIcon
-								icon={ChevronLeftIcon}
-								strokeWidth={2}
-								className="size-5"
-							/>
+							<ChevronLeftIcon className="size-5" />
 						</Button>
 						<InputGroup className="h-8 min-w-0 flex-1 rounded-full bg-transparent text-white has-[[data-slot=input-group-control]:focus-visible]:ring-0">
 							<InputGroupInput
@@ -360,12 +330,8 @@ export function ItemControls({
 											preset={control.preset}
 											className={control.isActive ? "text-black" : "text-white"}
 										/>
-									) : control.command === "manage-link" ? (
-										<HugeiconsIcon
-											icon={linkItem?.data.link ? Link02Icon : Unlink02Icon}
-											strokeWidth={2.5}
-											className="size-4 text-white"
-										/>
+                  ) : control.command === "manage-link" ? (
+                    linkItem?.data.link ? <LinkIcon className="stroke-3"/> : <UnlinkIcon className="stroke-3"/>
 									) : control.command === "crop-media" ? (
 										<CropIcon className="size-4 stroke-3 text-white" />
 									) : (
