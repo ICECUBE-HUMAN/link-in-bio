@@ -632,22 +632,21 @@ function HandlePageContent({
 
 				{!isSignedIn && !loaderData.isDemo ? (
 					<div className="flex w-full max-w-md flex-col items-center gap-3 px-6 pb-[calc(2rem+env(safe-area-inset-bottom))] min-[90rem]:hidden">
-						<Button
+            <Button
 							render={
 								<Link
 									to="/log-in"
 									search={{ redirect: `/${page.handle}` }}
-									className="inline-flex items-center justify-center gap-1.5 border-0 px-4 py-4.5 smooth-shadow-ring shadow-neutral-500 smooth-ring-brand"
 								>
-									Create your page
+								  Log in
 								</Link>
 							}
-							variant="brand"
+							variant="ghost"
 							nativeButton={false}
 							size="sm"
-							className="rounded-md"
+							className="rounded-md text-muted-foreground/80"
 						/>
-						<Button
+						{/*<Button
 							render={
 								<Link to="/explore">
 									<StackPerspective weight="Filled" />
@@ -658,7 +657,7 @@ function HandlePageContent({
 							size="icon-sm"
 							aria-label="Explore"
 							className="rounded-md text-muted-foreground/80"
-						/>
+						/>*/}
 					</div>
 				) : null}
 			</motion.div>
@@ -693,15 +692,14 @@ function HandlePageContent({
 									<Link
 										to="/log-in"
 										search={{ redirect: `/${page.handle}` }}
-										className="inline-flex items-center gap-1.5 px-4 py-4.5 smooth-shadow-ring shadow-neutral-500 smooth-ring-brand border-0 mr-2 rounded-sm"
 									>
-										Create your page
+									  Log in
 									</Link>
 								}
-								variant="brand"
+								variant="ghost"
 								nativeButton={false}
 								size="sm"
-								className="rounded-md"
+								className="rounded-md text-muted-foreground/80"
 							/>
 						) : null}
 						{/*<Tooltip>
@@ -726,21 +724,19 @@ function HandlePageContent({
 								render={
 									<Button
 										variant="ghost"
-										size="icon-sm"
+										// size="icon-sm"
 										aria-label="Feedback"
-										className="text-muted-foreground rounded-md"
+										className="text-muted-foreground/80 rounded-md"
 										render={
 											<a
 												href="https://discord.gg/U4NNF9hMms"
 												target="_blank"
 												rel="noreferrer"
-											/>
+											>Community</a>
 										}
 									/>
 								}
-							>
-								<BotMessageSquareIcon />
-							</TooltipTrigger>
+							/>
 							<TooltipContent>Send us feedback</TooltipContent>
 						</Tooltip>
 						<Separator
