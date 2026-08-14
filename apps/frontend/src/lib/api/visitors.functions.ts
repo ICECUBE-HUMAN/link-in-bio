@@ -6,26 +6,26 @@ import { env as viteEnv } from "@/env";
 import { getPageByHandle } from "./pages.functions";
 
 const SIMPLE_ANALYTICS_API_URL = "https://simpleanalytics.com";
-const VISITORS_CACHE_TTL_MS = 900_000;
+const VIEWS_CACHE_TTL_MS = 900_000;
 
-const publicVisitorsInputSchema = v.object({
+const publicViewsInputSchema = v.object({
 	pageId: v.pipe(v.string(), v.uuid()),
 	handle: v.pipe(v.string(), v.minLength(1)),
 	timezone: v.string(),
 });
 
-const publicVisitorsResponseSchema = v.object({
-	todayVisitors: v.nullable(v.number()),
-	yesterdayVisitors: v.nullable(v.number()),
+const publicViewsResponseSchema = v.object({
+	todayViews: v.nullable(v.number()),
+	yesterdayViews: v.nullable(v.number()),
 });
 
 const simpleAnalyticsStatsResponseSchema = v.object({
-	visitors: v.number(),
+	pageviews: v.number(),
 });
 
-type PublicVisitors = v.InferOutput<typeof publicVisitorsResponseSchema>;
+type PublicViews = v.InferOutput<typeof publicViewsResponseSchema>;
 
-type CachedVisitors = {
+type CachedPageviews = {
 	value: number | null;
 	expiresAt: number;
 };
@@ -36,10 +36,10 @@ type LocalDayRange = {
 	yesterdayDate: string;
 };
 
-const visitorsCache = new Map<string, CachedVisitors>();
-const emptyVisitors: PublicVisitors = {
-	todayVisitors: null,
-	yesterdayVisitors: null,
+const viewsCache = new Map<string, CachedPageviews>();
+const emptyViews: PublicViews = {
+	todayViews: null,
+	yesterdayViews: null,
 };
 
 function getDateTimeParts(date: Date, timezone: string) {
@@ -103,7 +103,7 @@ function getCacheKey(
 	return `${pageId}:${timezone}:${localDate}:${queryDate}`;
 }
 
-async function fetchSimpleAnalyticsVisitors(
+async function fetchSimpleAnalyticsPageviews(
 	hostname: string,
 	apiKey: string | undefined,
 	pageId: string,
@@ -115,7 +115,7 @@ async function fetchSimpleAnalyticsVisitors(
 			`${SIMPLE_ANALYTICS_API_URL}/${encodeURIComponent(hostname)}.json`,
 		);
 		url.searchParams.set("version", "6");
-		url.searchParams.set("fields", "visitors");
+		url.searchParams.set("fields", "pageviews");
 		url.searchParams.set("start", localDate);
 		url.searchParams.set("end", localDate);
 		url.searchParams.set("timezone", timezone);
@@ -128,13 +128,13 @@ async function fetchSimpleAnalyticsVisitors(
 		if (!response.ok) return null;
 
 		return v.parse(simpleAnalyticsStatsResponseSchema, await response.json())
-			.visitors;
+			.pageviews;
 	} catch {
 		return null;
 	}
 }
 
-async function getCachedVisitors(
+async function getCachedPageviews(
 	hostname: string,
 	apiKey: string | undefined,
 	pageId: string,
@@ -144,30 +144,30 @@ async function getCachedVisitors(
 ) {
 	const key = getCacheKey(pageId, timezone, localDate, queryDate);
 	const now = Date.now();
-	const cached = visitorsCache.get(key);
+	const cached = viewsCache.get(key);
 
 	if (cached) {
 		if (cached.expiresAt > now) return cached.value;
-		visitorsCache.delete(key);
+		viewsCache.delete(key);
 	}
 
-	const value = await fetchSimpleAnalyticsVisitors(
+	const value = await fetchSimpleAnalyticsPageviews(
 		hostname,
 		apiKey,
 		pageId,
 		timezone,
 		queryDate,
 	);
-	visitorsCache.set(key, {
+	viewsCache.set(key, {
 		value,
-		expiresAt: now + VISITORS_CACHE_TTL_MS,
+		expiresAt: now + VIEWS_CACHE_TTL_MS,
 	});
 
 	return value;
 }
 
-export const getPublicVisitors = createServerFn({ method: "GET" })
-	.validator((data) => v.parse(publicVisitorsInputSchema, data))
+export const getPublicViews = createServerFn({ method: "GET" })
+	.validator((data) => v.parse(publicViewsInputSchema, data))
 	.handler(async ({ data }) => {
 		try {
 			const pageByHandle = await getPageByHandle({
@@ -177,17 +177,17 @@ export const getPublicVisitors = createServerFn({ method: "GET" })
 				pageByHandle?.page.id !== data.pageId ||
 				pageByHandle.visitorsEnabled !== true
 			)
-				return emptyVisitors;
+				return emptyViews;
 		} catch {
-			return emptyVisitors;
+			return emptyViews;
 		}
 
 		const apiKey = cloudflareEnv.SIMPLE_ANALYTICS_API_KEY;
 		const hostname = viteEnv.VITE_APP_DOMAIN;
 
 		const range = getLocalDayRange(data.timezone, new Date());
-		const [todayVisitors, yesterdayVisitors] = await Promise.all([
-			getCachedVisitors(
+		const [todayViews, yesterdayViews] = await Promise.all([
+			getCachedPageviews(
 				hostname,
 				apiKey,
 				data.pageId,
@@ -195,7 +195,7 @@ export const getPublicVisitors = createServerFn({ method: "GET" })
 				range.localDate,
 				range.localDate,
 			),
-			getCachedVisitors(
+			getCachedPageviews(
 				hostname,
 				apiKey,
 				data.pageId,
@@ -205,27 +205,27 @@ export const getPublicVisitors = createServerFn({ method: "GET" })
 			),
 		]);
 
-		return v.parse(publicVisitorsResponseSchema, {
-			todayVisitors,
-			yesterdayVisitors,
+		return v.parse(publicViewsResponseSchema, {
+			todayViews,
+			yesterdayViews,
 		});
 	});
 
-export function getPublicVisitorsQueryOptions(
+export function getPublicViewsQueryOptions(
 	pageId: string,
 	handle: string,
 	timezone: string,
 ) {
 	return queryOptions({
-		queryKey: ["public-visitors", pageId, handle, timezone] as const,
+		queryKey: ["public-views", pageId, handle, timezone] as const,
 		queryFn: () =>
-			getPublicVisitors({
+			getPublicViews({
 				data: {
 					pageId,
 					handle,
 					timezone,
 				},
 			}),
-		staleTime: VISITORS_CACHE_TTL_MS,
+		staleTime: VIEWS_CACHE_TTL_MS,
 	});
 }

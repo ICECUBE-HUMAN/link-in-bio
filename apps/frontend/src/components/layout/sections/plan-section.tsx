@@ -23,7 +23,7 @@ const FREE_FEATURES: PlanFeature[] = [
 const PRO_FEATURES: PlanFeature[] = [
 	{ label: `${PRO_PAGE_LIMIT} pages` },
 	{ label: "All core widgets" },
-	{ label: "Today's and yesterday's visitor counts" },
+	{ label: "Today's and yesterday's view counts" },
 	{ label: "All future widgets" },
 ];
 

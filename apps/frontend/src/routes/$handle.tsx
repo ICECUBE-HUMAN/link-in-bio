@@ -38,7 +38,7 @@ import {
 } from "@/lib/api/pages.functions";
 import { getProfileImageUrl } from "@/lib/api/profile-image-api";
 import { getSessionQueryOptions } from "@/lib/api/session.functions";
-import { getPublicVisitorsQueryOptions } from "@/lib/api/visitors.functions";
+import { getPublicViewsQueryOptions } from "@/lib/api/visitors.functions";
 import { getDemoPage } from "@/lib/demo/demo-page.functions";
 import { useGridEditorStore } from "@/lib/grid/editor-store";
 import type { Breakpoint } from "@/lib/grid/types";
@@ -300,21 +300,19 @@ function HandlePageContent({
 		setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
 	}, []);
 
-	const canShowVisitors = !loaderData.isDemo && loaderData.visitorsEnabled;
-	const publicVisitorsQuery = useQuery({
-		...getPublicVisitorsQueryOptions(page.id, page.handle, timezone ?? "UTC"),
-		enabled: timezone !== null && canShowVisitors,
+	const canShowViews = !loaderData.isDemo && loaderData.visitorsEnabled;
+	const publicViewsQuery = useQuery({
+		...getPublicViewsQueryOptions(page.id, page.handle, timezone ?? "UTC"),
+		enabled: timezone !== null && canShowViews,
 	});
-	const showPublicVisitors =
-		canShowVisitors &&
-		!publicVisitorsQuery.isError &&
-		publicVisitorsQuery.isSuccess &&
-		publicVisitorsQuery.data.todayVisitors !== null &&
-		publicVisitorsQuery.data.yesterdayVisitors !== null;
-	const showPublicVisitorsSkeleton =
-		canShowVisitors &&
-		!publicVisitorsQuery.isError &&
-		!publicVisitorsQuery.isSuccess;
+	const showPublicViews =
+		canShowViews &&
+		!publicViewsQuery.isError &&
+		publicViewsQuery.isSuccess &&
+		publicViewsQuery.data.todayViews !== null &&
+		publicViewsQuery.data.yesterdayViews !== null;
+	const showPublicViewsSkeleton =
+		canShowViews && !publicViewsQuery.isError && !publicViewsQuery.isSuccess;
 
 	const { data: sessionResult } = useQuery({
 		...getSessionQueryOptions(),
@@ -752,7 +750,7 @@ function HandlePageContent({
 								<MyPageButton />
 							)
 						) : null}
-						{showPublicVisitors ? (
+						{showPublicViews ? (
 							<Tooltip>
 								<TooltipTrigger
 									render={
@@ -760,20 +758,20 @@ function HandlePageContent({
 											variant="ghost"
 											size="sm"
 											className="rounded-md text-sm text-muted-foreground/80"
-											aria-label={`${publicVisitorsQuery.data.todayVisitors} visitors today`}
+											aria-label={`${publicViewsQuery.data.todayViews} views today`}
 										/>
 									}
 								>
 									<SpinningCounter
-										value={publicVisitorsQuery.data.todayVisitors ?? 0}
+										value={publicViewsQuery.data.todayViews ?? 0}
 									/>
-									<span className="ml-1">visitors today</span>
+									<span className="ml-1">views today</span>
 								</TooltipTrigger>
 								<TooltipContent>
-									{`${publicVisitorsQuery.data?.yesterdayVisitors ?? "—"} visitors yesterday`}
+									{`${publicViewsQuery.data?.yesterdayViews ?? "—"} views yesterday`}
 								</TooltipContent>
 							</Tooltip>
-						) : showPublicVisitorsSkeleton ? (
+						) : showPublicViewsSkeleton ? (
 							<Skeleton className="h-8 w-24 rounded-md" />
 						) : null}
 					</div>

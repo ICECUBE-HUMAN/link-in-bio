@@ -1,12 +1,12 @@
-# 핸들 페이지 visitors Simple Analytics 구현 계획
+# 핸들 페이지 views Simple Analytics 구현 계획
 
 ## 구현 범위
 
 - Simple Analytics CDN 스크립트로 교체
 - 라우트 실제 경로 수동 페이지뷰 수집
 - `page.id` 안정 경로 추가 수집
-- Simple Analytics Stats API 기반 오늘·어제 visitors 조회
-- 페이지 소유자의 Pro 권한에 따른 visitors 기능 활성화
+- Simple Analytics Stats API 기반 오늘·어제 pageviews 조회
+- 페이지 소유자의 Pro 권한에 따른 views 기능 활성화
 - 15분 서버 캐시와 실패 시 `null` 처리
 
 ## 파일별 작업
@@ -18,13 +18,14 @@
    - `sa_pageview` 타입과 로드 지연 재시도를 제공한다.
    - `page.id`를 안정 경로로 바꿔 추가 수집한다.
 3. `apps/frontend/src/lib/api/visitors.functions.ts`
-   - Simple Analytics Stats API를 호출한다.
+	- Simple Analytics Stats API를 호출한다.
+	- `pageviews` 값을 조회한다.
    - `start`, `end`, `timezone`, `pages`를 사용해 오늘·어제를 조회한다.
    - 응답을 Valibot으로 검증하고 15분 캐시한다.
    - 페이지 핸들·ID와 `visitorsEnabled`를 다시 확인해 Free 페이지의 직접 조회를 막는다.
 4. `apps/frontend/src/routes/$handle.tsx`
-   - 기존 visitors 화면과 핸들 페이지 안정 경로 수집을 Simple Analytics 모듈로 연결한다.
-   - `visitorsEnabled`가 true인 Pro 페이지에서만 조회와 스켈레톤을 표시한다.
+	- 기존 views 화면과 핸들 페이지 안정 경로 수집을 Simple Analytics 모듈로 연결한다.
+	- `visitorsEnabled`가 true인 Pro 페이지에서만 조회와 스켈레톤을 표시한다.
 5. `apps/backend/src/services/public-page.service.ts`와 `packages/api/src/index.ts`
    - 페이지 소유자의 `getPlanAccess().hasAccess`를 `visitorsEnabled`로 공개 응답에 전달한다.
 6. `apps/frontend/src/cloudflare-workers.d.ts`
