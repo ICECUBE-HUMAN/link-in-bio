@@ -17,7 +17,7 @@
 	--grid-drag-follow-ease: cubic-bezier(0.22, 1, 0.36, 1);
 	--grid-resize-duration: 320ms;
 	--grid-resize-ease: var(--grid-spring-ease);
-	--grid-drag-lift-duration: 160ms;
+	--grid-drag-lift-duration: 480ms;
 	--grid-drag-lift-ease: cubic-bezier(0.23, 1, 0.32, 1);
 	--grid-drag-rotate-x: 0deg;
 	--grid-drag-rotate-z: 0deg;
@@ -198,10 +198,20 @@
 }
 
 .react-grid-item.react-draggable-dragging .grid-item-card {
+	@apply smooth-shadow-ring-xl shadow-black smooth-ring-neutral-300/30 transition-all;
+	transition-duration: var(--grid-drag-lift-duration);
+	transition-timing-function: var(--grid-drag-lift-ease);
 	transform: perspective(800px) translateY(-8px) scale(1.035)
 		rotateX(calc(1deg + var(--grid-drag-rotate-x)))
 		rotateZ(calc(0.35deg + var(--grid-drag-rotate-z)));
 	will-change: transform;
+}
+
+.react-grid-item.react-draggable-dragging
+	:is([data-grid-item-delete-control="true"], [data-grid-item-controls="true"]) {
+	opacity: 0 !important;
+	pointer-events: none !important;
+	transition: none !important;
 }
 
 /* Drop target: an inset shadow reads as a slot waiting for the dragged block. */

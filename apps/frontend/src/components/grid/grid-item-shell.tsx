@@ -44,6 +44,7 @@ type GridItemShellProps = {
 	isExiting?: boolean;
 	enteringIndex?: number;
 	isAnyItemDragging?: boolean;
+	isDragging?: boolean;
 	capabilities: ItemCapabilities;
 	onCommand?: GridItemCommandHandler;
 	children?: ReactNode;
@@ -96,6 +97,7 @@ function GridItemShellContent({
 	isExiting = false,
 	enteringIndex = 0,
 	isAnyItemDragging = false,
+	isDragging = false,
 	capabilities,
 	onCommand,
 	children,
@@ -221,7 +223,9 @@ function GridItemShellContent({
 				className={cn(
 					"grid-item-card relative size-full overflow-hidden rounded-2xl",
 					"bg-background",
-					!isChromeLess && "shadow-sm",
+					isDragging
+						? "smooth-shadow-ring-xl shadow-neutral-600 smooth-ring-neutral-300/30 transition-all"
+						: !isChromeLess && "shadow-sm",
 					isMediaCropOpen && "overflow-visible!",
 					item.type === "map" && "map-item-interaction",
 					cardThemeStyle && "link-card-themed",
@@ -229,8 +233,9 @@ function GridItemShellContent({
 						? "border-0!"
 						: item.type === "media"
 							? "ring-0! border-0!"
-							: "ring-1 ring-black/5",
-					item.type === "map" &&
+							: !isDragging && "ring-1 ring-black/5",
+					!isDragging &&
+						item.type === "map" &&
 						mapInteraction?.isLocationEditing &&
 						"scale-[1.02] ring-3 ring-black",
 				)}
@@ -245,6 +250,7 @@ function GridItemShellContent({
 			) : null}
 			{hasControls ? (
 				<div
+					data-grid-item-controls="true"
 					data-grid-item-drag-cancel="true"
 					className={cn(
 						"absolute top-full left-1/2 z-99999 mt-2 -translate-x-1/2 -translate-y-1/2",

@@ -435,6 +435,7 @@ export function GridSection({
 								isExiting={isExiting}
 								enteringIndex={Math.max(initialEnteringIndex, 0)}
 								isAnyItemDragging={isAnyItemDragging}
+								isDragging={draggingItemId === item.id}
 								capabilities={capabilities}
 								onCommand={handleGridCommand}
 							>

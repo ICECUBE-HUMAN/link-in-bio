@@ -44,6 +44,7 @@ export function ItemDeleteButton({ itemId, onCommand }: ItemDeleteButtonProps) {
 			size="icon-sm"
 			aria-label="Delete"
 			title="Delete"
+			data-grid-item-delete-control="true"
 			onClick={() => onCommand({ type: "delete-item", itemId })}
 			className="cursor-pointer! absolute -top-4 -right-4 z-20 inline-flex size-10 items-center justify-center rounded-full border border-border/60 bg-background opacity-0 shadow-xs transition-[opacity,transform,scale,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:scale-100 focus-visible:opacity-100 group-hover/grid-item:scale-100 group-hover/grid-item:opacity-100 motion-reduce:transition-none"
 		>
