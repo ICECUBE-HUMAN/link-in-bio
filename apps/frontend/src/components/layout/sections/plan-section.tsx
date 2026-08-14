@@ -5,7 +5,7 @@ import {
 	PRO_PLANS,
 } from "@sinabro/plan";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Check, LoaderCircle } from "lucide-react";
+import { Check } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,20 +13,18 @@ import { authClient } from "@/lib/auth/auth-client";
 
 type PlanFeature = {
 	label: string;
-	status?: "in-progress";
 };
 
 const FREE_FEATURES: PlanFeature[] = [
 	{ label: `${FREE_PAGE_LIMIT} page` },
 	{ label: "All core widgets" },
-	{ label: "Today's page views", status: "in-progress" },
 ];
 
 const PRO_FEATURES: PlanFeature[] = [
 	{ label: `${PRO_PAGE_LIMIT} pages` },
 	{ label: "All core widgets" },
-	{ label: "Today's page views", status: "in-progress" },
-	{ label: "Custom domain", status: "in-progress" },
+	{ label: "Today's and yesterday's visitor counts" },
+	{ label: "All future widgets" },
 ];
 
 export default function PlanSection() {
@@ -192,25 +190,13 @@ function PlanCard({
 				</div>
 				<ul className="flex flex-col gap-3 text-sm font-medium">
 					{features.map((feature) => {
-						const FeatureIcon =
-							feature.status === "in-progress" ? LoaderCircle : Check;
-
 						return (
 							<li key={feature.label} className="flex items-center gap-2">
-								<FeatureIcon
-									className={`size-4 shrink-0 ${
-										feature.status === "in-progress"
-											? "text-muted-foreground"
-											: "text-brand"
-									}`}
+								<Check
+									className="size-4 shrink-0 text-brand"
 									aria-hidden="true"
 								/>
-								<span>
-									{feature.status === "in-progress" ? (
-										<span className="sr-only">In progress: </span>
-									) : null}
-									{feature.label}
-								</span>
+								<span>{feature.label}</span>
 							</li>
 						);
 					})}

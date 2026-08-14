@@ -23,12 +23,7 @@ const simpleAnalyticsStatsResponseSchema = v.object({
 	visitors: v.number(),
 });
 
-export type PublicVisitorsInput = v.InferOutput<
-	typeof publicVisitorsInputSchema
->;
-export type PublicVisitors = v.InferOutput<typeof publicVisitorsResponseSchema>;
-
-type VisitorsMetric = "today" | "yesterday";
+type PublicVisitors = v.InferOutput<typeof publicVisitorsResponseSchema>;
 
 type CachedVisitors = {
 	value: number | null;
@@ -42,6 +37,10 @@ type LocalDayRange = {
 };
 
 const visitorsCache = new Map<string, CachedVisitors>();
+const emptyVisitors: PublicVisitors = {
+	todayVisitors: null,
+	yesterdayVisitors: null,
+};
 
 function getDateTimeParts(date: Date, timezone: string) {
 	const formatter = new Intl.DateTimeFormat("en-US", {
@@ -99,9 +98,9 @@ function getCacheKey(
 	pageId: string,
 	timezone: string,
 	localDate: string,
-	metric: VisitorsMetric,
+	queryDate: string,
 ) {
-	return `${pageId}:${timezone}:${localDate}:${metric}`;
+	return `${pageId}:${timezone}:${localDate}:${queryDate}`;
 }
 
 async function fetchSimpleAnalyticsVisitors(
@@ -141,10 +140,9 @@ async function getCachedVisitors(
 	pageId: string,
 	timezone: string,
 	localDate: string,
-	metric: VisitorsMetric,
 	queryDate: string,
 ) {
-	const key = getCacheKey(pageId, timezone, localDate, metric);
+	const key = getCacheKey(pageId, timezone, localDate, queryDate);
 	const now = Date.now();
 	const cached = visitorsCache.get(key);
 
@@ -169,29 +167,20 @@ async function getCachedVisitors(
 }
 
 export const getPublicVisitors = createServerFn({ method: "GET" })
-	.validator((data: PublicVisitorsInput) =>
-		v.parse(publicVisitorsInputSchema, data),
-	)
-	.handler(async ({ data }): Promise<PublicVisitors> => {
-		const emptyResult = {
-			todayVisitors: null,
-			yesterdayVisitors: null,
-		};
-		let pageByHandle: Awaited<ReturnType<typeof getPageByHandle>>;
+	.validator((data) => v.parse(publicVisitorsInputSchema, data))
+	.handler(async ({ data }) => {
 		try {
-			pageByHandle = await getPageByHandle({
+			const pageByHandle = await getPageByHandle({
 				data: { handle: data.handle },
 			});
+			if (
+				pageByHandle?.page.id !== data.pageId ||
+				pageByHandle.visitorsEnabled !== true
+			)
+				return emptyVisitors;
 		} catch {
-			return emptyResult;
+			return emptyVisitors;
 		}
-
-		if (
-			!pageByHandle ||
-			pageByHandle.page.id !== data.pageId ||
-			pageByHandle.visitorsEnabled !== true
-		)
-			return emptyResult;
 
 		const apiKey = cloudflareEnv.SIMPLE_ANALYTICS_API_KEY;
 		const hostname = viteEnv.VITE_APP_DOMAIN;
@@ -204,7 +193,6 @@ export const getPublicVisitors = createServerFn({ method: "GET" })
 				data.pageId,
 				range.timezone,
 				range.localDate,
-				"today",
 				range.localDate,
 			),
 			getCachedVisitors(
@@ -213,7 +201,6 @@ export const getPublicVisitors = createServerFn({ method: "GET" })
 				data.pageId,
 				range.timezone,
 				range.localDate,
-				"yesterday",
 				range.yesterdayDate,
 			),
 		]);

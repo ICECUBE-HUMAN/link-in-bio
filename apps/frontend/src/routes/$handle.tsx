@@ -300,19 +300,19 @@ function HandlePageContent({
 		setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
 	}, []);
 
+	const canShowVisitors = !loaderData.isDemo && loaderData.visitorsEnabled;
 	const publicVisitorsQuery = useQuery({
 		...getPublicVisitorsQueryOptions(page.id, page.handle, timezone ?? "UTC"),
-		enabled:
-			timezone !== null && !loaderData.isDemo && loaderData.visitorsEnabled,
+		enabled: timezone !== null && canShowVisitors,
 	});
 	const showPublicVisitors =
+		canShowVisitors &&
 		!publicVisitorsQuery.isError &&
 		publicVisitorsQuery.isSuccess &&
 		publicVisitorsQuery.data.todayVisitors !== null &&
 		publicVisitorsQuery.data.yesterdayVisitors !== null;
 	const showPublicVisitorsSkeleton =
-		!loaderData.isDemo &&
-		loaderData.visitorsEnabled &&
+		canShowVisitors &&
 		!publicVisitorsQuery.isError &&
 		!publicVisitorsQuery.isSuccess;
 
