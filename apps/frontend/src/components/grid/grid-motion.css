@@ -11,7 +11,7 @@
 	--grid-item-initial-ease: cubic-bezier(0.23, 1, 0.32, 1);
 	--grid-item-initial-distance: 8px;
 	--grid-item-initial-scale: 0.96;
-	--grid-position-duration: 360ms;
+	--grid-position-duration: 520ms;
 	--grid-position-ease: var(--grid-spring-ease);
 	--grid-drag-follow-duration: 100ms;
 	--grid-drag-follow-ease: cubic-bezier(0.22, 1, 0.36, 1);
