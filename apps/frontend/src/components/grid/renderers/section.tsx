@@ -16,7 +16,7 @@ export function SectionItemRenderer({
 
 	useLayoutEffect(() => {
 		if (!isEditing || !autoFocus) return;
-		inputRef.current?.focus();
+		inputRef.current?.focus({ preventScroll: true });
 		onAutoFocus?.();
 	}, [autoFocus, isEditing, onAutoFocus]);
 

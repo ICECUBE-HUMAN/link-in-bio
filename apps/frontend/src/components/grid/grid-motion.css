@@ -35,6 +35,10 @@
 		height var(--grid-resize-duration) var(--grid-resize-ease);
 }
 
+.sinabro-grid-layout [data-grid-item-shell] {
+	scroll-margin-block: 128px;
+}
+
 .sinabro-grid-layout .react-grid-item.react-draggable-dragging {
 	cursor: grabbing;
 	opacity: 1 !important;

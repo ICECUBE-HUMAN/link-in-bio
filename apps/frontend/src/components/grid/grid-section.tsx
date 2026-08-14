@@ -69,26 +69,6 @@ function getDesktopLayoutServerSnapshot() {
 	return false;
 }
 
-function getVerticalScrollContainer(element: HTMLElement) {
-	let ancestor = element.parentElement;
-	while (ancestor) {
-		const { overflowY } = window.getComputedStyle(ancestor);
-		if (
-			(overflowY === "auto" ||
-				overflowY === "scroll" ||
-				overflowY === "overlay") &&
-			ancestor.scrollHeight > ancestor.clientHeight
-		) {
-			return ancestor;
-		}
-		ancestor = ancestor.parentElement;
-	}
-
-	return document.scrollingElement instanceof HTMLElement
-		? document.scrollingElement
-		: null;
-}
-
 export function GridSection({
 	items,
 	breakpoint,
@@ -195,33 +175,14 @@ export function GridSection({
 						`[data-grid-item-id="${CSS.escape(itemId)}"]`,
 					);
 					if (itemShell) {
-						const gridSectionShell = itemShell.closest<HTMLElement>(
-							".grid-section-shell",
-						);
-						const paddingBottom = gridSectionShell
-							? Number.parseFloat(
-									window.getComputedStyle(gridSectionShell).paddingBottom,
-								)
-							: 0;
-						const scrollContainer = getVerticalScrollContainer(itemShell);
-						if (scrollContainer) {
-							const itemRect = itemShell.getBoundingClientRect();
-							const containerRect = scrollContainer.getBoundingClientRect();
-							const scrollDistance =
-								itemRect.bottom - containerRect.bottom + paddingBottom;
-							if (scrollDistance > 0) {
-								scrollContainer.scrollBy({
-									top: scrollDistance,
-									behavior: "smooth",
-								});
-							}
-						} else {
-							itemShell.scrollIntoView({
-								behavior: "smooth",
-								block: "nearest",
-								inline: "nearest",
-							});
-						}
+						itemShell.scrollIntoView({
+							behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+								.matches
+								? "auto"
+								: "smooth",
+							block: "nearest",
+							inline: "nearest",
+						});
 					}
 					newItemScrollFramesRef.current.delete(itemId);
 				});

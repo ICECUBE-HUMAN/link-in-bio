@@ -100,7 +100,7 @@ export function TextItemRenderer({
 
 	useLayoutEffect(() => {
 		if (!isEditing || !autoFocus) return;
-		textareaRef.current?.focus();
+		textareaRef.current?.focus({ preventScroll: true });
 		onAutoFocus?.();
 	}, [autoFocus, isEditing, onAutoFocus]);
 
