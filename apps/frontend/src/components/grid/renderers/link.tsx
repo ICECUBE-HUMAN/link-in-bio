@@ -180,7 +180,7 @@ function GithubContributionGraph({
 						<span
 							key={key}
 							aria-hidden="true"
-							className="size-full min-w-0 rounded-[2px]"
+							className="size-full min-w-0 rounded-xs"
 							style={{ backgroundColor: day?.color ?? "transparent" }}
 						/>
 					))}

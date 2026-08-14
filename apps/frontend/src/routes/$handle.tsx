@@ -188,10 +188,13 @@ function HandlePage() {
 	useEffect(() => {
 		setPage(loaderData.page);
 	}, [loaderData.page]);
+	const displayedPage =
+		page.handle === loaderData.page.handle ? page : loaderData.page;
 
 	return (
 		<HandlePageContent
-			loaderData={{ ...loaderData, page }}
+			key={displayedPage.handle}
+			loaderData={{ ...loaderData, page: displayedPage }}
 			onPageChange={(nextPage) => {
 				setPage(nextPage);
 				if (!loaderData.isDemo) {
@@ -514,7 +517,7 @@ function HandlePageContent({
 				<section
 					id="page-grid"
 					data-breakpoint-transition={breakpointTransition}
-					className={`t-breakpoint-crossfade grid-content-scroll-shell min-h-[calc(100dvh-3rem)] w-full overflow-visible p-0 pt-0 sm:max-w-[28rem] no-scrollbar min-[90rem]:px-0 min-[90rem]:pb-24 ${layoutClasses.content}`}
+					className={`t-breakpoint-crossfade grid-content-scroll-shell min-h-[calc(100dvh-3rem)] w-full overflow-visible p-0 pt-0 sm:max-w-md no-scrollbar min-[90rem]:px-0 min-[90rem]:pb-24 ${layoutClasses.content}`}
 				>
 					<div className="flex flex-col gap-4">
 						<GridSection
