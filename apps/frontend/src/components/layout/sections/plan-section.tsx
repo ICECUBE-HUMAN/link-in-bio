@@ -19,14 +19,12 @@ type PlanFeature = {
 const FREE_FEATURES: PlanFeature[] = [
 	{ label: `${FREE_PAGE_LIMIT} page` },
 	{ label: "All core widgets" },
-	{ label: "Wide & compact layouts" },
 	{ label: "Today's page views", status: "in-progress" },
 ];
 
 const PRO_FEATURES: PlanFeature[] = [
 	{ label: `${PRO_PAGE_LIMIT} pages` },
 	{ label: "All core widgets" },
-	{ label: "Wide & compact layouts" },
 	{ label: "Today's page views", status: "in-progress" },
 	{ label: "Custom domain", status: "in-progress" },
 ];
