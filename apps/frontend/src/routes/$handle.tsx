@@ -700,7 +700,7 @@ function HandlePageContent({
 									render={
 										<Button
 											variant="ghost"
-											// size="icon-sm"
+											size="sm"
 											aria-label="Feedback"
 											className="text-muted-foreground/80 rounded-md"
 											render={

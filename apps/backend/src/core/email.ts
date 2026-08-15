@@ -6,28 +6,39 @@ type EmailLink = {
 	url: string;
 };
 
-export async function sendMagicLinkEmail(
+type VerificationOTP = {
+	email: string;
+	otp: string;
+	type:
+		| "sign-in"
+		| "email-verification"
+		| "forget-password"
+		| "change-email";
+};
+
+export async function sendVerificationOTPEmail(
 	env: AppBindings,
-	{ email, url }: EmailLink,
+	{ email, otp, type }: VerificationOTP,
 ) {
 	const resend = createResendClient(
 		env,
-		"magic links",
+		"verification OTPs",
 	);
+	const title =
+		type === "sign-in"
+			? "Sign in to Sinabro"
+			: "Your Sinabro verification code";
 	const { error } =
 		await resend.emails.send({
 			from: env.RESEND_FROM_EMAIL,
 			to: email,
-			subject: "Sign in to Sinabro",
+			subject: title,
 			html: `
 			<div style="font-family: sans-serif; line-height: 1.5; max-width: 480px;">
-				<h1>Sign in to Sinabro</h1>
-				<p>Use the button below to sign in. This link expires in 5 minutes.</p>
-				<p>
-					<a href="${url}" style="display: inline-block; padding: 12px 18px; border-radius: 8px; background: #111827; color: #ffffff; text-decoration: none;">
-						Continue to Sinabro
-					</a>
-				</p>
+				<h1>${title}</h1>
+				<p>Your one-time code is:</p>
+				<p style="font-size: 32px; font-weight: 700; letter-spacing: 0.3em;">${otp}</p>
+				<p>This code expires in 5 minutes.</p>
 				<p>If you did not request this email, you can safely ignore it.</p>
 			</div>
 		`,

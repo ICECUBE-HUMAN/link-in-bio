@@ -143,8 +143,6 @@
 	--check-opacity-dur: 500ms;
 	--check-rotate-dur: 500ms;
 	--check-rotate-from: 80deg;
-	--check-bob-dur: 500ms;
-	--check-y-amount: 40px;
 	--check-blur-dur: 500ms;
 	--check-blur-from: 10px;
 	--check-path-dur: 500ms;
@@ -152,7 +150,6 @@
 	--check-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 	--check-ease-opacity: cubic-bezier(0.22, 1, 0.36, 1);
 	--check-ease-rotate: cubic-bezier(0.22, 1, 0.36, 1);
-	--check-ease-bob: cubic-bezier(0.34, 1.35, 0.64, 1);
 	--check-ease-path: cubic-bezier(0.22, 1, 0.36, 1);
 	--stagger-dur: 500ms;
 	--stagger-distance: 12px;

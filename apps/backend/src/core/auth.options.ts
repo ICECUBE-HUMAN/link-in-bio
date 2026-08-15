@@ -7,7 +7,7 @@
 import { creem } from "@creem_io/better-auth";
 import type { DatabaseClient } from "@db/index";
 import type { BetterAuthOptions } from "better-auth/minimal";
-import { magicLink } from "better-auth/plugins/magic-link";
+import { emailOTP } from "better-auth/plugins/email-otp";
 import type { AppBindings } from "types/type";
 import {
 	reconcileUserPageLifecycle,
@@ -17,7 +17,7 @@ import {
 import { syncCreemWebhookState } from "./creem-webhook";
 import {
 	sendDeleteAccountVerificationEmail,
-	sendMagicLinkEmail,
+	sendVerificationOTPEmail,
 } from "./email";
 
 type Options = {
@@ -154,17 +154,23 @@ export const betterAuthOptions = (
 			enabled: true,
 		},
 		plugins: [
-			magicLink({
+			emailOTP({
 				expiresIn: 5 * 60,
-				sendMagicLink: ({
+				storeOTP: "hashed",
+				sendVerificationOTP: ({
 					email,
-					url,
+					otp,
+					type,
 				}) => {
 					const task =
-						sendMagicLinkEmail(env, {
-							email,
-							url,
-						});
+						sendVerificationOTPEmail(
+							env,
+							{
+								email,
+								otp,
+								type,
+							},
+						);
 					if (backgroundTaskHandler) {
 						backgroundTaskHandler(task);
 						return;

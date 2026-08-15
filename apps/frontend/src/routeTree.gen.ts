@@ -12,15 +12,16 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as HandleRouteImport } from './routes/$handle'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
-import { Route as NewRouteImport } from './routes/new'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as entryLayoutRouteRouteImport } from './routes/(entry)/_layout/route'
 import { Route as ApiFaviconRouteImport } from './routes/api/favicon'
 import { Route as ApiProfileImageRouteImport } from './routes/api/profile-image'
 import { Route as ExploreIndexRouteImport } from './routes/explore/index'
-import { Route as LogInIndexRouteImport } from './routes/log-in/index'
 import { Route as PricingIndexRouteImport } from './routes/pricing/index'
 import { Route as UpdateIndexRouteImport } from './routes/update/index'
+import { Route as entryLayoutNewRouteImport } from './routes/(entry)/_layout/new'
 import { Route as ApiPagesHandleRouteImport } from './routes/api/pages/$handle'
+import { Route as entryLayoutLogInIndexRouteImport } from './routes/(entry)/_layout/log-in/index'
 import { Route as ApiPagesHandleImageUploadRouteImport } from './routes/api/pages/$handle/image-upload'
 import { Route as ApiPagesHandleImageUploadCompleteRouteImport } from './routes/api/pages/$handle/image-upload/complete'
 import { Route as ApiPagesHandleItemsUploadRouteImport } from './routes/api/pages/$handle/items/upload'
@@ -41,14 +42,13 @@ const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
   path: '/llms.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
-const NewRoute = NewRouteImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const entryLayoutRouteRoute = entryLayoutRouteRouteImport.update({
+  id: '/(entry)/_layout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiFaviconRoute = ApiFaviconRouteImport.update({
@@ -66,11 +66,6 @@ const ExploreIndexRoute = ExploreIndexRouteImport.update({
   path: '/explore/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LogInIndexRoute = LogInIndexRouteImport.update({
-  id: '/log-in/',
-  path: '/log-in/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PricingIndexRoute = PricingIndexRouteImport.update({
   id: '/pricing/',
   path: '/pricing/',
@@ -81,10 +76,20 @@ const UpdateIndexRoute = UpdateIndexRouteImport.update({
   path: '/update/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const entryLayoutNewRoute = entryLayoutNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => entryLayoutRouteRoute,
+} as any)
 const ApiPagesHandleRoute = ApiPagesHandleRouteImport.update({
   id: '/api/pages/$handle',
   path: '/api/pages/$handle',
   getParentRoute: () => rootRouteImport,
+} as any)
+const entryLayoutLogInIndexRoute = entryLayoutLogInIndexRouteImport.update({
+  id: '/log-in/',
+  path: '/log-in/',
+  getParentRoute: () => entryLayoutRouteRoute,
 } as any)
 const ApiPagesHandleImageUploadRoute =
   ApiPagesHandleImageUploadRouteImport.update({
@@ -115,16 +120,16 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$handle': typeof HandleRoute
   '/llms.txt': typeof LlmsDottxtRoute
-  '/new': typeof NewRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/favicon': typeof ApiFaviconRoute
   '/api/profile-image': typeof ApiProfileImageRoute
   '/explore/': typeof ExploreIndexRoute
-  '/log-in/': typeof LogInIndexRoute
   '/pricing/': typeof PricingIndexRoute
   '/update/': typeof UpdateIndexRoute
+  '/new': typeof entryLayoutNewRoute
   '/api/pages/$handle': typeof ApiPagesHandleRouteWithChildren
   '/api/pages/$handle/image-upload': typeof ApiPagesHandleImageUploadRouteWithChildren
+  '/log-in/': typeof entryLayoutLogInIndexRoute
   '/api/pages/$handle/image-upload/complete': typeof ApiPagesHandleImageUploadCompleteRoute
   '/api/pages/$handle/items/upload': typeof ApiPagesHandleItemsUploadRouteWithChildren
   '/api/pages/$handle/items/upload/complete': typeof ApiPagesHandleItemsUploadCompleteRoute
@@ -133,16 +138,16 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$handle': typeof HandleRoute
   '/llms.txt': typeof LlmsDottxtRoute
-  '/new': typeof NewRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/favicon': typeof ApiFaviconRoute
   '/api/profile-image': typeof ApiProfileImageRoute
   '/explore': typeof ExploreIndexRoute
-  '/log-in': typeof LogInIndexRoute
   '/pricing': typeof PricingIndexRoute
   '/update': typeof UpdateIndexRoute
+  '/new': typeof entryLayoutNewRoute
   '/api/pages/$handle': typeof ApiPagesHandleRouteWithChildren
   '/api/pages/$handle/image-upload': typeof ApiPagesHandleImageUploadRouteWithChildren
+  '/log-in': typeof entryLayoutLogInIndexRoute
   '/api/pages/$handle/image-upload/complete': typeof ApiPagesHandleImageUploadCompleteRoute
   '/api/pages/$handle/items/upload': typeof ApiPagesHandleItemsUploadRouteWithChildren
   '/api/pages/$handle/items/upload/complete': typeof ApiPagesHandleItemsUploadCompleteRoute
@@ -152,16 +157,17 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$handle': typeof HandleRoute
   '/llms.txt': typeof LlmsDottxtRoute
-  '/new': typeof NewRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/(entry)/_layout': typeof entryLayoutRouteRouteWithChildren
   '/api/favicon': typeof ApiFaviconRoute
   '/api/profile-image': typeof ApiProfileImageRoute
   '/explore/': typeof ExploreIndexRoute
-  '/log-in/': typeof LogInIndexRoute
   '/pricing/': typeof PricingIndexRoute
   '/update/': typeof UpdateIndexRoute
+  '/(entry)/_layout/new': typeof entryLayoutNewRoute
   '/api/pages/$handle': typeof ApiPagesHandleRouteWithChildren
   '/api/pages/$handle/image-upload': typeof ApiPagesHandleImageUploadRouteWithChildren
+  '/(entry)/_layout/log-in/': typeof entryLayoutLogInIndexRoute
   '/api/pages/$handle/image-upload/complete': typeof ApiPagesHandleImageUploadCompleteRoute
   '/api/pages/$handle/items/upload': typeof ApiPagesHandleItemsUploadRouteWithChildren
   '/api/pages/$handle/items/upload/complete': typeof ApiPagesHandleItemsUploadCompleteRoute
@@ -172,16 +178,16 @@ export interface FileRouteTypes {
     | '/'
     | '/$handle'
     | '/llms.txt'
-    | '/new'
     | '/sitemap.xml'
     | '/api/favicon'
     | '/api/profile-image'
     | '/explore/'
-    | '/log-in/'
     | '/pricing/'
     | '/update/'
+    | '/new'
     | '/api/pages/$handle'
     | '/api/pages/$handle/image-upload'
+    | '/log-in/'
     | '/api/pages/$handle/image-upload/complete'
     | '/api/pages/$handle/items/upload'
     | '/api/pages/$handle/items/upload/complete'
@@ -190,16 +196,16 @@ export interface FileRouteTypes {
     | '/'
     | '/$handle'
     | '/llms.txt'
-    | '/new'
     | '/sitemap.xml'
     | '/api/favicon'
     | '/api/profile-image'
     | '/explore'
-    | '/log-in'
     | '/pricing'
     | '/update'
+    | '/new'
     | '/api/pages/$handle'
     | '/api/pages/$handle/image-upload'
+    | '/log-in'
     | '/api/pages/$handle/image-upload/complete'
     | '/api/pages/$handle/items/upload'
     | '/api/pages/$handle/items/upload/complete'
@@ -208,16 +214,17 @@ export interface FileRouteTypes {
     | '/'
     | '/$handle'
     | '/llms.txt'
-    | '/new'
     | '/sitemap.xml'
+    | '/(entry)/_layout'
     | '/api/favicon'
     | '/api/profile-image'
     | '/explore/'
-    | '/log-in/'
     | '/pricing/'
     | '/update/'
+    | '/(entry)/_layout/new'
     | '/api/pages/$handle'
     | '/api/pages/$handle/image-upload'
+    | '/(entry)/_layout/log-in/'
     | '/api/pages/$handle/image-upload/complete'
     | '/api/pages/$handle/items/upload'
     | '/api/pages/$handle/items/upload/complete'
@@ -227,12 +234,11 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HandleRoute: typeof HandleRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
-  NewRoute: typeof NewRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  entryLayoutRouteRoute: typeof entryLayoutRouteRouteWithChildren
   ApiFaviconRoute: typeof ApiFaviconRoute
   ApiProfileImageRoute: typeof ApiProfileImageRoute
   ExploreIndexRoute: typeof ExploreIndexRoute
-  LogInIndexRoute: typeof LogInIndexRoute
   PricingIndexRoute: typeof PricingIndexRoute
   UpdateIndexRoute: typeof UpdateIndexRoute
   ApiPagesHandleRoute: typeof ApiPagesHandleRouteWithChildren
@@ -261,18 +267,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LlmsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/new': {
-      id: '/new'
-      path: '/new'
-      fullPath: '/new'
-      preLoaderRoute: typeof NewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(entry)/_layout': {
+      id: '/(entry)/_layout'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof entryLayoutRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/favicon': {
@@ -296,13 +302,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExploreIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/log-in/': {
-      id: '/log-in/'
-      path: '/log-in'
-      fullPath: '/log-in/'
-      preLoaderRoute: typeof LogInIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/pricing/': {
       id: '/pricing/'
       path: '/pricing'
@@ -317,12 +316,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UpdateIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(entry)/_layout/new': {
+      id: '/(entry)/_layout/new'
+      path: '/new'
+      fullPath: '/new'
+      preLoaderRoute: typeof entryLayoutNewRouteImport
+      parentRoute: typeof entryLayoutRouteRoute
+    }
     '/api/pages/$handle': {
       id: '/api/pages/$handle'
       path: '/api/pages/$handle'
       fullPath: '/api/pages/$handle'
       preLoaderRoute: typeof ApiPagesHandleRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/(entry)/_layout/log-in/': {
+      id: '/(entry)/_layout/log-in/'
+      path: '/log-in'
+      fullPath: '/log-in/'
+      preLoaderRoute: typeof entryLayoutLogInIndexRouteImport
+      parentRoute: typeof entryLayoutRouteRoute
     }
     '/api/pages/$handle/image-upload': {
       id: '/api/pages/$handle/image-upload'
@@ -354,6 +367,19 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface entryLayoutRouteRouteChildren {
+  entryLayoutNewRoute: typeof entryLayoutNewRoute
+  entryLayoutLogInIndexRoute: typeof entryLayoutLogInIndexRoute
+}
+
+const entryLayoutRouteRouteChildren: entryLayoutRouteRouteChildren = {
+  entryLayoutNewRoute: entryLayoutNewRoute,
+  entryLayoutLogInIndexRoute: entryLayoutLogInIndexRoute,
+}
+
+const entryLayoutRouteRouteWithChildren =
+  entryLayoutRouteRoute._addFileChildren(entryLayoutRouteRouteChildren)
 
 interface ApiPagesHandleImageUploadRouteChildren {
   ApiPagesHandleImageUploadCompleteRoute: typeof ApiPagesHandleImageUploadCompleteRoute
@@ -403,12 +429,11 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HandleRoute: HandleRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
-  NewRoute: NewRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  entryLayoutRouteRoute: entryLayoutRouteRouteWithChildren,
   ApiFaviconRoute: ApiFaviconRoute,
   ApiProfileImageRoute: ApiProfileImageRoute,
   ExploreIndexRoute: ExploreIndexRoute,
-  LogInIndexRoute: LogInIndexRoute,
   PricingIndexRoute: PricingIndexRoute,
   UpdateIndexRoute: UpdateIndexRoute,
   ApiPagesHandleRoute: ApiPagesHandleRouteWithChildren,

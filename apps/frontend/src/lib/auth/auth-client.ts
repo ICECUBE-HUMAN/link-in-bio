@@ -1,8 +1,8 @@
 import { creemClient } from "@creem_io/better-auth/client";
 import { createCreemAuthClient } from "@creem_io/better-auth/create-creem-auth-client";
 import {
+	emailOTPClient,
 	inferAdditionalFields,
-	magicLinkClient,
 } from "better-auth/client/plugins";
 import { getApiBaseUrl } from "@/lib/site/api-base-url";
 
@@ -13,7 +13,7 @@ export const authClient = createCreemAuthClient({
 		credentials: "include",
 	},
 	plugins: [
-		magicLinkClient(),
+		emailOTPClient(),
 		creemClient(),
 		inferAdditionalFields({
 			user: {
