@@ -109,6 +109,7 @@ export function createBlogPostingJsonLd(input: {
 	image?: string;
 	siteUrl?: string;
 	authors?: string[];
+	section?: string;
 	publisher?: Record<string, unknown>;
 }) {
 	const siteUrl = input.siteUrl ?? getSiteUrl();
@@ -123,6 +124,7 @@ export function createBlogPostingJsonLd(input: {
 		url,
 		datePublished: input.publishedTime,
 		...(input.modifiedTime ? { dateModified: input.modifiedTime } : {}),
+		...(input.section ? { articleSection: input.section } : {}),
 		...(image ? { image } : {}),
 		...(input.authors?.length
 			? {

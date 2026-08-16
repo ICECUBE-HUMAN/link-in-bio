@@ -157,9 +157,10 @@ export function createSeo(
 		...(input.imageAlt
 			? [{ name: "twitter:image:alt", content: input.imageAlt }]
 			: []),
-		...(input.noIndex
-			? [{ name: "robots", content: "noindex, nofollow" }]
-			: []),
+		{
+			name: "robots",
+			content: input.noIndex ? "noindex, nofollow" : "index, follow",
+		},
 		...(input.publishedTime
 			? [{ property: "article:published_time", content: input.publishedTime }]
 			: []),

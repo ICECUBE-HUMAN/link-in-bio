@@ -145,18 +145,6 @@ function getPublicPageDescription(page: PageResponse) {
 	);
 }
 
-function hasPublicPageContent(page: PageResponse, items: PageItemResponse[]) {
-	return Boolean(
-		page.name?.trim() ||
-			page.bio?.trim() ||
-			items.some((item) => {
-				if (item.type === "text") return item.data.text.trim();
-				if (item.type === "section") return item.data.title.trim();
-				return true;
-			}),
-	);
-}
-
 export const Route = createFileRoute("/$handle")({
 	loader: async ({ context, params }): Promise<HandleLoaderData> => {
 		if (params.handle.trim().toLowerCase() === "demo") {
@@ -211,18 +199,13 @@ export const Route = createFileRoute("/$handle")({
 		const canonicalPath = loaderData
 			? `/${encodeURIComponent(loaderData.page.handle)}`
 			: undefined;
-		const noIndex = loaderData
-			? loaderData.isDemo ||
-				!hasPublicPageContent(loaderData.page, loaderData.items)
-			: false;
-
 		const seo = createSeo({
 			title,
 			description,
 			canonicalPath,
 			image,
 			imageAlt: `${title} profile image`,
-			noIndex,
+			noIndex: false,
 			jsonLd: loaderData
 				? createProfilePageJsonLd({
 						title,

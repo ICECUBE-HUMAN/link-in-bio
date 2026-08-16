@@ -1,10 +1,11 @@
-import { Link } from "@tanstack/react-router";
-import parse, {
-	type DOMNode,
+import htmlToDOM from "html-dom-parser/lib/server/html-to-dom";
+import {
 	domToReact,
 	Element,
+	type DOMNode,
 	type HTMLReactParserOptions,
 } from "html-react-parser";
+import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/shared/utils";
 import type { MarkdownResult } from "@/utils/markdown";
 
@@ -29,16 +30,7 @@ export function Markdown({ result, className }: MarkdownProps) {
 				}
 
 				if (domNode.name === "img") {
-					const alt = domNode.attribs.alt ?? "";
-
-					return (
-						<img
-							{...domNode.attribs}
-							alt={alt}
-							loading="lazy"
-							className="rounded-4xl"
-						/>
-					);
+					return <img {...domNode.attribs} alt={domNode.attribs.alt ?? ""} />;
 				}
 			}
 		},
@@ -46,7 +38,7 @@ export function Markdown({ result, className }: MarkdownProps) {
 
 	return (
 		<div className={cn("pb-20", className)}>
-			{parse(result.markup, options)}
+			{domToReact(htmlToDOM(result.markup), options)}
 		</div>
 	);
 }

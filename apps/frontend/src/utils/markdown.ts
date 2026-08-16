@@ -45,6 +45,14 @@ export async function renderMarkdown(content: string): Promise<MarkdownResult> {
 		})
 		.use(() => (tree) => {
 			visit(tree, "element", (node: Element) => {
+				if (node.tagName === "img") {
+					node.properties = {
+						...node.properties,
+						className: ["rounded-4xl"],
+						loading: "lazy",
+					};
+				}
+
 				if (node.tagName === "p") {
 					node.properties = node.properties ?? {};
 					node.properties.className = [

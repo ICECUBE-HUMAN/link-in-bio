@@ -13,62 +13,42 @@ const markdownDocumentSchema = z.object({
 	image: z.string().optional(),
 });
 
-const postCollection = defineCollection({
-	name: "posts",
-	directory: "./src/mdx/post",
-	include: "**/*.md",
-	schema: markdownDocumentSchema.extend({
-		published: z.coerce.date(),
-		authors: z.string().array(),
-		content: z.string(),
-	}),
-	transform: ({ content, ...post }) => {
-		const frontMatter = extractFrontMatter(content);
-		const headerImageMatch = content.match(/!\[([^\]]*)\]\(([^)]+)\)/);
-		const headerImage = headerImageMatch ? headerImageMatch[2] : undefined;
-
-		return {
-			...post,
-			slug: post._meta.path,
-			excerpt: frontMatter.excerpt,
-			headerImage: post.image ?? headerImage,
-			content: frontMatter.body,
-		};
-	},
-});
-
-function createStaticPageCollection(name: "privacyPages" | "termsPages", directory: string) {
+function createArticleCollection(
+	name: "posts" | "updates",
+	directory: string,
+) {
 	return defineCollection({
 		name,
 		directory,
-		include: "**/*.md",
+		include: ["**/*.md", "**/*.mdx"],
 		schema: markdownDocumentSchema.extend({
-			updated: z.coerce.date(),
+			published: z.coerce.date(),
+			authors: z.string().array(),
+			category: z.string().optional(),
 			content: z.string(),
 		}),
-		transform: ({ content, ...page }) => {
+		transform: ({ content, ...post }) => {
 			const frontMatter = extractFrontMatter(content);
+			const headerImageMatch = content.match(/!\[([^\]]*)\]\(([^)]+)\)/);
+			const headerImage = headerImageMatch ? headerImageMatch[2] : undefined;
 
 			return {
-				...page,
-				slug: page._meta.path,
+				...post,
+				slug: post._meta.path,
 				excerpt: frontMatter.excerpt,
+				headerImage: post.image ?? headerImage,
 				content: frontMatter.body,
 			};
 		},
 	});
 }
 
-const privacyPageCollection = createStaticPageCollection(
-	"privacyPages",
-	"./src/mdx/privacy",
-);
-
-const termsPageCollection = createStaticPageCollection(
-	"termsPages",
-	"./src/mdx/terms",
+const postCollection = createArticleCollection("posts", "./src/mdx/post");
+const updateCollection = createArticleCollection(
+	"updates",
+	"./src/mdx/update",
 );
 
 export default defineConfig({
-	content: [postCollection, privacyPageCollection, termsPageCollection],
+	content: [postCollection, updateCollection],
 });

@@ -16,6 +16,8 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as entryLayoutRouteRouteImport } from './routes/(entry)/_layout/route'
 import { Route as ApiFaviconRouteImport } from './routes/api/favicon'
 import { Route as ApiProfileImageRouteImport } from './routes/api/profile-image'
+import { Route as BlogIndexRouteImport } from './routes/blog/index'
+import { Route as BlogSlugRouteImport } from './routes/blog/$slug'
 import { Route as ExploreIndexRouteImport } from './routes/explore/index'
 import { Route as PricingIndexRouteImport } from './routes/pricing/index'
 import { Route as UpdateIndexRouteImport } from './routes/update/index'
@@ -59,6 +61,16 @@ const ApiFaviconRoute = ApiFaviconRouteImport.update({
 const ApiProfileImageRoute = ApiProfileImageRouteImport.update({
   id: '/api/profile-image',
   path: '/api/profile-image',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExploreIndexRoute = ExploreIndexRouteImport.update({
@@ -123,6 +135,8 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/favicon': typeof ApiFaviconRoute
   '/api/profile-image': typeof ApiProfileImageRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/blog/': typeof BlogIndexRoute
   '/explore/': typeof ExploreIndexRoute
   '/pricing/': typeof PricingIndexRoute
   '/update/': typeof UpdateIndexRoute
@@ -141,6 +155,8 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/favicon': typeof ApiFaviconRoute
   '/api/profile-image': typeof ApiProfileImageRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/blog': typeof BlogIndexRoute
   '/explore': typeof ExploreIndexRoute
   '/pricing': typeof PricingIndexRoute
   '/update': typeof UpdateIndexRoute
@@ -161,6 +177,8 @@ export interface FileRoutesById {
   '/(entry)/_layout': typeof entryLayoutRouteRouteWithChildren
   '/api/favicon': typeof ApiFaviconRoute
   '/api/profile-image': typeof ApiProfileImageRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/blog/': typeof BlogIndexRoute
   '/explore/': typeof ExploreIndexRoute
   '/pricing/': typeof PricingIndexRoute
   '/update/': typeof UpdateIndexRoute
@@ -181,6 +199,8 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/api/favicon'
     | '/api/profile-image'
+    | '/blog/$slug'
+    | '/blog/'
     | '/explore/'
     | '/pricing/'
     | '/update/'
@@ -199,6 +219,8 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/api/favicon'
     | '/api/profile-image'
+    | '/blog/$slug'
+    | '/blog'
     | '/explore'
     | '/pricing'
     | '/update'
@@ -218,6 +240,8 @@ export interface FileRouteTypes {
     | '/(entry)/_layout'
     | '/api/favicon'
     | '/api/profile-image'
+    | '/blog/$slug'
+    | '/blog/'
     | '/explore/'
     | '/pricing/'
     | '/update/'
@@ -238,6 +262,8 @@ export interface RootRouteChildren {
   entryLayoutRouteRoute: typeof entryLayoutRouteRouteWithChildren
   ApiFaviconRoute: typeof ApiFaviconRoute
   ApiProfileImageRoute: typeof ApiProfileImageRoute
+  BlogSlugRoute: typeof BlogSlugRoute
+  BlogIndexRoute: typeof BlogIndexRoute
   ExploreIndexRoute: typeof ExploreIndexRoute
   PricingIndexRoute: typeof PricingIndexRoute
   UpdateIndexRoute: typeof UpdateIndexRoute
@@ -293,6 +319,20 @@ declare module '@tanstack/react-router' {
       path: '/api/profile-image'
       fullPath: '/api/profile-image'
       preLoaderRoute: typeof ApiProfileImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/explore/': {
@@ -433,6 +473,8 @@ const rootRouteChildren: RootRouteChildren = {
   entryLayoutRouteRoute: entryLayoutRouteRouteWithChildren,
   ApiFaviconRoute: ApiFaviconRoute,
   ApiProfileImageRoute: ApiProfileImageRoute,
+  BlogSlugRoute: BlogSlugRoute,
+  BlogIndexRoute: BlogIndexRoute,
   ExploreIndexRoute: ExploreIndexRoute,
   PricingIndexRoute: PricingIndexRoute,
   UpdateIndexRoute: UpdateIndexRoute,
