@@ -8,7 +8,7 @@
 @import "@fontsource-variable/inter";
 @import "./fonts.css";
 @import "react-grid-layout/css/styles.css";
-@import "./components/grid/grid-motion.css";
+@import "./styles/grid-motion.css";
 @import "./styles/grid-layout.css";
 @import "./styles/motion.css";
 
