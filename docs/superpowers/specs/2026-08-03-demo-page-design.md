@@ -4,15 +4,16 @@
 
 `/demo`를 제품의 공개·편집 페이지를 직접 체험할 수 있는 데모로 제공한다.
 데모는 일반 `$handle` 페이지와 같은 레이아웃, grid 편집, breakpoint 전환, 링크,
-미디어, 지도, 섹션, 프로필 편집 UI를 사용한다. 초기 데이터는 지정된 실제 사용자
-페이지에서 읽고, 페이지·아이템·미디어·메타데이터 변경은 backend, DB, R2, 인증 API에
-저장하지 않는다.
+미디어, 지도, 섹션, 프로필 편집 UI를 사용한다. 초기 데이터는 `PageByHandleResponse`
+형태의 데모 fixture에서 읽고, 페이지·아이템·미디어·메타데이터 변경은 backend, DB, R2,
+인증 API에 저장하지 않는다.
 
 ## 요구사항
 
 - `demo`는 예약어로 유지되어 일반 사용자가 생성하거나 변경할 수 없어야 한다.
-- `$handle.tsx`의 `/demo`는 userId `OH1GRoqsiDaMteHkYe8E8FUP9RMVfMtU`인 사용자의
-  실제 페이지 응답을 loader에서 사용한다.
+- `/demo`는 별도 정적 라우트와 `apps/frontend/src/lib/demo/demo-page.functions.ts`의 정적
+  fixture로 빌드한다. fixture는 `/tester`의 현재 데이터를 복사한 시작점이며 운영 중에는
+  실제 계정이나 backend 응답에 의존하지 않는다.
 - 데모에서는 편집 모드를 활성화한다. 제목, 소개, 프로필 이미지/크롭, item 추가·삭제·편집·이동,
   preset, breakpoint, 링크 추가, 미디어 선택을 현재 브라우저 상태에서만 반영한다.
 - 데모 경로에서 page autosave, item batch PATCH, link metadata enrichment, media upload,
@@ -23,11 +24,11 @@
 
 ### 로컬 데이터 경계
 
-`apps/frontend/src/lib/demo/demo-page.functions.ts`의 server function은 source handle `tester`의
-실제 `PageByHandleResponse`를 backend에서 읽고 userId가 지정된 값과 일치하는지 검증한다.
-loader는 normalized handle이 `demo`일 때만 이 응답을 사용하고, 일반 handle은 기존 query/API
-흐름을 그대로 사용한다. `packages/api/src/index.ts`의 `reservedPageHandles`에는 이미 `demo`가
-포함되어 있는지 확인하고 유지한다.
+`apps/frontend/src/lib/demo/demo-page.functions.ts`의 `getDemoPage`는 정적
+`PageByHandleResponse` fixture의 새 복사본을 반환한다. `/demo` 전용 라우트는 이 데이터를
+사용하며 정적 HTML로 prerender된다. 일반 handle은 기존 동적 query/API 흐름을 그대로 사용한다.
+`packages/api/src/index.ts`의 `reservedPageHandles`에는 이미 `demo`가 포함되어 있는지 확인하고
+유지한다.
 
 ### 저장 경계
 
@@ -43,10 +44,11 @@ loader는 normalized handle이 `demo`일 때만 이 응답을 사용하고, 일�
 
 ### 상호작용
 
-데모는 `isCurrentUserPage: true`로 같은 edit mode와 toolbar를 사용한다. `isDemo` 플래그는
-라우트 loader data에서 내려 각 저장 경계에만 전달하고, 렌더링 컴포넌트의 공개 UI 구조는 일반
-페이지와 공유한다. 로컬 변경은 query cache와 컴포넌트 state를 업데이트할 수 있지만 network
-mutation은 발생하지 않는다.
+데모는 `isCurrentUserPage: true`로 같은 edit mode와 toolbar를 사용한다. 데모에서는 세션
+query cache를 편집 권한 판단에 사용하지 않는다. `isDemo` 플래그는 라우트 loader data에서
+내려 각 저장 경계에만 전달하고, 렌더링 컴포넌트의 공개 UI 구조는 일반 페이지와 공유한다.
+로컬 변경은 query cache와 컴포넌트 state를 업데이트할 수 있지만 network mutation은 발생하지
+않는다.
 
 ## Verification scenarios
 
@@ -54,8 +56,8 @@ mutation은 발생하지 않는다.
 
 - Given: 인증되지 않은 사용자가 `/demo`에 접근한다.
 - When: 페이지가 초기 렌더링된다.
-- Then: 지정된 userId의 최신 profile/grid가 표시되고 source page 응답의 아이템이 그대로 존재한다.
-- Evidence: browser 화면, source page GET 응답, DOM의 `data-grid-item-type` 분포.
+- Then: fixture의 profile/grid가 표시되고 backend 페이지 조회 없이 아이템이 존재한다.
+- Evidence: browser 화면, network 요청 목록, DOM의 `data-grid-item-type` 분포.
 
 ### DEMO-02: 편집 기능
 

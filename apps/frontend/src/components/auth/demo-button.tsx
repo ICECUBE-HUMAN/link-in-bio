@@ -9,7 +9,7 @@ export default function TryDemoButton() {
 			className="rounded-lg text-base px-5 py-5.5"
 			nativeButton={false}
 			render={
-				<Link to="/$handle" params={{ handle: "demo" }}>
+				<Link to="/demo">
 					Try demo
 				</Link>
 			}

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as HandleRouteImport } from './routes/$handle'
+import { Route as DemoRouteImport } from './routes/demo'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -38,6 +39,11 @@ const IndexRoute = IndexRouteImport.update({
 const HandleRoute = HandleRouteImport.update({
   id: '/$handle',
   path: '/$handle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoRoute = DemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
@@ -137,6 +143,7 @@ const ApiPagesHandleItemsUploadCompleteRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$handle': typeof HandleRoute
+  '/demo': typeof DemoRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$handle': typeof HandleRoute
+  '/demo': typeof DemoRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -180,6 +188,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$handle': typeof HandleRoute
+  '/demo': typeof DemoRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -204,6 +213,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$handle'
+    | '/demo'
     | '/llms.txt'
     | '/robots.txt'
     | '/sitemap.xml'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$handle'
+    | '/demo'
     | '/llms.txt'
     | '/robots.txt'
     | '/sitemap.xml'
@@ -246,6 +257,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$handle'
+    | '/demo'
     | '/llms.txt'
     | '/robots.txt'
     | '/sitemap.xml'
@@ -269,6 +281,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HandleRoute: typeof HandleRoute
+  DemoRoute: typeof DemoRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -297,6 +310,13 @@ declare module '@tanstack/react-router' {
       path: '/$handle'
       fullPath: '/$handle'
       preLoaderRoute: typeof HandleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/llms.txt': {
@@ -488,6 +508,7 @@ const ApiPagesHandleRouteWithChildren = ApiPagesHandleRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HandleRoute: HandleRoute,
+  DemoRoute: DemoRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

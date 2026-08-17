@@ -55,7 +55,7 @@ import {
 	truncateSeoText,
 } from "@/lib/seo/metadata";
 
-type HandleLoaderData = {
+export type HandleLoaderData = {
 	page: PageResponse;
 	items: PageItemResponse[];
 	isCurrentUserPage: boolean;
@@ -185,52 +185,54 @@ export const Route = createFileRoute("/$handle")({
 			visitorsEnabled: result.visitorsEnabled === true,
 		};
 	},
-	head: ({ loaderData }) => {
-		const title = loaderData
-			? getPublicPageTitle(loaderData.page)
-			: DEFAULT_SITE_NAME;
-		const description = loaderData
-			? getPublicPageDescription(loaderData.page)
-			: DEFAULT_SEO_DESCRIPTION;
-		const image = loaderData
-			? (getProfileImageUrl(loaderData.page.image) ?? DEFAULT_APP_LOGO)
-			: DEFAULT_APP_LOGO;
-		const favicon = getFaviconUrl(image);
-		const canonicalPath = loaderData
-			? `/${encodeURIComponent(loaderData.page.handle)}`
-			: undefined;
-		const seo = createSeo({
-			title,
-			description,
-			canonicalPath,
-			image,
-			imageAlt: `${title} profile image`,
-			noIndex: false,
-			jsonLd: loaderData
-				? createProfilePageJsonLd({
-						title,
-						handle: loaderData.page.handle,
-						description,
-						path: canonicalPath ?? "/",
-						image,
-					})
-				: undefined,
-		});
-
-		return {
-			...seo,
-			links: [
-				...seo.links,
-				{
-					rel: "icon",
-					href: favicon,
-					"data-page-favicon": "true",
-				},
-			],
-		};
-	},
+	head: ({ loaderData }) => createHandlePageHead(loaderData),
 	component: HandlePage,
 });
+
+export function createHandlePageHead(loaderData?: HandleLoaderData) {
+	const title = loaderData
+		? getPublicPageTitle(loaderData.page)
+		: DEFAULT_SITE_NAME;
+	const description = loaderData
+		? getPublicPageDescription(loaderData.page)
+		: DEFAULT_SEO_DESCRIPTION;
+	const image = loaderData
+		? (getProfileImageUrl(loaderData.page.image) ?? DEFAULT_APP_LOGO)
+		: DEFAULT_APP_LOGO;
+	const favicon = getFaviconUrl(image);
+	const canonicalPath = loaderData
+		? `/${encodeURIComponent(loaderData.page.handle)}`
+		: undefined;
+	const seo = createSeo({
+		title,
+		description,
+		canonicalPath,
+		image,
+		imageAlt: `${title} profile image`,
+		noIndex: false,
+		jsonLd: loaderData
+			? createProfilePageJsonLd({
+					title,
+					handle: loaderData.page.handle,
+					description,
+					path: canonicalPath ?? "/",
+					image,
+				})
+			: undefined,
+	});
+
+	return {
+		...seo,
+		links: [
+			...seo.links,
+			{
+				rel: "icon",
+				href: favicon,
+				"data-page-favicon": "true",
+			},
+		],
+	};
+}
 
 function HandlePage() {
 	const loaderData = Route.useLoaderData();
@@ -260,7 +262,7 @@ function HandlePage() {
 	);
 }
 
-function HandlePageContent({
+export function HandlePageContent({
 	loaderData,
 	onPageChange,
 }: {
@@ -300,9 +302,11 @@ function HandlePageContent({
 		...getSessionQueryOptions(),
 		enabled: !loaderData.isDemo,
 	});
-	const isCurrentUserPage = sessionResult
-		? sessionResult.data?.user.id === page.userId
-		: loaderData.isCurrentUserPage;
+	const isCurrentUserPage = loaderData.isDemo
+		? true
+		: sessionResult
+			? sessionResult.data?.user.id === page.userId
+			: loaderData.isCurrentUserPage;
 	const isSignedIn = Boolean(sessionResult?.data?.user);
 	const mode = getPageMode(isCurrentUserPage);
 	const { data: ownedPagesResult } = useQuery({
