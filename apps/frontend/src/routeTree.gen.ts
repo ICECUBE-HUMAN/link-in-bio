@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as HandleRouteImport } from './routes/$handle'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as entryLayoutRouteRouteImport } from './routes/(entry)/_layout/route'
 import { Route as ApiFaviconRouteImport } from './routes/api/favicon'
@@ -42,6 +43,11 @@ const HandleRoute = HandleRouteImport.update({
 const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
   id: '/llms.txt',
   path: '/llms.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$handle': typeof HandleRoute
   '/llms.txt': typeof LlmsDottxtRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/favicon': typeof ApiFaviconRoute
   '/api/profile-image': typeof ApiProfileImageRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$handle': typeof HandleRoute
   '/llms.txt': typeof LlmsDottxtRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/favicon': typeof ApiFaviconRoute
   '/api/profile-image': typeof ApiProfileImageRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$handle': typeof HandleRoute
   '/llms.txt': typeof LlmsDottxtRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/(entry)/_layout': typeof entryLayoutRouteRouteWithChildren
   '/api/favicon': typeof ApiFaviconRoute
@@ -196,6 +205,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$handle'
     | '/llms.txt'
+    | '/robots.txt'
     | '/sitemap.xml'
     | '/api/favicon'
     | '/api/profile-image'
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$handle'
     | '/llms.txt'
+    | '/robots.txt'
     | '/sitemap.xml'
     | '/api/favicon'
     | '/api/profile-image'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$handle'
     | '/llms.txt'
+    | '/robots.txt'
     | '/sitemap.xml'
     | '/(entry)/_layout'
     | '/api/favicon'
@@ -258,6 +270,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HandleRoute: typeof HandleRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   entryLayoutRouteRoute: typeof entryLayoutRouteRouteWithChildren
   ApiFaviconRoute: typeof ApiFaviconRoute
@@ -291,6 +304,13 @@ declare module '@tanstack/react-router' {
       path: '/llms.txt'
       fullPath: '/llms.txt'
       preLoaderRoute: typeof LlmsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -469,6 +489,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HandleRoute: HandleRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   entryLayoutRouteRoute: entryLayoutRouteRouteWithChildren,
   ApiFaviconRoute: ApiFaviconRoute,
