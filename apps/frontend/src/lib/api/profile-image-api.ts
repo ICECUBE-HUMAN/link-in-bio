@@ -91,7 +91,7 @@ export async function uploadPageImage(
 	const completeRequest: ProfileImageCompleteRequest = {
 		sourceObjectKey: uploadResponse.source.objectKey,
 		crop: input.crop,
-		expectedUpdatedAt: uploadResponse.expectedUpdatedAt,
+		expectedImage: uploadResponse.expectedImage,
 	};
 	const completeResponse = await parseResponse(
 		await fetch(

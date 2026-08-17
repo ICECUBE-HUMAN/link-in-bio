@@ -72,6 +72,14 @@ export const profileImageCropSchema = grid.normalizedCropSchema;
 
 export type ProfileImageCrop = grid.NormalizedCrop;
 
+export const profileImageStateSchema = v.object({
+	image: v.nullable(v.string()),
+	imageSource: v.nullable(v.string()),
+	imageCrop: v.nullable(profileImageCropSchema),
+});
+
+export type ProfileImageState = v.InferOutput<typeof profileImageStateSchema>;
+
 /**
  * Public HTTP response contracts shared by the backend and its consumers.
  * Keep implementation details such as auth, database, and Cloudflare bindings
@@ -221,7 +229,7 @@ export const profileImageUploadSlotSchema = v.object({
 
 export const profileImageUploadResponseSchema = v.object({
 	source: profileImageUploadSlotSchema,
-	expectedUpdatedAt: v.string(),
+	expectedImage: profileImageStateSchema,
 });
 
 export type ProfileImageUploadResponse = v.InferOutput<
@@ -231,7 +239,7 @@ export type ProfileImageUploadResponse = v.InferOutput<
 export const profileImageCompleteRequestSchema = v.object({
 	sourceObjectKey: v.pipe(v.string(), v.minLength(1)),
 	crop: profileImageCropSchema,
-	expectedUpdatedAt: v.pipe(v.string(), v.minLength(1)),
+	expectedImage: profileImageStateSchema,
 });
 
 export type ProfileImageCompleteRequest = v.InferOutput<

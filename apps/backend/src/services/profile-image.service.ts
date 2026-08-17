@@ -11,9 +11,14 @@ import type { DatabaseClient } from "@db/index";
 import { pages } from "@db/schema";
 import type {
 	ProfileImageCompleteRequest,
+	ProfileImageState,
 	ProfileImageUploadRequest,
 } from "@sinabro/api";
-import { and, eq } from "drizzle-orm";
+import {
+	and,
+	eq,
+	sql,
+} from "drizzle-orm";
 import {
 	ConflictError,
 	UnprocessableEntityError,
@@ -26,6 +31,24 @@ const profileImagePrefix = (
 	pageId: string,
 ) =>
 	`users/${userId}/${pageId}/profile/`;
+
+export const profileImageOperationWhere =
+	({
+		pageId,
+		userId,
+		expectedImage,
+	}: {
+		pageId: string;
+		userId: string;
+		expectedImage: ProfileImageState;
+	}) =>
+		and(
+			eq(pages.id, pageId),
+			eq(pages.userId, userId),
+			sql`${pages.image} IS NOT DISTINCT FROM ${expectedImage.image}`,
+			sql`${pages.imageSource} IS NOT DISTINCT FROM ${expectedImage.imageSource}`,
+			sql`${pages.imageCrop} IS NOT DISTINCT FROM ${expectedImage.imageCrop}`,
+		);
 
 const deleteProfileObjects = async ({
 	env,
@@ -142,8 +165,13 @@ export const createProfileImageUpload =
 				objectKey: sourceObjectKey,
 				contentType: input.contentType,
 			}),
-			expectedUpdatedAt:
-				page.updatedAt.toISOString(),
+			expectedImage: {
+				image: page.image,
+				imageSource:
+					page.imageSource ?? null,
+				imageCrop:
+					page.imageCrop ?? null,
+			},
 		};
 	};
 
@@ -171,18 +199,12 @@ export const completeProfileImageUpload =
 			userId,
 			page,
 		});
-		const expectedUpdatedAt = new Date(
-			input.expectedUpdatedAt,
-		);
 		const ownedPrefix =
 			profileImagePrefix(
 				userId,
 				page.id,
 			);
 		if (
-			Number.isNaN(
-				expectedUpdatedAt.getTime(),
-			) ||
 			!input.sourceObjectKey.startsWith(
 				ownedPrefix,
 			) ||
@@ -224,14 +246,12 @@ export const completeProfileImageUpload =
 				updatedAt: new Date(),
 			})
 			.where(
-				and(
-					eq(pages.id, page.id),
-					eq(pages.userId, userId),
-					eq(
-						pages.updatedAt,
-						expectedUpdatedAt,
-					),
-				),
+				profileImageOperationWhere({
+					pageId: page.id,
+					userId,
+					expectedImage:
+						input.expectedImage,
+				}),
 			)
 			.returning();
 		if (!updatedPage) {

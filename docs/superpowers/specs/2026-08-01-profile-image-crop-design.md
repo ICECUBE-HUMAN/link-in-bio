@@ -337,12 +337,13 @@ source로 승격한다. 이미 과거에 destructive crop된 이미지는 그 �
 - presigned display PUT은 completion 전용 staging key로 받고, completion이
   검증 후 최종 `{uuid}-crop.{displayExtension}` key로 승격한다. 최종 key는
   신규 업로드와 재크롭 모두 동일한 UUID 규칙을 따른다.
-- upload 응답에는 presign 시점의 `page.updatedAt`을 `expectedUpdatedAt`으로
-  포함하고, completion 요청도 이를 돌려보낸다. completion은 해당 timestamp를
-  조건으로 DB를 갱신해, 느린 이전 crop 작업이 최신 crop을 덮어쓰지 않게 한다.
+- upload 응답에는 presign 시점의 `image`, `imageSource`, `imageCrop`을
+  `expectedImage`로 포함하고, completion 요청도 이를 돌려보낸다. completion은
+  이 이미지 상태를 조건으로 DB를 갱신해, 이름·소개글 변경은 허용하면서 느린
+  이전 이미지 작업이 최신 이미지를 덮어쓰지 않게 한다.
 - completion 요청은 `sourceObjectKey`, `displayObjectKey`, `crop`,
-  `expectedUpdatedAt`을 받아 소유권, MIME, object 존재 여부와 crop 범위를 검증한
-  뒤 `image`, `imageSource`, `imageCrop`을 함께 저장한다. timestamp가 더 이상
+  `expectedImage`를 받아 소유권, MIME, object 존재 여부와 crop 범위를 검증한
+  뒤 `image`, `imageSource`, `imageCrop`을 함께 저장한다. 이미지 상태가 더 이상
   현재 page와 일치하지 않으면 `PROFILE_IMAGE_OPERATION_STALE` conflict를
   반환한다.
 
