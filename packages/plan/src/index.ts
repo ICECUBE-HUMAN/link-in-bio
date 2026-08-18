@@ -8,13 +8,13 @@ export const PRO_PLANS = {
 		productId: "prod_1M7K6uOQxjMu006ypD04R",
 		label: "Monthly",
 		price: "$6",
-		suffix: "/ month",
+		suffix: "/month",
 	},
 	yearly: {
 		productId: "prod_6oaKuPlsztLLAQt3Y5BlqD",
 		label: "Yearly",
 		price: "$60",
-		suffix: "/ year",
+		suffix: "/year",
 	},
 } as const satisfies Record<
 	PlanPeriod,
