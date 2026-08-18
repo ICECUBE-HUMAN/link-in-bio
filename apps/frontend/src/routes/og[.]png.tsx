@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers";
 import { initWasm, Resvg } from "@resvg/resvg-wasm";
 import resvgWasm from "@resvg/resvg-wasm/index_bg.wasm?module";
 import { createFileRoute } from "@tanstack/react-router";
@@ -148,9 +149,13 @@ export const Route = createFileRoute("/og.png")({
 					logoResponse,
 					pageResult,
 				] = await Promise.all([
-					fetch(new URL("/fonts/Inter-Regular.ttf", requestUrl)),
-					fetch(new URL("/fonts/Inter-Bold.ttf", requestUrl)),
-					fetch(new URL("/logo512.png", requestUrl)),
+					env.ASSETS.fetch(
+						new Request(new URL("/fonts/Inter-Regular.ttf", requestUrl)),
+					),
+					env.ASSETS.fetch(
+						new Request(new URL("/fonts/Inter-Bold.ttf", requestUrl)),
+					),
+					env.ASSETS.fetch(new Request(new URL("/logo512.png", requestUrl))),
 					handle ? getPageByHandle({ data: { handle } }) : null,
 				]);
 
