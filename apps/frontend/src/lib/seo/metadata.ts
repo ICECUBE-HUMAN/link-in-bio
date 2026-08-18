@@ -38,7 +38,7 @@ const isStarterSiteName = ["cream", "service"].includes(
 export const DEFAULT_SITE_NAME =
 	configuredSiteName && !isStarterSiteName ? configuredSiteName : "Grabbin";
 
-export const DEFAULT_APP_LOGO = "/favicon.ico";
+export const DEFAULT_APP_LOGO = "/favicon.svg";
 
 export const DEFAULT_SOCIAL_IMAGE = "/logo512.png";
 
@@ -55,19 +55,9 @@ export const defaultHeadLinks = [
 	},
 	{
 		rel: "icon",
-		type: "image/png",
-		sizes: "32x32",
-		href: "/favicon-32x32.png",
-	},
-	{
-		rel: "icon",
-		type: "image/png",
-		sizes: "16x16",
-		href: "/favicon-16x16.png",
-	},
-	{
-		rel: "icon",
-		href: "/favicon.ico",
+		type: "image/svg+xml",
+		sizes: "any",
+		href: "/favicon.svg",
 	},
 	{
 		rel: "manifest",

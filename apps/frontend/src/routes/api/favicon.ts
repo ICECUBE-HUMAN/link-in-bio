@@ -5,7 +5,7 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 function isAllowedImageUrl(imageUrl: URL, requestUrl: URL) {
 	if (imageUrl.origin === requestUrl.origin) {
-		return imageUrl.pathname === "/favicon.ico";
+		return imageUrl.pathname === "/favicon.svg";
 	}
 
 	if (!env.VITE_R2_PUBLIC_URL) return false;
