@@ -34,7 +34,7 @@ export const Route = createFileRoute("/pricing/")({
 function RouteComponent() {
 	return (
 		<>
-			<main>
+			<main className="px-5 pb-16">
 				<PlanSection />
 				<FeatureSection />
 			</main>
