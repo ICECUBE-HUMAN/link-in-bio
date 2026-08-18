@@ -1,19 +1,36 @@
-import { Blend2, Widget5 } from "reicon-react";
+import { Crop, Layout, MonitorMobbile, Widget5 } from "reicon-react";
 
 export const FEATURE_ITEMS = [
 	{
-		icon: Blend2,
-		title: "Drag & Drop",
-		description: "Build your page by simply dragging and dropping.",
-		thumbnail: "",
-		preview: "drag-drop",
-	},
-	{
 		icon: Widget5,
-		title: "Rich Content",
+		title: "A widget for everything",
 		description:
-			"Create pages with links, text, images, videos, maps, and more.",
+			"Bring links, text, images, videos, maps, and more together on one page.",
 		thumbnail: "",
 		preview: "rich-content",
+	},
+	{
+		icon: Layout,
+		title: "Flexible widget sizes",
+		description:
+			"Choose the size that works best for each piece of content.",
+		thumbnail: "",
+		preview: "flexible-widget-sizes",
+	},
+	{
+		icon: Crop,
+		title: "Perfect the frame",
+		description:
+			"Crop and position every image so it looks right in your layout.",
+		thumbnail: "",
+		preview: "perfect-the-frame",
+	},
+	{
+		icon: MonitorMobbile,
+		title: "One page, every screen",
+		description:
+			"Switch between mobile and desktop layouts to keep your page looking great everywhere.",
+		thumbnail: "",
+		preview: "drag-drop",
 	},
 ] as const;

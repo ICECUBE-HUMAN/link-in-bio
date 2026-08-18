@@ -4,7 +4,6 @@ import FeatureSection from "@/components/layout/sections/feature-section";
 import HeroSection from "@/components/layout/sections/hero-section";
 import PlanSection from "@/components/layout/sections/plan-section";
 import { Footer } from "@/components/layout/shell/footer";
-import { useRevealOnView } from "@/hooks/use-reveal-on-view";
 import { createWebPageJsonLd, createWebSiteJsonLd } from "@/lib/seo/json-ld";
 import {
 	createSeo,
@@ -55,9 +54,6 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-	const { ref: ctaRevealRef, isShown: isCtaShown } =
-		useRevealOnView<HTMLDivElement>({ threshold: 0.35 });
-
 	return (
 		<main>
 			<div className="flex min-h-lvh flex-col">
@@ -66,11 +62,7 @@ function Home() {
 					<FeatureSection />
 					<PlanSection />
 					{/*<MessageSection />*/}
-					<div
-						ref={ctaRevealRef}
-						className="t-panel-slide"
-						data-open={isCtaShown ? "true" : "false"}
-					>
+					<div>
 						<CTASection />
 					</div>
 				</section>

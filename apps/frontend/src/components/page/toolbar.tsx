@@ -114,7 +114,7 @@ export default function Toolbar({
 			<motion.div
 				layout
 				transition={{ layout: viewTransition }}
-				className="flex items-center overflow-hidden rounded-full bg-test p-1.5"
+				className="flex items-center overflow-hidden rounded-full bg-background p-1.5 smooth-shadow-ring shadow-black smooth-ring-neutral-300/30"
 			>
 				<AnimatePresence initial={false} mode="popLayout">
 					{view === "link" ? (

@@ -1,13 +1,28 @@
+import { Computer, Smartphone } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Player } from "@remotion/player";
 import type { PageItemLinkMetadata } from "@sinabro/api";
-import { motion, useReducedMotion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
-import { GridSection } from "@/components/grid/grid-section";
+import { type CSSProperties, useMemo } from "react";
+import {
+	AbsoluteFill,
+	Easing,
+	interpolate,
+	interpolateColors,
+	useCurrentFrame,
+} from "remotion";
+import { GridItemShell } from "@/components/grid/grid-item-shell";
+import { ItemRenderer } from "@/components/grid/item-renderer";
+import { FlexibleWidgetSizesPreview } from "@/components/layout/feature-previews/flexible-widget-sizes-preview";
+import { PerfectFramePreview } from "@/components/layout/feature-previews/perfect-frame-preview";
 import { FEATURE_ITEMS } from "@/constant/features";
 import { GITHUB_CONTRIBUTION_GRAPH } from "@/constant/github-contribution-graph";
 import { env } from "@/env";
 import { useRevealOnView } from "@/hooks/use-reveal-on-view";
 import { createGridItem } from "@/lib/grid/item-factory";
-import type { GridItemCommandHandler } from "@/lib/grid/item-registry";
+import {
+	type GridItemCommandHandler,
+	getItemCapabilities,
+} from "@/lib/grid/item-registry";
 import {
 	getPresetGeometry,
 	placeAtFirstAvailable,
@@ -379,6 +394,8 @@ const noopGridCommand: GridItemCommandHandler = () => undefined;
 const featurePreviewMap = {
 	"drag-drop": DragDropPreview,
 	"rich-content": RichContentPreview,
+	"flexible-widget-sizes": FlexibleWidgetSizesPreview,
+	"perfect-the-frame": PerfectFramePreview,
 } as const;
 
 function getFeatureViewport(width: number): FeatureViewport {
@@ -389,65 +406,59 @@ function getFeatureViewport(width: number): FeatureViewport {
 }
 
 export default function FeatureSection() {
-	const { ref: textRevealRef, isShown: isTextShown } =
-		useRevealOnView<HTMLDivElement>({ threshold: 0.5 });
-	const [viewport, setViewport] = useState<FeatureViewport | null>(null);
-	useEffect(() => {
-		const syncViewport = () =>
-			setViewport(getFeatureViewport(window.innerWidth));
-		syncViewport();
-		window.addEventListener("resize", syncViewport);
-		return () => window.removeEventListener("resize", syncViewport);
-	}, []);
-	const items = useMemo(createFeatureItems, []);
-	const visibleItems = useMemo(() => {
-		if (!viewport) return [];
-
-		const activePlaceholders = FEATURE_PLACEHOLDERS_BY_VIEWPORT[viewport];
-		return items.filter(
-			(item) =>
-				!FEATURE_PLACEHOLDER_IDS.has(item.id) ||
-				activePlaceholders.has(item.id),
-		);
-	}, [items, viewport]);
-	const breakpoint: Breakpoint = viewport === "wide" ? "wide" : "compact";
-	const columns = viewport ? FEATURE_COLUMNS[viewport] : 0;
-	const layoutOverride = useMemo(
-		() => (viewport ? createFeatureLayout(viewport) : undefined),
-		[viewport],
-	);
-
 	return (
-		<section className="mx-auto flex min-h-lvh max-w-7xl flex-col items-center gap-32 p-4 py-20">
-			<div
-				ref={textRevealRef}
-				className={`t-stagger flex flex-col items-center gap-2 text-center ${isTextShown ? "is-shown" : ""}`}
-			>
-				<h2 className="t-stagger-line t-stagger-line--1 text-3xl font-medium tracking-tight md:text-4xl">
-					<span className="text-brand">More than</span> a list of links
+		<section className="mx-auto flex min-h-lvh max-w-6xl flex-col items-center gap-4 py-20">
+			<div className="flex flex-col items-center gap-8 text-center mb-8">
+				<h2 className="flex flex-col items-center text-4xl font-semibold md:text-5xl">
+					<span>Everything you are.</span>
+					<span>In one place.</span>
 				</h2>
-				<p className="t-stagger-line t-stagger-line--2 text-lg tracking-tight md:text-xl">
-					Bring your links, content, and places together in one page that
-					represents yourself
-				</p>
+				<div>
+					<p className="text-lg font-medium text-balance md:text-xl">
+						Bring your links, content, and favorite places together.
+					</p>
+					<p className="text-lg font-medium text-balance text-gray-bright md:text-xl">
+						Share a page that feels like you.
+					</p>
+				</div>
 			</div>
 
-			{viewport ? (
-				<div className="feature-section-grid -mx-9 w-[calc(100%+4.5rem)] max-w-none overflow-x-auto overflow-y-visible px-0 sm:overflow-x-visible **:aria-[aria-label*='Google']:hidden">
-					<div className="pointer-events-none mx-auto w-full min-w-0" inert>
-						<GridSection
-							items={visibleItems}
-							breakpoint={breakpoint}
-							forceBreakpoint={breakpoint}
-							columns={columns}
-							disableCompaction
-							layoutOverride={layoutOverride}
-							mode="view"
-							onCommand={noopGridCommand}
-						/>
-					</div>
-				</div>
-			) : null}
+				<div className="grid w-full gap-4 md:grid-cols-2">
+				{FEATURE_ITEMS.map(
+					({ title, description, preview }, index) => {
+						const Preview = featurePreviewMap[preview];
+
+						return (
+							<article
+								key={title}
+								className={`flex h-full min-h-0 flex-col gap-6 rounded-3xl bg-secondary/60 ${index === 0 ? "md:col-span-2" : ""} ${index === 1 ? "md:col-start-2 md:row-start-2" : ""} ${index === 2 ? "md:col-start-1 md:row-start-2 md:row-span-2" : ""} ${index === 3 ? "md:col-start-2 md:row-start-3" : ""}`}
+							>
+								<div className="flex flex-col gap-1 p-6">
+									<h3 className="text-2xl font-medium tracking-tight">
+										{title}
+									</h3>
+									<p className="text-base leading-relaxed text-gray-bright">
+										{description}
+									</p>
+								</div>
+								{preview === "rich-content" ||
+								preview === "drag-drop" ||
+								preview === "flexible-widget-sizes" ||
+								preview === "perfect-the-frame" ? (
+					<div
+						className={`mx-6 mb-6 min-h-[18rem] flex-1 rounded-2xl ${preview === "rich-content" ? "overflow-visible bg-background md:min-h-[40rem]" : `overflow-hidden bg-background ${preview === "flexible-widget-sizes" ? "md:min-h-[24rem]" : ""}`}`}
+									>
+										<Preview />
+									</div>
+								) : null}
+							</article>
+						);
+					},
+				)}
+      </div>
+      <p className="text-center text-base text-gray-bright md:text-xl">
+				More features may be added based on users needs.
+			</p>
 		</section>
 	);
 }
@@ -557,60 +568,404 @@ export function FeatureSection3() {
 }
 
 function DragDropPreview() {
-	return <AbstractLayoutPreview animated />;
+	return (
+		<Player
+			component={BreakpointToolbarComposition}
+			durationInFrames={BREAKPOINT_PREVIEW_FRAMES}
+			compositionWidth={640}
+			compositionHeight={480}
+			fps={60}
+			autoPlay
+			loop
+			initiallyMuted
+			controls={false}
+			clickToPlay={false}
+			acknowledgeRemotionLicense
+			style={{ height: "100%", width: "100%", pointerEvents: "none" }}
+		/>
+	);
+}
+
+const BREAKPOINT_PREVIEW_FRAMES = 240;
+const BREAKPOINT_PREVIEW_EASE = Easing.bezier(0.22, 1, 0.36, 1);
+const BREAKPOINT_BUTTON_SIZE = 104;
+const BREAKPOINT_BUTTON_GAP = 8;
+const BREAKPOINT_TABS_WIDTH =
+	BREAKPOINT_BUTTON_SIZE * 2 + BREAKPOINT_BUTTON_GAP;
+
+function BreakpointToolbarComposition() {
+	const frame = useCurrentFrame() % BREAKPOINT_PREVIEW_FRAMES;
+	const desktopToMobile = interpolate(
+		frame,
+		[48, 96],
+		[0, 1],
+		{
+			easing: BREAKPOINT_PREVIEW_EASE,
+			extrapolateLeft: "clamp",
+			extrapolateRight: "clamp",
+		},
+	);
+	const mobileToDesktop = interpolate(
+		frame,
+		[168, 216],
+		[0, 1],
+		{
+			easing: BREAKPOINT_PREVIEW_EASE,
+			extrapolateLeft: "clamp",
+			extrapolateRight: "clamp",
+		},
+	);
+	const activeProgress = frame < 168 ? desktopToMobile : 1 - mobileToDesktop;
+	const pillX = interpolate(
+		activeProgress,
+		[0, 1],
+		[0, BREAKPOINT_BUTTON_SIZE + BREAKPOINT_BUTTON_GAP],
+	);
+	const desktopColor = interpolateColors(
+		activeProgress,
+		[0, 1],
+		["#ffffff", "#000000"],
+	);
+	const mobileColor = interpolateColors(
+		activeProgress,
+		[0, 1],
+		["#000000", "#ffffff"],
+	);
+	const desktopOpacity = 1;
+	const mobileOpacity = 1;
+
+	return (
+		<AbsoluteFill
+			style={{
+				alignItems: "center",
+				backgroundColor: "transparent",
+				justifyContent: "center",
+			}}
+		>
+			<div
+				className="flex items-center overflow-hidden rounded-full bg-background p-1.5 smooth-shadow-ring-sm shadow-black smooth-ring-neutral-300/30"
+				style={{
+					borderRadius: 40,
+					display: "flex",
+					gap: BREAKPOINT_BUTTON_GAP,
+					padding: 8,
+					position: "relative",
+					width: BREAKPOINT_TABS_WIDTH + 16,
+				}}
+			>
+					<div
+						style={{
+							backgroundColor: "#000000",
+							borderRadius: 32,
+							height: BREAKPOINT_BUTTON_SIZE,
+							left: 8,
+							position: "absolute",
+							top: 8,
+							translate: `${pillX}px 0px`,
+							width: BREAKPOINT_BUTTON_SIZE,
+						}}
+					/>
+					<div
+						aria-hidden="true"
+						style={{
+							alignItems: "center",
+							color: desktopColor,
+							display: "flex",
+							height: BREAKPOINT_BUTTON_SIZE,
+							justifyContent: "center",
+							opacity: desktopOpacity,
+							position: "relative",
+							width: BREAKPOINT_BUTTON_SIZE,
+						}}
+					>
+							<HugeiconsIcon icon={Computer} strokeWidth={2} size={56} />
+					</div>
+					<div
+						aria-hidden="true"
+						style={{
+							alignItems: "center",
+							color: mobileColor,
+							display: "flex",
+							height: BREAKPOINT_BUTTON_SIZE,
+							justifyContent: "center",
+							opacity: mobileOpacity,
+							position: "relative",
+							width: BREAKPOINT_BUTTON_SIZE,
+						}}
+					>
+							<HugeiconsIcon icon={Smartphone} strokeWidth={2} size={56} />
+					</div>
+			</div>
+		</AbsoluteFill>
+	);
 }
 
 function RichContentPreview() {
-	return <AbstractLayoutPreview />;
-}
-
-const abstractLayoutItems = [
-	{ id: "small", className: "h-14 w-16" },
-	{ id: "large", className: "h-28 w-24" },
-	{ id: "medium", className: "h-20 w-20" },
-];
-
-function AbstractLayoutPreview({ animated = false }: { animated?: boolean }) {
-	const shouldReduceMotion = useReducedMotion();
-	const [order, setOrder] = useState(() =>
-		abstractLayoutItems.map(({ id }) => id),
-	);
-
-	useEffect(() => {
-		if (!animated || shouldReduceMotion) return;
-		const interval = setInterval(() => {
-			setOrder((currentOrder) => [
-				currentOrder[1],
-				currentOrder[2],
-				currentOrder[0],
-			]);
-		}, 1800);
-		return () => clearInterval(interval);
-	}, [animated, shouldReduceMotion]);
+	const items = useMemo(createEverythingPreviewItems, []);
 
 	return (
-		<div className="flex h-full items-center justify-center p-8">
-			<div className="flex h-56 w-full max-w-sm items-end justify-center gap-3 rounded-2xl border border-foreground/10 bg-background/30 p-8">
-				{order.map((id) => {
-					const item = abstractLayoutItems.find(
-						(layoutItem) => layoutItem.id === id,
-					);
-					if (!item) return null;
-
-					return (
-						<motion.div
-							key={item.id}
-							layout={animated}
-							transition={{
-								type: "spring",
-								duration: 0.6,
-								bounce: 0.12,
-							}}
-							className={`rounded-xl border border-foreground/10 bg-foreground/10 ${item.className}`}
-						/>
-					);
-				})}
+		<div className="relative size-full overflow-visible rounded-2xl bg-background">
+			<div
+				className="pointer-events-none absolute inset-0"
+				style={{
+					maskImage:
+						"radial-gradient(ellipse at center, #000 72%, transparent 100%)",
+					WebkitMaskImage:
+						"radial-gradient(ellipse at center, #000 72%, transparent 100%)",
+				}}
+			>
+				<div
+					className="absolute right-0 bottom-0"
+					style={
+						{
+							"--preview-row": "68px",
+							"--preview-gap": "36px",
+							"--preview-small":
+								"calc(var(--preview-row) * 2 + var(--preview-gap))",
+							"--preview-wide":
+								"calc(var(--preview-small) * 2 + var(--preview-gap))",
+							"--preview-edge-inset": "12px",
+							"--preview-item-gap":
+								"calc(var(--preview-gap) - var(--preview-edge-inset))",
+							width:
+								"calc(var(--preview-small) * 5 + var(--preview-gap) * 4 - var(--preview-edge-inset) * 2)",
+							height:
+								"calc(var(--preview-wide) + var(--preview-gap) + var(--preview-small))",
+							bottom: "0",
+							right: "0",
+						} as CSSProperties
+					}
+				>
+					<div className="relative size-full">
+						{items.map((item) => (
+							<EverythingPreviewItem key={item.id} item={item} />
+						))}
+					</div>
+				</div>
 			</div>
+		</div>
+	);
+}
+
+const EVERYTHING_PREVIEW_POSITIONS = {
+	"everything-media": {
+		left: "calc(-1 * var(--preview-edge-inset))",
+		top: "calc(var(--preview-wide) + var(--preview-item-gap))",
+		width: "var(--preview-wide)",
+		height: "var(--preview-small)",
+		zIndex: 1,
+	},
+	"everything-media-portrait": {
+		left:
+			"calc(var(--preview-wide) - var(--preview-small) - var(--preview-edge-inset))",
+		top: "0",
+		width: "var(--preview-small)",
+		height: "var(--preview-wide)",
+		zIndex: 2,
+	},
+	"everything-github": {
+		left:
+			"calc(var(--preview-wide) - var(--preview-edge-inset) + var(--preview-item-gap))",
+		top: "calc(var(--preview-small) + var(--preview-item-gap))",
+		width: "var(--preview-small)",
+		height: "var(--preview-wide)",
+		zIndex: 3,
+	},
+	"everything-instagram": {
+		left:
+			"calc(var(--preview-wide) - var(--preview-edge-inset) + var(--preview-item-gap))",
+		top: "0",
+		width: "var(--preview-small)",
+		height: "var(--preview-small)",
+		zIndex: 4,
+	},
+	"everything-youtube": {
+		left: "0",
+		top: "calc(var(--preview-wide) - var(--preview-small))",
+		width: "var(--preview-small)",
+		height: "var(--preview-small)",
+		zIndex: 2,
+	},
+	"everything-map": {
+		right: "var(--preview-edge-inset)",
+		top: "calc(var(--preview-small) + var(--preview-item-gap))",
+		width: "var(--preview-wide)",
+		height: "var(--preview-wide)",
+		zIndex: 5,
+	},
+	"everything-text": {
+		right: "var(--preview-edge-inset)",
+		top: "calc(var(--preview-row) + var(--preview-item-gap))",
+		width: "var(--preview-wide)",
+		height: "var(--preview-row)",
+		zIndex: 6,
+	},
+} as const satisfies Record<
+	string,
+	{
+		top: string;
+		left?: string;
+		right?: string;
+		height: string;
+		width: string;
+		zIndex: number;
+	}
+>;
+
+const EVERYTHING_PREVIEW_ITEM_LAYOUTS: Record<PresetName, ItemLayout> = {
+	halfBanner: { x: 0, y: 0, w: 2, h: 1 },
+	squareSmall: { x: 0, y: 0, w: 1, h: 2 },
+	landscape: { x: 0, y: 0, w: 2, h: 2 },
+	squareLarge: { x: 0, y: 0, w: 2, h: 4 },
+	portrait: { x: 0, y: 0, w: 1, h: 4 },
+	fullBanner: { x: 0, y: 0, w: 4, h: 1 },
+};
+
+const EVERYTHING_PREVIEW_TIMESTAMP = "2026-01-01T00:00:00.000Z";
+
+function createEverythingPreviewItem<T extends ItemType>({
+	id,
+	type,
+	preset,
+	data,
+}: {
+	id: string;
+	type: T;
+	preset: PresetName;
+	data: GridItemByType<T>["data"];
+}): GridItemByType<T> {
+	const layout = EVERYTHING_PREVIEW_ITEM_LAYOUTS[preset];
+
+	return {
+		id,
+		type,
+		style: {},
+		data,
+		layouts: { wide: layout, compact: layout },
+		createdAt: EVERYTHING_PREVIEW_TIMESTAMP,
+		updatedAt: EVERYTHING_PREVIEW_TIMESTAMP,
+		preset,
+	} as GridItemByType<T>;
+}
+
+function createEverythingPreviewItems(): GridItem[] {
+	const items: GridItem[] = [];
+	const add = <T extends GridItem>(item: T) => {
+		items.push(item);
+		return item;
+	};
+
+	add(
+		createEverythingPreviewItem({
+			id: "everything-media",
+			type: "media",
+			preset: "landscape",
+			data: {
+				objectKey: "feature-preview-media",
+				mimeType: "image/jpeg",
+				mediaUrl: "https://cdn.grabbin.me/assets/features/4.jpg",
+			},
+		}),
+	);
+
+	add(
+		createEverythingPreviewItem({
+			id: "everything-map",
+			type: "map",
+			preset: "squareLarge",
+			data: {
+				latitude: 40.7128,
+				longitude: -74.006,
+				zoom: 10,
+				caption: "New York",
+			},
+		}),
+	);
+
+	add(
+		createEverythingPreviewItem({
+			id: "everything-media-portrait",
+			type: "media",
+			preset: "portrait",
+			data: {
+				objectKey: "feature-preview-media-portrait",
+				mimeType: "video/webm",
+				mediaUrl: "https://cdn.grabbin.me/assets/features/3.webm",
+			},
+		}),
+	);
+
+	add(
+		createEverythingPreviewItem({
+			id: "everything-text",
+			type: "text",
+			preset: "halfBanner",
+			data: { text: "Everything in one place." },
+		}),
+	);
+
+	for (const link of [
+		{
+			id: "everything-github",
+			preset: "portrait" as const,
+			url: "https://github.com/milla-jovovich",
+			metadata: { ...FEATURE_LINK_METADATA.github, title: "GitHub" },
+		},
+		{
+			id: "everything-instagram",
+			preset: "squareSmall" as const,
+			url: "https://www.instagram.com/mgaband",
+			metadata: { ...FEATURE_LINK_METADATA.instagram, title: "Instagram" },
+		},
+		{
+			id: "everything-youtube",
+			preset: "squareSmall" as const,
+			url: "https://www.youtube.com/@WarnerBros",
+			metadata: { ...FEATURE_LINK_METADATA.youtube, title: "YouTube" },
+		},
+	] as const) {
+		add(
+			createEverythingPreviewItem({
+				id: link.id,
+				type: "link",
+				preset: link.preset,
+				data: {
+					url: link.url,
+					metadata: link.metadata,
+				},
+			}),
+		);
+	}
+
+	return items;
+}
+
+function EverythingPreviewItem({ item }: { item: GridItem }) {
+	const position = EVERYTHING_PREVIEW_POSITIONS[item.id];
+	const preset = item.preset;
+	if (!position || !preset) return null;
+
+	const capabilities = getItemCapabilities(item, {
+		breakpoint: "wide",
+		mode: "view",
+	});
+
+	return (
+		<div className="absolute" style={position}>
+			<GridItemShell
+				item={item}
+				layout={EVERYTHING_PREVIEW_ITEM_LAYOUTS[preset]}
+				capabilities={capabilities}
+				onCommand={noopGridCommand}
+			>
+				<ItemRenderer
+					item={item}
+					breakpoint="wide"
+					preset={preset}
+					mode="view"
+					onCommand={noopGridCommand}
+				/>
+			</GridItemShell>
 		</div>
 	);
 }

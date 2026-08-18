@@ -160,7 +160,7 @@ export default function PlanSection() {
 						className="flex flex-col gap-6 rounded-3xl bg-secondary/60 p-6"
 					>
 						<div
-							className="aspect-[4/3] rounded-2xl bg-background"
+							className="aspect-4/3 rounded-2xl bg-background"
 							data-feature-image={feature.key}
 						>
 							{feature.key === "profiles" ? (

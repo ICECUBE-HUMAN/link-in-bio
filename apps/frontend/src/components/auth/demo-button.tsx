@@ -6,7 +6,7 @@ export default function TryDemoButton() {
     <Button
       size="lg"
       variant={'secondary'}
-			className="rounded-lg text-base px-5 py-5.5"
+			className="rounded-xl w-full py-5.5 h-12 text-base md:text-lg md:h-14 text-muted-foreground"
 			nativeButton={false}
 			render={
 				<Link to="/demo">

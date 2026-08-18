@@ -72,7 +72,7 @@ function LogInRoute() {
 			data-page={flow.otpSent ? "2" : "1"}
 			noValidate
 			onSubmit={(event) => void flow.handleSendOtp(event)}
-		>
+    >
 			<LogInEmailStep flow={flow} />
 			<LogInOtpStep flow={flow} />
 		</form>

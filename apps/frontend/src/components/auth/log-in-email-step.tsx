@@ -23,7 +23,8 @@ export function LogInEmailStep({ flow }: { flow: LogInFlow }) {
 
 	return (
 		<div className="t-page min-w-0" data-page-id="1">
-			<header className="flex flex-col gap-0.5">
+      <header className="flex flex-col gap-0.5">
+        <img src={'/favicon.svg'} alt="grabbin" className="size-16 mb-4" />
 				<h1 className="text-xl font-medium">Good to see you again.</h1>
 				<p className="text-sm text-muted-foreground">
 					Create your beautiful page in seconds.

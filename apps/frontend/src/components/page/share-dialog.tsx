@@ -201,7 +201,7 @@ export function ShareDialog({ page }: ShareDialogProps) {
 				type="button"
 				variant="brand"
 				size="default"
-				className="surface-line w-28 px-8"
+				className="w-28 px-8"
 				disabled={false}
 				onClick={() => setOpen(true)}
 			>

@@ -10,7 +10,7 @@ function EntryRouteLayout() {
 	return (
 		<main className="relative mx-auto flex h-lvh w-full grow items-center justify-between px-5 py-6">
 			<aside className="flex basis-0 flex-1 justify-center">
-				<section className="relative flex w-full max-w-sm flex-col gap-10">
+        <section className="relative flex w-full max-w-sm flex-col gap-10">
 					<Outlet />
 				</section>
 			</aside>
