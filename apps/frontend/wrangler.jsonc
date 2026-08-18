@@ -8,6 +8,9 @@
     "region": "aws:ap-northeast-2"
   },
   "main": "@tanstack/react-start/server-entry",
+  "limits": {
+    "cpu_ms": 5000
+  },
   "assets": {
     "directory": "dist/client",
     "binding": "ASSETS"
