@@ -146,6 +146,10 @@ function getPublicPageDescription(page: PageResponse) {
 
 export const Route = createFileRoute("/$handle")({
 	loader: async ({ context, params }): Promise<HandleLoaderData> => {
+		if (["explore", "update"].includes(params.handle.trim().toLowerCase())) {
+			throw notFound({ routeId: Route.id });
+		}
+
 		if (params.handle.trim().toLowerCase() === "demo") {
 			const demoPage = await getDemoPage();
 			return {
