@@ -104,10 +104,10 @@ export default function PlanSection() {
 
 	return (
 		<section
-			className="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-24"
+			className="mx-auto flex max-w-4xl flex-col gap-4 py-24"
 			aria-labelledby="plans-heading"
 		>
-			<header className="flex flex-col gap-4 items-center">
+			<header className="flex flex-col gap-4 items-center mb-8">
 				<h2
 					id="plans-heading"
 					className="flex flex-col items-center text-4xl font-semibold md:text-5xl text-balance text-center"
@@ -180,7 +180,7 @@ export default function PlanSection() {
 					</article>
 				))}
 			</div>
-			<p className="text-center text-base text-gray-bright md:text-lg">
+			<p className="text-center text-base text-gray-bright md:text-xl">
 				More features may be added based on users needs.
 			</p>
 		</section>
