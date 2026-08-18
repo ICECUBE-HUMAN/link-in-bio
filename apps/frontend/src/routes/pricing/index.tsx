@@ -1,4 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import FeatureSection from "@/components/layout/sections/feature-section";
+import PlanSection from "@/components/layout/sections/plan-section";
+import { Footer } from "@/components/layout/shell/footer";
 import { createWebPageJsonLd } from "@/lib/seo/json-ld";
 import {
 	createSeo,
@@ -29,5 +32,15 @@ export const Route = createFileRoute("/pricing/")({
 });
 
 function RouteComponent() {
-	return <div>Hello "/pricing/"!</div>;
+	return (
+		<>
+			<main>
+				<PlanSection />
+				<FeatureSection />
+			</main>
+			<div className="px-5">
+				<Footer />
+			</div>
+		</>
+	);
 }

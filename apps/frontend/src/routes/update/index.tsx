@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { allUpdates } from "content-collections";
+import { Footer } from "@/components/layout/shell/footer";
 import { Markdown } from "@/components/post/markdown";
 import { createWebPageJsonLd } from "@/lib/seo/json-ld";
 import {
@@ -62,44 +63,45 @@ function UpdatePage() {
 	const { updates } = Route.useLoaderData();
 
 	return (
-		<main className="flex flex-col items-center px-5 pt-32 pb-24">
-			<header className="flex w-full max-w-3xl flex-col gap-4 pb-12">
-				<p className="text-sm text-muted-foreground">
-					{DEFAULT_SITE_NAME} updates
-				</p>
-				<h1 className="text-4xl font-medium text-fg-4 sm:text-6xl">
-					Product updates
-				</h1>
-				<p className="max-w-2xl text-base leading-7 text-muted-foreground">
-					Product updates and technical notes from the team building Grabbin.
-				</p>
-			</header>
+		<>
+			<main className="mx-auto flex w-full max-w-7xl flex-col gap-14 px-5 py-20">
+				{/*<header className="flex w-full max-w-3xl flex-col gap-4 pb-12 items-center">
+					<h1 className="text-4xl font-semibold">Product updates</h1>
+				</header>*/}
 
-			<section className="flex w-full max-w-3xl flex-col gap-10">
-				{updates.map((update) => (
-					<article
-						className="surface-line rounded-3xl p-6 sm:p-10"
-						key={update.slug}
-					>
-						<header className="mb-8 flex flex-col gap-4">
-							<div className="flex items-center gap-3 text-sm text-muted-foreground">
-								<span>{update.category ?? "Updates"}</span>
-								<span aria-hidden="true">·</span>
-								<time dateTime={update.published.toISOString()}>
-									{formatDate(update.published)}
-								</time>
-							</div>
-							<h2 className="text-3xl font-medium leading-tight text-fg-4">
-								{update.title}
-							</h2>
-							<p className="text-base leading-7 text-muted-foreground">
-								{update.description}
-							</p>
-						</header>
-						<Markdown result={update.rendered} />
-					</article>
-				))}
-			</section>
-		</main>
+				<p className="font-medium text-muted-foreground">
+					If anyone wants to see the update history, it’ll be created then.
+				</p>
+
+				<section className="flex w-full max-w-3xl flex-col gap-10">
+					{updates.map((update) => (
+						<article
+							className="surface-line rounded-3xl p-6 sm:p-10"
+							key={update.slug}
+						>
+							<header className="mb-8 flex flex-col gap-4">
+								<div className="flex items-center gap-3 text-sm text-muted-foreground">
+									<span>{update.category ?? "Updates"}</span>
+									<span aria-hidden="true">·</span>
+									<time dateTime={update.published.toISOString()}>
+										{formatDate(update.published)}
+									</time>
+								</div>
+								<h2 className="text-3xl font-medium leading-tight text-fg-4">
+									{update.title}
+								</h2>
+								<p className="text-base leading-7 text-muted-foreground">
+									{update.description}
+								</p>
+							</header>
+							<Markdown result={update.rendered} />
+						</article>
+					))}
+				</section>
+			</main>
+			<div className="px-5">
+				<Footer />
+			</div>
+		</>
 	);
 }

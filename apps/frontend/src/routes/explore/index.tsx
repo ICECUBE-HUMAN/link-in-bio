@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Footer } from "@/components/layout/shell/footer";
 import { createWebPageJsonLd } from "@/lib/seo/json-ld";
 import { createSeo } from "@/lib/seo/metadata";
 
@@ -29,18 +30,23 @@ export const Route = createFileRoute("/explore/")({
 
 function ExplorePage() {
 	return (
-		<main className="mx-auto flex w-full max-w-7xl flex-col gap-14 px-5 py-20 pt-52">
-			<section className="flex max-w-2xl flex-col gap-5">
-				<div className="space-y-4">
-					<h1 className="text-3xl font-bold text-balance md:text-4xl">
-						Explore
-					</h1>
-					<p className="max-w-xl text-base text-muted-foreground">
-						This page is used to display a list of users or unique pages created
-						by users, such as in a link-in-bio service.
-					</p>
-				</div>
-			</section>
-		</main>
+		<>
+			<main className="mx-auto flex w-full max-w-7xl flex-col gap-14 px-5 py-20">
+				<section className="flex max-w-2xl flex-col gap-5">
+					<div className="space-y-4">
+						{/*<h1 className="text-3xl font-bold text-balance md:text-4xl">
+							Explore
+						</h1>*/}
+						<p className="max-w-xl font-medium text-base text-gray-bright">
+							Explore how other users have built their pages. This space isn’t
+							available yet, but we’ll build it if you want it.
+						</p>
+					</div>
+				</section>
+			</main>
+			<div className="px-5">
+				<Footer />
+			</div>
+		</>
 	);
 }
