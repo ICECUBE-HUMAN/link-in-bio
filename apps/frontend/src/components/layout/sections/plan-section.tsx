@@ -1,10 +1,8 @@
-import {
-	FREE_PAGE_LIMIT,
-	type PlanPeriod,
-	PRO_PAGE_LIMIT,
-	PRO_PLANS,
-} from "@sinabro/plan";
 import { Player } from "@remotion/player";
+import { type PlanPeriod, PRO_PAGE_LIMIT, PRO_PLANS } from "@sinabro/plan";
+import { useNavigate } from "@tanstack/react-router";
+import { BadgeCheck } from "lucide-react";
+import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
 import {
 	Easing,
 	interpolate,
@@ -12,20 +10,12 @@ import {
 	useCurrentFrame,
 	useVideoConfig,
 } from "remotion";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { BadgeCheck } from "lucide-react";
-import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth/auth-client";
 
 type PlanFeature = {
 	label: string;
 };
-
-const FREE_FEATURES: PlanFeature[] = [
-	{ label: `${FREE_PAGE_LIMIT} page` },
-	{ label: "All core widgets" },
-];
 
 const PRO_FEATURES: PlanFeature[] = [
 	{ label: `${PRO_PAGE_LIMIT} pages` },
@@ -90,11 +80,15 @@ export default function PlanSection() {
 				return;
 			}
 
-			const { error } = await authClient.creem.createCheckout({
+			const { data, error } = await authClient.creem.createCheckout({
 				productId: selectedPrice.productId,
 			});
-			if (error)
+			if (error || !data?.url) {
 				setCheckoutError("Billing could not be started. Please try again.");
+				return;
+			}
+
+			window.location.href = data.url;
 		} catch {
 			setCheckoutError("Billing could not be started. Please try again.");
 		} finally {

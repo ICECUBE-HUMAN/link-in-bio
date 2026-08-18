@@ -133,18 +133,25 @@ export function PageSettingsMenu({
 				}));
 
 			if (!billingState.hasAccess) {
-				const { error } = await authClient.creem.createCheckout({
+				const { data, error } = await authClient.creem.createCheckout({
 					productId: PRO_MONTHLY_PRODUCT_ID,
 				});
-				if (error)
+				if (error || !data?.url) {
 					setBillingError("Billing could not be started. Please try again.");
+					return;
+				}
+
+				window.location.href = data.url;
 				return;
 			}
 
-			const { error } = await authClient.creem.createPortal();
-			if (error) {
+			const { data, error } = await authClient.creem.createPortal();
+			if (error || !data?.url) {
 				setBillingError("Billing portal could not be opened.");
+				return;
 			}
+
+			window.location.href = data.url;
 		} catch {
 			setBillingError("Billing could not be opened. Please try again.");
 		} finally {
