@@ -13,10 +13,7 @@ const markdownDocumentSchema = z.object({
 	image: z.string().optional(),
 });
 
-function createArticleCollection(
-	name: "posts" | "updates",
-	directory: string,
-) {
+function createArticleCollection(name: "posts", directory: string) {
 	return defineCollection({
 		name,
 		directory,
@@ -44,11 +41,7 @@ function createArticleCollection(
 }
 
 const postCollection = createArticleCollection("posts", "./src/mdx/post");
-const updateCollection = createArticleCollection(
-	"updates",
-	"./src/mdx/update",
-);
 
 export default defineConfig({
-	content: [postCollection, updateCollection],
+	content: [postCollection],
 });

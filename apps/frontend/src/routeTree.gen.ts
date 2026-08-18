@@ -21,9 +21,7 @@ import { Route as ApiFaviconRouteImport } from './routes/api/favicon'
 import { Route as ApiProfileImageRouteImport } from './routes/api/profile-image'
 import { Route as BlogIndexRouteImport } from './routes/blog/index'
 import { Route as BlogSlugRouteImport } from './routes/blog/$slug'
-import { Route as ExploreIndexRouteImport } from './routes/explore/index'
 import { Route as PricingIndexRouteImport } from './routes/pricing/index'
-import { Route as UpdateIndexRouteImport } from './routes/update/index'
 import { Route as entryLayoutNewRouteImport } from './routes/(entry)/_layout/new'
 import { Route as ApiPagesHandleRouteImport } from './routes/api/pages/$handle'
 import { Route as entryLayoutLogInIndexRouteImport } from './routes/(entry)/_layout/log-in/index'
@@ -91,19 +89,9 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ExploreIndexRoute = ExploreIndexRouteImport.update({
-  id: '/explore/',
-  path: '/explore/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PricingIndexRoute = PricingIndexRouteImport.update({
   id: '/pricing/',
   path: '/pricing/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const UpdateIndexRoute = UpdateIndexRouteImport.update({
-  id: '/update/',
-  path: '/update/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const entryLayoutNewRoute = entryLayoutNewRouteImport.update({
@@ -158,9 +146,7 @@ export interface FileRoutesByFullPath {
   '/api/profile-image': typeof ApiProfileImageRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/': typeof BlogIndexRoute
-  '/explore/': typeof ExploreIndexRoute
   '/pricing/': typeof PricingIndexRoute
-  '/update/': typeof UpdateIndexRoute
   '/new': typeof entryLayoutNewRoute
   '/api/pages/$handle': typeof ApiPagesHandleRouteWithChildren
   '/api/pages/$handle/image-upload': typeof ApiPagesHandleImageUploadRouteWithChildren
@@ -181,9 +167,7 @@ export interface FileRoutesByTo {
   '/api/profile-image': typeof ApiProfileImageRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog': typeof BlogIndexRoute
-  '/explore': typeof ExploreIndexRoute
   '/pricing': typeof PricingIndexRoute
-  '/update': typeof UpdateIndexRoute
   '/new': typeof entryLayoutNewRoute
   '/api/pages/$handle': typeof ApiPagesHandleRouteWithChildren
   '/api/pages/$handle/image-upload': typeof ApiPagesHandleImageUploadRouteWithChildren
@@ -206,9 +190,7 @@ export interface FileRoutesById {
   '/api/profile-image': typeof ApiProfileImageRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/': typeof BlogIndexRoute
-  '/explore/': typeof ExploreIndexRoute
   '/pricing/': typeof PricingIndexRoute
-  '/update/': typeof UpdateIndexRoute
   '/(entry)/_layout/new': typeof entryLayoutNewRoute
   '/api/pages/$handle': typeof ApiPagesHandleRouteWithChildren
   '/api/pages/$handle/image-upload': typeof ApiPagesHandleImageUploadRouteWithChildren
@@ -231,9 +213,7 @@ export interface FileRouteTypes {
     | '/api/profile-image'
     | '/blog/$slug'
     | '/blog/'
-    | '/explore/'
     | '/pricing/'
-    | '/update/'
     | '/new'
     | '/api/pages/$handle'
     | '/api/pages/$handle/image-upload'
@@ -254,9 +234,7 @@ export interface FileRouteTypes {
     | '/api/profile-image'
     | '/blog/$slug'
     | '/blog'
-    | '/explore'
     | '/pricing'
-    | '/update'
     | '/new'
     | '/api/pages/$handle'
     | '/api/pages/$handle/image-upload'
@@ -278,9 +256,7 @@ export interface FileRouteTypes {
     | '/api/profile-image'
     | '/blog/$slug'
     | '/blog/'
-    | '/explore/'
     | '/pricing/'
-    | '/update/'
     | '/(entry)/_layout/new'
     | '/api/pages/$handle'
     | '/api/pages/$handle/image-upload'
@@ -303,9 +279,7 @@ export interface RootRouteChildren {
   ApiProfileImageRoute: typeof ApiProfileImageRoute
   BlogSlugRoute: typeof BlogSlugRoute
   BlogIndexRoute: typeof BlogIndexRoute
-  ExploreIndexRoute: typeof ExploreIndexRoute
   PricingIndexRoute: typeof PricingIndexRoute
-  UpdateIndexRoute: typeof UpdateIndexRoute
   ApiPagesHandleRoute: typeof ApiPagesHandleRouteWithChildren
 }
 
@@ -395,25 +369,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/explore/': {
-      id: '/explore/'
-      path: '/explore'
-      fullPath: '/explore/'
-      preLoaderRoute: typeof ExploreIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/pricing/': {
       id: '/pricing/'
       path: '/pricing'
       fullPath: '/pricing/'
       preLoaderRoute: typeof PricingIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/update/': {
-      id: '/update/'
-      path: '/update'
-      fullPath: '/update/'
-      preLoaderRoute: typeof UpdateIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(entry)/_layout/new': {
@@ -538,9 +498,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiProfileImageRoute: ApiProfileImageRoute,
   BlogSlugRoute: BlogSlugRoute,
   BlogIndexRoute: BlogIndexRoute,
-  ExploreIndexRoute: ExploreIndexRoute,
   PricingIndexRoute: PricingIndexRoute,
-  UpdateIndexRoute: UpdateIndexRoute,
   ApiPagesHandleRoute: ApiPagesHandleRouteWithChildren,
 }
 export const routeTree = rootRouteImport

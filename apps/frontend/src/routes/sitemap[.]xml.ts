@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { allPosts, allUpdates } from "content-collections";
+import { allPosts } from "content-collections";
 import { getSiteUrl } from "@/lib/site/site-url";
 
 type SitemapEntry = {
@@ -51,7 +51,6 @@ export const Route = createFileRoute("/sitemap.xml")({
 			GET: async ({ request }) => {
 				const origin = getSiteUrl() ?? new URL(request.url).origin;
 				const latestPost = getLatestDate(allPosts);
-				const latestUpdate = getLatestDate(allUpdates);
 				const entries: SitemapEntry[] = [
 					{
 						loc: toAbsoluteUrl("/", origin),
@@ -63,12 +62,6 @@ export const Route = createFileRoute("/sitemap.xml")({
 						lastmod: latestPost?.toISOString().slice(0, 10),
 						changefreq: "weekly",
 						priority: 0.8,
-					},
-					{
-						loc: toAbsoluteUrl("/update", origin),
-						lastmod: latestUpdate?.toISOString().slice(0, 10),
-						changefreq: "monthly",
-						priority: 0.7,
 					},
 					...allPosts.map((post) => ({
 						loc: toAbsoluteUrl(

@@ -7,10 +7,8 @@ import {
 	notFound,
 	redirect,
 } from "@tanstack/react-router";
-import { BotMessageSquareIcon } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { StackPerspective } from "reicon-react";
 import { toast } from "sonner";
 import { GridSection } from "@/components/grid/grid-section";
 import { EditableParagraph } from "@/components/page/editable-paragraph";
@@ -668,23 +666,6 @@ export function HandlePageContent({
 									className="rounded-md text-muted-foreground/80"
 								/>
 							) : null}
-							{/*<Tooltip>
-							<TooltipTrigger
-								render={
-									<Button
-										render={<Link to="/explore" />}
-										variant="ghost"
-										nativeButton={false}
-										size="icon-sm"
-										aria-label="Explore"
-										className="text-muted-foreground/80 rounded-md"
-									/>
-								}
-							>
-								<StackPerspective weight="Filled" />
-							</TooltipTrigger>
-							<TooltipContent>Explore</TooltipContent>
-						</Tooltip>*/}
 							<Tooltip>
 								<TooltipTrigger
 									render={

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { allPosts, allUpdates } from "content-collections";
+import { allPosts } from "content-collections";
 import { createLlmsText, DEFAULT_SITE_NAME } from "@/lib/seo/metadata";
 import { getSiteUrl } from "@/lib/site/site-url";
 
@@ -28,21 +28,10 @@ export const Route = createFileRoute("/llms.txt")({
 								"Overview of the link in bio service and its main features.",
 						},
 						{
-							name: "Explore",
-							url: toAbsoluteUrl("/explore", siteUrl),
-							description: "Discovery surface for pages created by users.",
-						},
-						{
 							name: "Blog",
 							url: toAbsoluteUrl("/blog", siteUrl),
 							description:
 								"Link in bio guides for creators and small businesses.",
-						},
-						{
-							name: "Product updates",
-							url: toAbsoluteUrl("/update", siteUrl),
-							description:
-								"Product updates and technical notes from the Grabbin team.",
 						},
 						...allPosts.map((post) => ({
 							name: post.title,
@@ -51,11 +40,6 @@ export const Route = createFileRoute("/llms.txt")({
 								siteUrl,
 							),
 							description: post.description,
-						})),
-						...allUpdates.map((update) => ({
-							name: update.title,
-							url: toAbsoluteUrl("/update", siteUrl),
-							description: update.description,
 						})),
 					],
 				});
