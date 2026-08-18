@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as HandleRouteImport } from './routes/$handle'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
+import { Route as OgDotpngRouteImport } from './routes/og[.]png'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as entryLayoutRouteRouteImport } from './routes/(entry)/_layout/route'
@@ -49,6 +50,11 @@ const DemoRoute = DemoRouteImport.update({
 const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
   id: '/llms.txt',
   path: '/llms.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OgDotpngRoute = OgDotpngRouteImport.update({
+  id: '/og.png',
+  path: '/og.png',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
@@ -145,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/$handle': typeof HandleRoute
   '/demo': typeof DemoRoute
   '/llms.txt': typeof LlmsDottxtRoute
+  '/og.png': typeof OgDotpngRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/favicon': typeof ApiFaviconRoute
@@ -167,6 +174,7 @@ export interface FileRoutesByTo {
   '/$handle': typeof HandleRoute
   '/demo': typeof DemoRoute
   '/llms.txt': typeof LlmsDottxtRoute
+  '/og.png': typeof OgDotpngRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/favicon': typeof ApiFaviconRoute
@@ -190,6 +198,7 @@ export interface FileRoutesById {
   '/$handle': typeof HandleRoute
   '/demo': typeof DemoRoute
   '/llms.txt': typeof LlmsDottxtRoute
+  '/og.png': typeof OgDotpngRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/(entry)/_layout': typeof entryLayoutRouteRouteWithChildren
@@ -215,6 +224,7 @@ export interface FileRouteTypes {
     | '/$handle'
     | '/demo'
     | '/llms.txt'
+    | '/og.png'
     | '/robots.txt'
     | '/sitemap.xml'
     | '/api/favicon'
@@ -237,6 +247,7 @@ export interface FileRouteTypes {
     | '/$handle'
     | '/demo'
     | '/llms.txt'
+    | '/og.png'
     | '/robots.txt'
     | '/sitemap.xml'
     | '/api/favicon'
@@ -259,6 +270,7 @@ export interface FileRouteTypes {
     | '/$handle'
     | '/demo'
     | '/llms.txt'
+    | '/og.png'
     | '/robots.txt'
     | '/sitemap.xml'
     | '/(entry)/_layout'
@@ -283,6 +295,7 @@ export interface RootRouteChildren {
   HandleRoute: typeof HandleRoute
   DemoRoute: typeof DemoRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
+  OgDotpngRoute: typeof OgDotpngRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   entryLayoutRouteRoute: typeof entryLayoutRouteRouteWithChildren
@@ -324,6 +337,13 @@ declare module '@tanstack/react-router' {
       path: '/llms.txt'
       fullPath: '/llms.txt'
       preLoaderRoute: typeof LlmsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/og.png': {
+      id: '/og.png'
+      path: '/og.png'
+      fullPath: '/og.png'
+      preLoaderRoute: typeof OgDotpngRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/robots.txt': {
@@ -510,6 +530,7 @@ const rootRouteChildren: RootRouteChildren = {
   HandleRoute: HandleRoute,
   DemoRoute: DemoRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
+  OgDotpngRoute: OgDotpngRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   entryLayoutRouteRoute: entryLayoutRouteRouteWithChildren,
