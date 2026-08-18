@@ -40,7 +40,7 @@ export const DEFAULT_SITE_NAME =
 
 export const DEFAULT_APP_LOGO = "/favicon.svg";
 
-export const DEFAULT_SOCIAL_IMAGE = "/logo512.png";
+export const DEFAULT_SOCIAL_IMAGE = "/og.png";
 
 export const DEFAULT_SEO_DESCRIPTION =
 	"Create a beautiful link in bio page with your links, media, and favorite places.";

@@ -52,6 +52,7 @@ import {
 	DEFAULT_APP_LOGO,
 	DEFAULT_SEO_DESCRIPTION,
 	DEFAULT_SITE_NAME,
+	DEFAULT_SOCIAL_IMAGE,
 	truncateSeoText,
 } from "@/lib/seo/metadata";
 
@@ -197,7 +198,9 @@ export function createHandlePageHead(loaderData?: HandleLoaderData) {
 		? getPublicPageDescription(loaderData.page)
 		: DEFAULT_SEO_DESCRIPTION;
 	const image = loaderData
-		? (getProfileImageUrl(loaderData.page.image) ?? DEFAULT_APP_LOGO)
+		? loaderData.isDemo
+			? (getProfileImageUrl(loaderData.page.image) ?? DEFAULT_APP_LOGO)
+			: `${DEFAULT_SOCIAL_IMAGE}?handle=${encodeURIComponent(loaderData.page.handle)}`
 		: DEFAULT_APP_LOGO;
 	const favicon = getFaviconUrl(image);
 	const canonicalPath = loaderData
