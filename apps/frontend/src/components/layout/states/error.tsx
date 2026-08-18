@@ -19,18 +19,32 @@ export default function ErrorState({ error, reset }: ErrorStateProps) {
 			<Empty>
 				<EmptyHeader className="gap-3">
 					<EmptyTitle className="font-brand font-semibold text-2xl leading-tight">
-			      Well... this wasn't supposed to happen.
+						Well... this wasn't supposed to happen.
 					</EmptyTitle>
 					<EmptyDescription className="max-w-sm text-sm text-gray-bright">
-						{error.message || "Please try again."}
+						{import.meta.env.DEV && error.message
+							? error.message
+							: "Please try again."}
 					</EmptyDescription>
 				</EmptyHeader>
 				<EmptyContent className="max-w-2xs gap-1 mt-8">
-					<Button type="button" onClick={reset} size={'lg'} variant="secondary" className={'rounded-lg h-12 w-full'}>
+					<Button
+						type="button"
+						onClick={reset}
+						size={"lg"}
+						variant="secondary"
+						className={"rounded-lg h-12 w-full text-base"}
+					>
 						Try again
 					</Button>
-					<Button render={<Link to="/" />} nativeButton={false} size={'lg'} variant="ghost" className={'rounded-lg h-12 w-full'}>
-						Back to home
+					<Button
+						render={<Link to="/" />}
+						size={"sm"}
+						nativeButton={false}
+						variant={"link"}
+						className={"rounded-lg text-gray-bright"}
+					>
+						or back to home
 					</Button>
 				</EmptyContent>
 			</Empty>

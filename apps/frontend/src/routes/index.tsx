@@ -61,7 +61,6 @@ function Home() {
 					<HeroSection />
 					<FeatureSection />
 					<PlanSection />
-					{/*<MessageSection />*/}
 					<div>
 						<CTASection />
 					</div>
