@@ -67,19 +67,11 @@ function createImageSvg({
 			>${escapeXml(pageName)}</text>
 		`
 		: `
-			<filter id="text-glow" x="-20%" y="-50%" width="140%" height="200%">
-				<feGaussianBlur stdDeviation="18" result="blur" />
-				<feMerge>
-					<feMergeNode in="blur" />
-					<feMergeNode in="SourceGraphic" />
-				</feMerge>
-			</filter>
 			<g
 				font-family="Inter, Arial, sans-serif"
 				font-size="60"
 				font-weight="700"
 				fill="#171717"
-				filter="url(#text-glow)"
 			>
 				<text x="72" y="500">A cleaner, more beautiful</text>
 				<text x="72" y="562">Link in Bio</text>
