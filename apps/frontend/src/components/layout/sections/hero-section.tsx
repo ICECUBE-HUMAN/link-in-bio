@@ -3,7 +3,7 @@ import TryDemoButton from "@/components/auth/demo-button";
 
 export default function HeroSection() {
 	return (
-		<section className="flex min-h-svh flex-col items-center justify-center gap-16 max-w-4xl mx-auto p-4">
+		<section className="flex min-h-svh flex-col items-center justify-center gap-16 max-w-4xl mx-auto">
 			<div className="flex flex-col justify-between items-center gap-12 w-full">
 				<div className="flex flex-col items-center justify-center gap-12">
           <header className="flex flex-col gap-8 items-center">

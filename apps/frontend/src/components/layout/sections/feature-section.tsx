@@ -446,7 +446,7 @@ export default function FeatureSection() {
 								preview === "flexible-widget-sizes" ||
 								preview === "perfect-the-frame" ? (
 					<div
-						className={`mx-6 mb-6 min-h-[18rem] flex-1 rounded-2xl ${preview === "rich-content" ? "overflow-visible bg-background md:min-h-[40rem]" : `overflow-hidden bg-background ${preview === "flexible-widget-sizes" ? "md:min-h-[24rem]" : ""}`}`}
+						className={`mx-6 mb-6 min-h-[18rem] flex-1 rounded-2xl ${preview === "rich-content" ? "min-h-[20rem] overflow-visible bg-background p-2 md:min-h-[40rem]" : `overflow-hidden bg-background ${preview === "flexible-widget-sizes" ? "md:min-h-[24rem]" : ""}`}`}
 									>
 										<Preview />
 									</div>
@@ -715,22 +715,21 @@ function RichContentPreview() {
 				}}
 			>
 				<div
-					className="absolute right-0 bottom-0"
+					className="absolute right-0 bottom-0 max-md:!inset-0 max-md:!h-full max-md:!w-full [--preview-row:49px] [--preview-gap:24px] md:[--preview-row:68px] md:[--preview-gap:36px]"
 					style={
 						{
-							"--preview-row": "68px",
-							"--preview-gap": "36px",
 							"--preview-small":
 								"calc(var(--preview-row) * 2 + var(--preview-gap))",
 							"--preview-wide":
 								"calc(var(--preview-small) * 2 + var(--preview-gap))",
-							"--preview-edge-inset": "12px",
-							"--preview-item-gap":
-								"calc(var(--preview-gap) - var(--preview-edge-inset))",
+							"--preview-edge-inset": "0px",
+							"--preview-item-gap": "var(--preview-gap)",
+							boxSizing: "border-box",
+							padding: "8px",
 							width:
-								"calc(var(--preview-small) * 5 + var(--preview-gap) * 4 - var(--preview-edge-inset) * 2)",
+								"calc(var(--preview-small) * 5 + var(--preview-gap) * 4 - var(--preview-edge-inset) * 2 + 16px)",
 							height:
-								"calc(var(--preview-wide) + var(--preview-gap) + var(--preview-small))",
+								"calc(var(--preview-wide) + var(--preview-gap) + var(--preview-small) + 16px)",
 							bottom: "0",
 							right: "0",
 						} as CSSProperties
@@ -738,7 +737,15 @@ function RichContentPreview() {
 				>
 					<div className="relative size-full">
 						{items.map((item) => (
-							<EverythingPreviewItem key={item.id} item={item} />
+							<EverythingPreviewItem
+								key={item.id}
+								item={item}
+								className={
+									item.id === "everything-map"
+										? "max-md:!bottom-auto max-md:!left-1/2 max-md:!right-auto max-md:!top-1/2 max-md:-translate-x-1/2 max-md:-translate-y-1/2"
+										: "max-md:hidden"
+								}
+							/>
 						))}
 					</div>
 				</div>
@@ -940,7 +947,13 @@ function createEverythingPreviewItems(): GridItem[] {
 	return items;
 }
 
-function EverythingPreviewItem({ item }: { item: GridItem }) {
+function EverythingPreviewItem({
+	item,
+	className,
+}: {
+	item: GridItem;
+	className?: string;
+}) {
 	const position = EVERYTHING_PREVIEW_POSITIONS[item.id];
 	const preset = item.preset;
 	if (!position || !preset) return null;
@@ -951,7 +964,7 @@ function EverythingPreviewItem({ item }: { item: GridItem }) {
 	});
 
 	return (
-		<div className="absolute" style={position}>
+		<div className={`absolute ${className ?? ""}`} style={position}>
 			<GridItemShell
 				item={item}
 				layout={EVERYTHING_PREVIEW_ITEM_LAYOUTS[preset]}

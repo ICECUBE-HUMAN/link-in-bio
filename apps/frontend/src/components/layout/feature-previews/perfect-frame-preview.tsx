@@ -27,6 +27,7 @@ const CROP_REVEAL_END = CROP_OPEN_FRAME + CROP_REVEAL_FRAMES;
 const CROP_MOVEMENT_START = CROP_REVEAL_END + CROP_HOLD_FRAMES;
 const CROP_MOVEMENT_DURATION = CROP_CLOSE_FRAME - CROP_MOVEMENT_START;
 const CONTROL_GAP = 12;
+const PREVIEW_CONTROLS_SCALE = 0.8;
 const DEFAULT_PREVIEW_SIZE = { width: 640, height: 480 };
 const MEDIA_SOURCE_SIZE: MediaFrameSize = { width: 1080, height: 2400 };
 const MEDIA_LAYOUT = getPresetGeometry("squareLarge", "wide");
@@ -123,7 +124,8 @@ function PerfectFrameComposition() {
 	const mediaTop =
 		(compositionHeight - mediaHeight * MEDIA_CROP_BOUNDS_FACTOR) / 2 +
 		mediaHeight * MEDIA_CROP_TRAVEL_FACTOR;
-	const controlsTop = mediaTop + mediaHeight + CONTROL_GAP;
+	const controlsTop =
+		mediaTop + mediaHeight + CONTROL_GAP * PREVIEW_CONTROLS_SCALE;
 	const isCropOpen = frame >= CROP_OPEN_FRAME && frame < DURATION_IN_FRAMES - 1;
 	const isCropActive = frame >= CROP_OPEN_FRAME && frame < CROP_CLOSE_FRAME;
 	const shouldShowCropShadow = isCropActive && frame >= CROP_REVEAL_END;
@@ -310,7 +312,12 @@ function PreviewItemControls({ isCropOpen }: { isCropOpen: boolean }) {
 	return (
 		<span
 			className="flex h-10 flex-nowrap items-center gap-0.5 overflow-hidden rounded-lg bg-black p-1 shadow-lg"
-			style={{ pointerEvents: "none", width: PREVIEW_CONTROLS_WIDTH }}
+			style={{
+				pointerEvents: "none",
+				transform: `scale(${PREVIEW_CONTROLS_SCALE})`,
+				transformOrigin: "top center",
+				width: PREVIEW_CONTROLS_WIDTH,
+			}}
 		>
 			<Button
 				type="button"
@@ -321,7 +328,7 @@ function PreviewItemControls({ isCropOpen }: { isCropOpen: boolean }) {
 				aria-pressed={isCropOpen}
 				tabIndex={-1}
 				aria-disabled="true"
-				className={`rounded-md text-white ${isCropOpen ? "bg-profile-image-crop-action! text-white!" : ""}`}
+				className={`cursor-pointer! rounded-md text-white hover:bg-white/20 hover:text-white ${isCropOpen ? "bg-profile-image-crop-action! text-white!" : ""}`}
 			>
 				<CropIcon className="size-4 stroke-3 text-white" />
 			</Button>
