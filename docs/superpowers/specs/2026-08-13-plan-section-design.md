@@ -9,8 +9,8 @@
 - `apps/frontend/src/components/layout/sections/plan-section.tsx`에 `PlanSection`을 만든다.
 - 카드 내용과 가격 표시 문구는 프론트 코드에 둔다.
 - 실제 결제 상품은 Creem의 `productId`를 기준으로 한다.
-- `prod_1M7K6uOQxjMu006ypD04R`를 Pro 월간 상품 ID로 연결한다.
-- `prod_6oaKuPlsztLLAQt3Y5BlqD`를 Pro 연간 상품 ID로 연결한다.
+- `prod_GSK39navdTU71bXQBHraL`를 Pro 월간 상품 ID로 연결한다.
+- `prod_2Uz7Eh1vsEpfdWCwfXYPHV`를 Pro 연간 상품 ID로 연결한다.
 - Free 카드에는 페이지 1개, 핵심 위젯 전체, wide/compact 편집을 표시하고 오늘자 페이지뷰는 진행 중 아이콘으로 표시한다.
 - Pro 카드에는 페이지 3개, 핵심 위젯 전체, wide/compact 편집을 표시하고 오늘자 페이지뷰와 커스텀 도메인은 진행 중 아이콘으로 표시한다.
 - 로그인한 사용자는 `authClient.creem.createCheckout` 호출 후 반환된 URL로 이동한다.

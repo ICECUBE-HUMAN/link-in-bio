@@ -5,13 +5,13 @@ export const PRO_PAGE_LIMIT = 3;
 
 export const PRO_PLANS = {
 	monthly: {
-		productId: "prod_1M7K6uOQxjMu006ypD04R",
+		productId: "prod_GSK39navdTU71bXQBHraL",
 		label: "Monthly",
 		price: "$6",
 		suffix: "/month",
 	},
 	yearly: {
-		productId: "prod_6oaKuPlsztLLAQt3Y5BlqD",
+		productId: "prod_2Uz7Eh1vsEpfdWCwfXYPHV",
 		label: "Yearly",
 		price: "$60",
 		suffix: "/year",

@@ -56,8 +56,9 @@ bun run typecheck
 
 Creem은 Better Auth의 `/auth/creem/*` endpoint를 사용합니다. 구독 저장과
 webhook 동기화를 켜려면 `CREEM_API_KEY`와 `CREEM_WEBHOOK_SECRET`을 Worker
-secret으로 설정하세요. 테스트 환경에서는 `CREEM_TEST_MODE=true`를 사용하고,
-결제 성공 후 이동할 주소는 `CREEM_SUCCESS_URL`로 설정합니다.
+secret으로 설정하세요. 운영 환경에서는 `CREEM_TEST_MODE=false`를 사용하고,
+테스트 환경에서만 `CREEM_TEST_MODE=true`를 사용합니다. 결제 성공 후 이동할
+주소는 `CREEM_SUCCESS_URL`로 설정합니다.
 
 스키마 변경은 다음 명령으로 생성·적용합니다.
 

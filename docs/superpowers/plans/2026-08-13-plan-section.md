@@ -12,7 +12,7 @@
 
 - Do not add frontend tests unless explicitly requested.
 - Do not add dependencies.
-- Use `prod_1M7K6uOQxjMu006ypD04R` for monthly and `prod_6oaKuPlsztLLAQt3Y5BlqD` for yearly checkout.
+- Use `prod_GSK39navdTU71bXQBHraL` for monthly and `prod_2Uz7Eh1vsEpfdWCwfXYPHV` for yearly checkout.
 - Use the existing design tokens and Button component.
 
 ---
