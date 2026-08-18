@@ -14,8 +14,10 @@ import { Route as HandleRouteImport } from './routes/$handle'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as OgDotpngRouteImport } from './routes/og[.]png'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as entryLayoutRouteRouteImport } from './routes/(entry)/_layout/route'
 import { Route as ApiFaviconRouteImport } from './routes/api/favicon'
 import { Route as ApiProfileImageRouteImport } from './routes/api/profile-image'
@@ -55,6 +57,11 @@ const OgDotpngRoute = OgDotpngRouteImport.update({
   path: '/og.png',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
@@ -63,6 +70,11 @@ const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const entryLayoutRouteRoute = entryLayoutRouteRouteImport.update({
@@ -140,8 +152,10 @@ export interface FileRoutesByFullPath {
   '/demo': typeof DemoRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/og.png': typeof OgDotpngRoute
+  '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/api/favicon': typeof ApiFaviconRoute
   '/api/profile-image': typeof ApiProfileImageRoute
   '/blog/$slug': typeof BlogSlugRoute
@@ -161,8 +175,10 @@ export interface FileRoutesByTo {
   '/demo': typeof DemoRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/og.png': typeof OgDotpngRoute
+  '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/api/favicon': typeof ApiFaviconRoute
   '/api/profile-image': typeof ApiProfileImageRoute
   '/blog/$slug': typeof BlogSlugRoute
@@ -183,8 +199,10 @@ export interface FileRoutesById {
   '/demo': typeof DemoRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/og.png': typeof OgDotpngRoute
+  '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/(entry)/_layout': typeof entryLayoutRouteRouteWithChildren
   '/api/favicon': typeof ApiFaviconRoute
   '/api/profile-image': typeof ApiProfileImageRoute
@@ -207,8 +225,10 @@ export interface FileRouteTypes {
     | '/demo'
     | '/llms.txt'
     | '/og.png'
+    | '/privacy'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/terms'
     | '/api/favicon'
     | '/api/profile-image'
     | '/blog/$slug'
@@ -228,8 +248,10 @@ export interface FileRouteTypes {
     | '/demo'
     | '/llms.txt'
     | '/og.png'
+    | '/privacy'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/terms'
     | '/api/favicon'
     | '/api/profile-image'
     | '/blog/$slug'
@@ -249,8 +271,10 @@ export interface FileRouteTypes {
     | '/demo'
     | '/llms.txt'
     | '/og.png'
+    | '/privacy'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/terms'
     | '/(entry)/_layout'
     | '/api/favicon'
     | '/api/profile-image'
@@ -272,8 +296,10 @@ export interface RootRouteChildren {
   DemoRoute: typeof DemoRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
   OgDotpngRoute: typeof OgDotpngRoute
+  PrivacyRoute: typeof PrivacyRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TermsRoute: typeof TermsRoute
   entryLayoutRouteRoute: typeof entryLayoutRouteRouteWithChildren
   ApiFaviconRoute: typeof ApiFaviconRoute
   ApiProfileImageRoute: typeof ApiProfileImageRoute
@@ -320,6 +346,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OgDotpngRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/robots.txt': {
       id: '/robots.txt'
       path: '/robots.txt'
@@ -332,6 +365,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(entry)/_layout': {
@@ -491,8 +531,10 @@ const rootRouteChildren: RootRouteChildren = {
   DemoRoute: DemoRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
   OgDotpngRoute: OgDotpngRoute,
+  PrivacyRoute: PrivacyRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TermsRoute: TermsRoute,
   entryLayoutRouteRoute: entryLayoutRouteRouteWithChildren,
   ApiFaviconRoute: ApiFaviconRoute,
   ApiProfileImageRoute: ApiProfileImageRoute,

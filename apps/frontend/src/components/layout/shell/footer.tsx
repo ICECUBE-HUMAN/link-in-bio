@@ -39,7 +39,15 @@ export function Footer() {
             </p>
 					</div>
 					<div className="flex justify-center text-lg font-medium">
-						<p></p>
+						<p>
+							Contact:{" "}
+							<a
+								href="mailto:support@grabbin.me"
+								className="underline transition-colors hover:text-foreground/70"
+							>
+								support@grabbin.me
+							</a>
+						</p>
 					</div>
 				</div>
 
