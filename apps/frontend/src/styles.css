@@ -302,7 +302,7 @@
 }
 
 :root {
-    --brand: oklch(67.3% 0.182 276.935);
+    --brand: oklch(0.6556 0.1619 252.68);
     --profile-image-crop-action: #4ade80;
     --test: oklch(0.3151 0.0088 285.88);
     --background: oklch(1 0 0);
