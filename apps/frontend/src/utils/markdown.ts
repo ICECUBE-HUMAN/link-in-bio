@@ -21,6 +21,49 @@ export type MarkdownResult = {
 	headings: Array<MarkdownHeading>;
 };
 
+export type MarkdownDocument = {
+	content: string;
+	data: Record<string, unknown>;
+};
+
+export function parseMarkdownDocument(source: string): MarkdownDocument {
+	const frontmatterMatch = source.match(/^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/);
+	if (!frontmatterMatch) {
+		return { content: source, data: {} };
+	}
+
+	const data = Object.fromEntries(
+		frontmatterMatch[1].split("\n").flatMap((line) => {
+			const separatorIndex = line.indexOf(":");
+			if (separatorIndex < 0) return [];
+
+			const key = line.slice(0, separatorIndex).trim();
+			const value = line.slice(separatorIndex + 1).trim();
+			if (!key || !value) return [];
+
+			return [[key, value.replace(/^(['"])(.*)\1$/, "$2")]];
+		}),
+	);
+
+	return {
+		content: source.slice(frontmatterMatch[0].length),
+		data,
+	};
+}
+
+export function getMarkdownFrontmatterString(
+	data: Record<string, unknown>,
+	key: string,
+): string {
+	const value = data[key];
+
+	if (typeof value !== "string" || value.trim() === "") {
+		throw new Error(`Missing markdown frontmatter field: ${key}`);
+	}
+
+	return value.trim();
+}
+
 const headingSizeClassNames: Record<string, string> = {
 	h1: "text-[24px]",
 	h2: "text-[20px]",

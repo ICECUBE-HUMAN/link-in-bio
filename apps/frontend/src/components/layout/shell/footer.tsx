@@ -7,6 +7,12 @@ export function Footer() {
 	const footerRoutes = collectRoutes(routeTree as StaticRoute, "footer").sort(
 		(a, b) => a.order - b.order,
 	);
+	const primaryFooterRoutes = footerRoutes.filter(
+		(route) => route.to === "/" || route.to === "/log-in",
+	);
+	const legalFooterRoutes = footerRoutes.filter(
+		(route) => route.to === "/privacy" || route.to === "/terms",
+	);
 
 	return (
 		<footer className="relative overflow-hidden bg-background">
@@ -20,14 +26,14 @@ export function Footer() {
 								className="rounded-[inherit] size-full"
 							/>
 						</div>
-						<h3 className="font-semibold text-3xl text-primary">{DEFAULT_SITE_NAME}</h3>
+						<h3 className="font-semibold text-3xl text-primary">
+							{DEFAULT_SITE_NAME}
+						</h3>
 					</aside>
 					<div className="flex flex-col items-center font-medium gap-1 text-lg">
+						<p>Designed for everyone</p>
 						<p>
-							Designed for everyone
-            </p>
-            <p>
-              Built by{" "}
+							Built by{" "}
 							<a
 								href={"https://x.com/kinwooky"}
 								target="_blank"
@@ -36,24 +42,13 @@ export function Footer() {
 							>
 								wooky
 							</a>
-            </p>
-					</div>
-					<div className="flex justify-center text-lg font-medium">
-						<p>
-							Contact:{" "}
-							<a
-								href="mailto:support@grabbin.me"
-								className="underline transition-colors hover:text-foreground/70"
-							>
-								support@grabbin.me
-							</a>
 						</p>
 					</div>
 				</div>
 
 				<nav aria-label="Footer">
 					<ul className="flex flex-col items-center gap-5 text-lg font-medium sm:flex-row">
-						{footerRoutes.map((route) => (
+						{primaryFooterRoutes.map((route) => (
 							<li key={route.to}>
 								<Link
 									to={route.to}
@@ -80,6 +75,24 @@ export function Footer() {
 							>
 								Pricing
 							</Link>
+						</li>
+						{legalFooterRoutes.map((route) => (
+							<li key={route.to}>
+								<Link
+									to={route.to}
+									className="transition-colors hover:text-foreground/70"
+								>
+									{route.label}
+								</Link>
+							</li>
+						))}
+						<li>
+							<a
+								href="mailto:support@grabbin.me"
+								className="transition-colors hover:text-foreground/70"
+							>
+								Contact
+							</a>
 						</li>
 					</ul>
 				</nav>
