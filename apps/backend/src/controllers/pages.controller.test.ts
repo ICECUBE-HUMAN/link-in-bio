@@ -271,6 +271,9 @@ function createFakeDb({
 				}),
 			}),
 		}),
+		delete: () => ({
+			where: async () => undefined,
+		}),
 	};
 
 	return {
@@ -734,6 +737,57 @@ describe("pagesController", () => {
 		expect(response.status).toBe(201);
 		expect(state.currentUser.primaryPageId).toBe("page_1");
 		expect(state.insertedPages).toHaveLength(1);
+	});
+
+	it("deletes a non-primary page without plan access", async () => {
+		const user = {
+			id: "user_1",
+			name: "Kim",
+			email: "kim@example.com",
+			primaryPageId: "page_primary",
+		};
+		const { db } = createFakeDb({
+			currentUser: user,
+			existingPages: [
+				{
+					id: "page_primary",
+					userId: "user_1",
+					handle: "kim",
+					name: "Kim",
+					bio: null,
+					image: null,
+					role: null,
+					createdAt: now,
+					updatedAt: now,
+				},
+				{
+					id: "page_secondary",
+					userId: "user_1",
+					handle: "secondary",
+					name: "Secondary",
+					bio: null,
+					image: null,
+					role: null,
+					createdAt: now,
+					updatedAt: now,
+				},
+			],
+		});
+		const app = createTestApp({ db, user });
+
+		const response = await app.fetch(
+			new Request("http://localhost/pages/secondary", {
+				method: "DELETE",
+			}),
+			{
+				ITEM_MEDIA_DELETE_QUEUE: undefined,
+			} as never,
+			{
+				waitUntil: () => undefined,
+			} as never,
+		);
+
+		expect(response.status).toBe(204);
 	});
 
 	it("patches the signed-in user's page at /pages/:handle", async () => {

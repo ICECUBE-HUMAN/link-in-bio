@@ -426,19 +426,6 @@ export const deleteOwnedPage = async ({
 					"The primary page cannot be deleted.",
 					"PRIMARY_PAGE_DELETE_FORBIDDEN",
 				);
-			const access =
-				await getPlanAccess({
-					db: tx as unknown as DatabaseClient,
-					userId,
-				});
-			if (
-				!access.hasAccess &&
-				!access.gracePeriod
-			)
-				throw new ForbiddenError(
-					"Page deletion is not available on this plan.",
-					"PAGE_DELETE_FORBIDDEN",
-				);
 			const items =
 				await tx.query.pageItems.findMany(
 					{

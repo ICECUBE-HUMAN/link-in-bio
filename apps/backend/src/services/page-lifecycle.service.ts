@@ -75,7 +75,6 @@ export const assertPageWritable =
 		const [
 			access,
 			currentUser,
-			ownedPages,
 		] = await Promise.all([
 			getPlanAccess({
 				db,
@@ -94,31 +93,8 @@ export const assertPageWritable =
 						},
 					})
 				: Promise.resolve({
-						primaryPageId: page.id,
-					}),
-			(async () => {
-				const query = (
-					db.query as unknown as {
-						pages?: {
-							findMany?: (
-								config: unknown,
-							) => Promise<unknown[]>;
-						};
-					}
-				).pages;
-				if (
-					typeof query?.findMany !==
-					"function"
-				)
-					return [page];
-				return query.findMany({
-					where: eq(
-						pages.userId,
-						userId,
-					),
-					columns: { id: true },
-				});
-			})(),
+					primaryPageId: page.id,
+				}),
 		]);
 
 		if (access.hasAccess) return;
@@ -126,12 +102,7 @@ export const assertPageWritable =
 		const isPrimary =
 			currentUser?.primaryPageId ===
 			page.id;
-		if (
-			isPrimary &&
-			(access.gracePeriod ||
-				ownedPages.length === 1)
-		)
-			return;
+		if (isPrimary) return;
 
 		throw new ForbiddenError(
 			"This page is read-only.",
