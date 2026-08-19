@@ -33,3 +33,36 @@ export function createWebPageJsonLd(input: {
     ...(input.description ? { description: input.description } : {}),
   };
 }
+
+export function createBlogPostingJsonLd(input: {
+  title: string;
+  description?: string;
+  path: string;
+  publishedTime: string;
+  image?: string;
+  authors?: string[];
+  section?: string;
+  publisher?: Record<string, unknown>;
+}): JsonLdNode {
+  const image = input.image ? withSiteUrl(input.image) : undefined;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: input.title,
+    description: input.description,
+    url: withSiteUrl(input.path),
+    datePublished: input.publishedTime,
+    ...(input.section ? { articleSection: input.section } : {}),
+    ...(image ? { image } : {}),
+    ...(input.authors?.length
+      ? {
+          author: input.authors.map((name) => ({
+            "@type": "Person",
+            name,
+          })),
+        }
+      : {}),
+    ...(input.publisher ? { publisher: input.publisher } : {}),
+  };
+}

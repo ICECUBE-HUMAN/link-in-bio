@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 export const DEFAULT_SEO_DESCRIPTION =
   "Create a beautiful link in bio page with your links, media, and favorite places.";
+export const DEFAULT_SITE_NAME = "Grabbin";
 export const HOME_TITLE =
   "A Link in Bio, the most beautiful and clean you've ever seen";
 export const DEFAULT_SOCIAL_IMAGE = "/logo512.png";
@@ -12,22 +13,25 @@ type PageMetadataInput = {
   canonicalPath: string;
   image?: string;
   keywords?: string[];
+  type?: "website" | "article";
+  publishedTime?: string;
 };
 
 export function createMetadata(input: PageMetadataInput): Metadata {
   const image = input.image ? [{ url: input.image }] : undefined;
 
   return {
-    title: `${input.title} | Grabbin`,
+    title: `${input.title} | ${DEFAULT_SITE_NAME}`,
     description: input.description,
     keywords: input.keywords,
     alternates: { canonical: input.canonicalPath },
     openGraph: {
-      title: `${input.title} | Grabbin`,
+      title: `${input.title} | ${DEFAULT_SITE_NAME}`,
       description: input.description,
-      type: "website",
+      type: input.type ?? "website",
       url: input.canonicalPath,
       images: image,
+      ...(input.publishedTime ? { publishedTime: input.publishedTime } : {}),
     },
     twitter: {
       card: image ? "summary_large_image" : "summary",

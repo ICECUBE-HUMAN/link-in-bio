@@ -2,7 +2,6 @@ import CTASection from "@/components/landing/cta-section";
 import FeatureSection from "@/components/landing/feature-section";
 import HeroSection from "@/components/landing/hero-section";
 import PlanSection from "@/components/landing/plan-section";
-import Footer from "@/components/layout/footer";
 import JsonLd from "@/components/seo/json-ld";
 import { createWebPageJsonLd, createWebSiteJsonLd } from "@/lib/seo/json-ld";
 import {
@@ -40,9 +39,6 @@ export default function Home() {
               <CTASection />
             </div>
           </section>
-        </div>
-        <div className="px-5">
-          <Footer />
         </div>
       </main>
     </>
