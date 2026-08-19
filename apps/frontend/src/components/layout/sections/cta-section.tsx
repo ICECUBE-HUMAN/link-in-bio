@@ -16,12 +16,11 @@ export default function CTASection() {
 				</header>
 				<div className="flex flex-col items-center justify-center gap-2 w-3xs md:w-xs">
 					<CTAButton title="Get started" />
-          <TryDemoButton />
-          <p className="text-sm font-medium text-gray-bright md:text-base">
-            Create your page in seconds.
-          </p>
+					<TryDemoButton />
+					<p className="text-sm font-medium text-gray-bright md:text-base">
+						Create your page in seconds.
+					</p>
 				</div>
-				
 			</div>
 		</section>
 	);
