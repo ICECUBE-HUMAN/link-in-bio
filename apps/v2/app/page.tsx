@@ -1,13 +1,19 @@
-import { Button } from "@/components/ui/button";
+import Footer from "@/components/layout/footer";
 
 export default function Home() {
   return (
     <main className="mx-auto max-w-2xl space-y-8 p-8">
-      <div>
-        <Button size={"lg"} className={"font-bold text-base"}>
-          버튼
-        </Button>
+      <div className="flex min-h-lvh flex-col">
+        {/*<section className="flex-1 px-5 pb-16">
+					<HeroSection />
+					<FeatureSection />
+					<PlanSection />
+					<div>
+						<CTASection />
+					</div>
+				</section>*/}
       </div>
+      <Footer />
     </main>
   );
 }

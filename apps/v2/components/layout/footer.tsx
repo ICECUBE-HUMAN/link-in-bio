@@ -1,6 +1,8 @@
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { Route } from "next";
+import { Jacquard_12 } from "next/font/google";
+import Image from "next/image";
 import Link from "next/link";
+import { env } from "@/lib/env";
 
 type FooterLink =
   | {
@@ -35,19 +37,19 @@ export const footerLinks = [
 ] as const satisfies readonly FooterLink[];
 
 export default function Footer() {
-  const { env } = getCloudflareContext();
-  const appTitle = (env as CloudflareEnv & { NEXT_PUBLIC_APP_TITLE: string })
-    .NEXT_PUBLIC_APP_TITLE;
+  const appTitle = env.NEXT_PUBLIC_APP_TITLE;
 
   return (
-    <footer className="relative overflow-hidden bg-background">
+    <footer className="relative overflow-hidden bg-background px-5">
       <div className="relative mx-auto flex min-h-[36vh] w-full max-w-4xl flex-col justify-between gap-8 px-4 py-24 text-center items-center text-brand-gray">
         <div className="flex flex-col gap-6 items-center justify-center">
           <aside className="flex items-center gap-2">
             <div className="size-16 rounded-full">
-              <img
+              <Image
                 src={"/icon.svg"}
                 alt={appTitle}
+                width={120}
+                height={120}
                 className="rounded-[inherit] size-full"
               />
             </div>
@@ -77,7 +79,7 @@ export default function Footer() {
         >
           <img
             src="https://storage.ko-fi.com/cdn/cup-border.png"
-            alt=""
+            alt="ko-fi cup"
             className="mr-1.5 h-[15px] w-[22px]"
           />
           Support me on Ko-fi

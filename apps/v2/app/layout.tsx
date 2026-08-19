@@ -18,9 +18,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={inter.variable}>
-      <body>
-        <TooltipProvider>{children}</TooltipProvider>
-        <Toaster />
+      <body className="flex flex-col">
+        <TooltipProvider>
+          <main className="flex min-h-svh flex-col">{children}</main>
+        </TooltipProvider>
+        <Toaster position="top-center" />
       </body>
     </html>
   );
