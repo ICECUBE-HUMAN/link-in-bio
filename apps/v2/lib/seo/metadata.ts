@@ -4,7 +4,7 @@ export const DEFAULT_SEO_DESCRIPTION =
   "Create a beautiful link in bio page with your links, media, and favorite places.";
 export const HOME_TITLE =
   "A Link in Bio, the most beautiful and clean you've ever seen";
-export const DEFAULT_SOCIAL_IMAGE = "/opengraph-image";
+export const DEFAULT_SOCIAL_IMAGE = "/logo512.png";
 
 type PageMetadataInput = {
   title: string;
