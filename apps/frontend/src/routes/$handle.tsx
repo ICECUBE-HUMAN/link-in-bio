@@ -568,8 +568,10 @@ export function HandlePageContent({
 								className={`t-stagger-line t-stagger-line--3 px-0.5 text-base leading-6 text-primary/80 ${layoutClasses.bio}`}
 							/>
 							{readOnly && ownedPage && !ownedPage.isPrimary ? (
-								<div className="text-sm text-muted-foreground">
+								<div className="text-base text-muted-foreground">
 									Non-primary pages are read-only and will be deleted soon.
+									<br />
+									Upgrade your plan before these pages are deleted.
 								</div>
 							) : null}
 						</div>
