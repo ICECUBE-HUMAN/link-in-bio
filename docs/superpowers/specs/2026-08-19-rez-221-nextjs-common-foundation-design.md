@@ -6,7 +6,7 @@
 
 ## 범위
 
-- 기존 전역 CSS와 Inter 글꼴 설정을 `apps/v2`의 전역 스타일로 옮긴다.
+- 기존 전역 CSS 본문은 옮기지 않고, 필요한 import만 `apps/v2` 전역 스타일에 반영한다.
 - Next.js 루트 레이아웃에 HTML/body/main 구조와 기본 메타데이터·아이콘·매니페스트 링크를 둔다.
 - 툴팁과 알림을 V2 공통 제공자로 제공한다.
 - Next.js의 없는 페이지와 오류 화면을 추가한다.
@@ -32,7 +32,7 @@
 
 ### 1. 전역 스타일과 글꼴
 
-기존 전역 CSS의 Tailwind·공통 토큰·애니메이션·그리드 보조 규칙·Inter 글꼴 선언을 V2 전역 CSS에 반영한다. 기존 V2 초기 토큰은 유지하되, 동일한 이름의 공통 변수와 규칙은 기존 앱의 동작을 기준으로 맞춘다. 기존 화면에서 아직 사용하지 않는 규칙도 이후 이관 화면의 공통 기반이므로 임의로 삭제하지 않는다.
+`apps/v2/app/globals.css`의 현재 본문과 토큰은 그대로 유지한다. 기존 `apps/frontend/src/styles.css`에서 필요한 import 줄만 확인해 V2에 반영한다. `styles.css`의 토큰·애니메이션·유틸리티·선택자 본문은 복사하지 않는다. 별도 CSS 파일의 내용을 새로 복사하는 작업도 이 이슈에 포함하지 않는다.
 
 ### 2. 루트 레이아웃과 메타데이터
 
@@ -78,7 +78,7 @@
 예상 변경 파일은 다음으로 한정한다.
 
 - `apps/v2/app/layout.tsx`
-- `apps/v2/app/globals.css`
+- `apps/v2/app/globals.css` (기존 본문 유지, 필요한 import만 추가)
 - `apps/v2/app/not-found.tsx`
 - `apps/v2/app/error.tsx`
 - `apps/v2/components/providers.tsx` 또는 같은 역할의 단일 Provider 파일
