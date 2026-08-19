@@ -258,6 +258,22 @@ const DEMO_PAGE = {
 					"https://cdn.grabbin.me/users/pNltlwfyWfhbiyDakkKbEPQTQOqkl86Z/1817c60c-7bd9-4105-bf15-a69e8ab3f2df/photo-1644409718092-c92a5f93b4d6.webp",
 			},
 		},
+		{
+			id: "demo-item-map-1",
+			style: {},
+			layouts: {
+				wide: { x: 0, y: 16, w: 2, h: 4 },
+				compact: { x: 0, y: 14, w: 2, h: 4 },
+			},
+			createdAt: "2026-08-19T12:00:00.000Z",
+			updatedAt: "2026-08-19T12:00:00.000Z",
+			type: "map",
+			data: {
+				latitude: 35.6762,
+				longitude: 139.6503,
+				zoom: 12,
+			},
+		},
 	],
 } satisfies PageByHandleResponse;
 
