@@ -104,7 +104,7 @@ export const betterAuthOptions = (
 		/**
 		 * The name of the application.
 		 */
-		appName: "Sinabro",
+		appName: "Grabbin",
 		/**
 		 * Base path for Better Auth.
 		 * @default "/api/auth"

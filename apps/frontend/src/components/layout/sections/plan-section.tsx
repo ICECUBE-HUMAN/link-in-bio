@@ -521,7 +521,7 @@ function PlanCard({
 				<div className="size-150 absolute -bottom-40 -right-40">
 					<img
 						src={"/favicon.svg"}
-						alt="grabbin"
+						alt="Grabbin"
 						className="size-full object-cover"
 					/>
 				</div>

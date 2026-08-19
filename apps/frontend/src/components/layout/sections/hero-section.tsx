@@ -10,7 +10,7 @@ export default function HeroSection() {
 						<div className="size-20">
 							<img
 								src={"/favicon.svg"}
-								alt="grabbin"
+								alt="Grabbin"
 								className="size-full object-cover"
 							/>
 						</div>
@@ -23,7 +23,7 @@ export default function HeroSection() {
 								A cleaner, more beautiful link in bio.
 							</h1>
 							<h3 className="text-lg font-medium text-center text-balance text-gray-bright md:text-xl">
-								Turn one link into your world.
+								Your links, content, and favorite places — all in one link in bio.
 							</h3>
 						</div>
 					</header>

@@ -19,7 +19,7 @@ export const Route = createFileRoute("/llms.txt")({
 				const body = createLlmsText({
 					title: DEFAULT_SITE_NAME,
 					description:
-						"grabbin is a flexible link in bio service for presenting your identity, links, media, and favorite places in one personal page.",
+						"Grabbin is a flexible link in bio service for presenting your identity, links, media, and favorite places in one personal page.",
 					resources: [
 						{
 							name: "Home",
