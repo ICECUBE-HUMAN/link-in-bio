@@ -2,9 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
 import type { ReactNode } from "react";
-import { Providers } from "@/components/providers";
-import { SimpleAnalyticsTracker } from "@/components/simple-analytics-tracker";
-import { env } from "@/lib/env";
+import { Providers } from "@/lib/providers";
+import { SimpleAnalyticsTracker } from "@/lib/simple-analytics-tracker";
 import "./globals.css";
 
 const inter = Inter({
@@ -13,7 +12,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: `${env.NEXT_PUBLIC_APP_TITLE ?? "Grabbin"} — A Link in Bio`,
+  metadataBase: new URL("https://grabbin.me"),
+  title: "Grabbin — A Link in Bio",
   description: "A cleaner, more beautiful link in bio.",
 };
 
@@ -34,7 +34,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
         <Providers>
           <SimpleAnalyticsTracker />
-          <main className="flex min-h-svh flex-col">{children}</main>
+          <div className="flex min-h-svh flex-col">{children}</div>
         </Providers>
       </body>
     </html>

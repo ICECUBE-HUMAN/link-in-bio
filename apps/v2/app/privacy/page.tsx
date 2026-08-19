@@ -1,3 +1,3 @@
-export function PrivacyPage() {
+export default function PrivacyPage() {
   return <main></main>;
 }
