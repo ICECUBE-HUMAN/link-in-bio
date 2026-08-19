@@ -348,6 +348,7 @@ export function HandlePageContent({
 	const showPrimaryAction =
 		isCurrentUserPage &&
 		!loaderData.isDemo &&
+		ownedPagesResult?.hasAccess === true &&
 		ownedPage !== undefined &&
 		primaryActionState !== "hidden" &&
 		(!ownedPage.isPrimary ||
@@ -566,6 +567,11 @@ export function HandlePageContent({
 								spellCheck={false}
 								className={`t-stagger-line t-stagger-line--3 px-0.5 text-base leading-6 text-primary/80 ${layoutClasses.bio}`}
 							/>
+							{readOnly && ownedPage && !ownedPage.isPrimary ? (
+								<div className="text-sm text-muted-foreground">
+									Non-primary pages are read-only and will be deleted soon.
+								</div>
+							) : null}
 						</div>
 						{showPrimaryAction ? (
 							<div
@@ -625,11 +631,6 @@ export function HandlePageContent({
 					className={`flex flex-col items-center gap-2 py-24 pt-0 z-10 min-[90rem]:flex-row min-[90rem]:py-0 ${layoutClasses.controls}`}
 					aria-label="Page controls"
 				>
-					{readOnly && ownedPage && !ownedPage.isPrimary ? (
-						<div className="text-xs text-muted-foreground">
-							Non-primary pages are read-only and will be deleted soon.
-						</div>
-					) : null}
 					<div
 						className={
 							isSignedIn
