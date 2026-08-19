@@ -547,26 +547,40 @@
 	z-index: 50;
 }
 
-.t-breakpoint-crossfade {
+@keyframes t-breakpoint-view-old {
+	to {
+		opacity: 0;
+	}
+}
+
+@keyframes t-breakpoint-view-new {
+	from {
+		opacity: 0;
+	}
+}
+
+::view-transition-group(root) {
+	animation-duration: 200ms;
+	animation-timing-function: var(--page-fade-ease);
+}
+
+::view-transition-old(root) {
+	animation: t-breakpoint-view-old 160ms var(--page-fade-ease) both;
+}
+
+::view-transition-new(root) {
+	animation: t-breakpoint-view-new 200ms var(--page-fade-ease) both;
+}
+
+.t-breakpoint-content {
 	opacity: 1;
-	filter: blur(0);
-	transition:
-		opacity var(--breakpoint-fade-dur) var(--page-fade-ease),
-		filter var(--breakpoint-fade-dur) var(--page-fade-ease);
-	will-change: opacity, filter;
+	transition: opacity 160ms var(--page-fade-ease);
+	will-change: opacity;
 }
 
-.t-breakpoint-crossfade[data-breakpoint-transition="exit"],
-.t-breakpoint-crossfade[data-breakpoint-transition="frame"],
-.t-breakpoint-crossfade[data-breakpoint-transition="enter"] {
+.t-breakpoint-content[data-breakpoint-transition="out"] {
 	opacity: 0;
-	filter: blur(var(--page-blur));
-}
-
-.t-breakpoint-frame {
-	transition:
-		border-radius var(--breakpoint-frame-dur) var(--page-fade-ease),
-		background-color var(--breakpoint-frame-dur) var(--page-fade-ease);
+	transition-duration: 80ms;
 }
 
 .t-panel-slide {
@@ -594,9 +608,14 @@
 
 @media (prefers-reduced-motion: reduce) {
 	.t-stagger-line,
-	.t-breakpoint-crossfade,
-	.t-breakpoint-frame,
+	.t-breakpoint-content,
 	.t-panel-slide {
 		transition: none !important;
+	}
+
+	::view-transition-group(root),
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation: none;
 	}
 }

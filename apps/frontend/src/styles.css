@@ -111,10 +111,6 @@
 	transition-duration: var(--modal-close-dur);
 }
 
-#page-toolbar {
-	z-index: 10000 !important;
-}
-
 .t-acc-panel {
 	display: grid;
 	grid-template-rows: 0fr;

@@ -170,7 +170,7 @@ export default function Toolbar({
 	return (
 		<div
 			id="page-toolbar"
-			className="fixed bottom-8 z-100 flex w-full items-center justify-center"
+			className="fixed bottom-8 flex w-full items-center justify-center"
 		>
 			<input
 				ref={mediaInputRef}

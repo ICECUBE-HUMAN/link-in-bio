@@ -54,6 +54,9 @@ export function MediaItemRenderer({
 		startCrop: NormalizedCrop;
 	} | null>(null);
 	const [sourceSize, setSourceSize] = useState<MediaSourceSize | null>(null);
+	const [loadedMediaSource, setLoadedMediaSource] = useState<string | null>(
+		null,
+	);
 	const [frameSize, setFrameSize] = useState<MediaFrameSize>({
 		width: 0,
 		height: 0,
@@ -83,8 +86,10 @@ export function MediaItemRenderer({
 	}, []);
 
 	const mediaSource = item.data.mediaUrl ?? DEFAULT_IMAGE_DATA_URL;
+	const isMediaLoaded = loadedMediaSource === mediaSource;
 	useLayoutEffect(() => {
 		setSourceSize(null);
+		setLoadedMediaSource(null);
 
 		if (isVideo) {
 			const video = videoRef.current;
@@ -99,6 +104,9 @@ export function MediaItemRenderer({
 					width: video.videoWidth,
 					height: video.videoHeight,
 				});
+				if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+					setLoadedMediaSource(mediaSource);
+				}
 			}
 			return;
 		}
@@ -114,6 +122,7 @@ export function MediaItemRenderer({
 				width: image.naturalWidth,
 				height: image.naturalHeight,
 			});
+			setLoadedMediaSource(mediaSource);
 		}
 	}, [isVideo, mediaSource]);
 
@@ -303,6 +312,7 @@ export function MediaItemRenderer({
 			width: event.currentTarget.naturalWidth,
 			height: event.currentTarget.naturalHeight,
 		});
+		setLoadedMediaSource(mediaSource);
 	}
 
 	function handleVideoMetadata(event: SyntheticEvent<HTMLVideoElement>) {
@@ -310,6 +320,10 @@ export function MediaItemRenderer({
 			width: event.currentTarget.videoWidth,
 			height: event.currentTarget.videoHeight,
 		});
+	}
+
+	function handleVideoLoad() {
+		setLoadedMediaSource(mediaSource);
 	}
 
 	function handleCropPointerDown(event: ReactPointerEvent<HTMLButtonElement>) {
@@ -362,9 +376,11 @@ export function MediaItemRenderer({
 			loop
 			playsInline
 			onLoadedMetadata={handleVideoMetadata}
+			onLoadedData={handleVideoLoad}
 			className={cn(
-				"pointer-events-none",
+				"pointer-events-none absolute inset-0 transition-opacity duration-200 ease-out",
 				cropStyle ? "size-full rounded-[inherit]" : "size-full object-cover",
+				isMediaLoaded ? "opacity-100" : "opacity-0",
 			)}
 		/>
 	) : (
@@ -372,10 +388,12 @@ export function MediaItemRenderer({
 			ref={imageRef}
 			src={mediaSource}
 			alt={item.data.caption ?? "Media item"}
+			decoding="async"
 			onLoad={handleImageLoad}
 			className={cn(
-				"pointer-events-none",
+				"pointer-events-none absolute inset-0 transition-opacity duration-200 ease-out",
 				cropStyle ? "size-full rounded-[inherit]" : "size-full object-cover",
+				isMediaLoaded ? "opacity-100" : "opacity-0",
 			)}
 		/>
 	);
@@ -391,6 +409,12 @@ export function MediaItemRenderer({
 				isCropVisible && "overflow-visible!",
 			)}
 		>
+			<img
+				src={DEFAULT_IMAGE_DATA_URL}
+				alt=""
+				aria-hidden="true"
+				className="pointer-events-none absolute inset-0 size-full object-cover"
+			/>
 			{cropStyle ? (
 				<div
 					data-media-crop-source="true"
