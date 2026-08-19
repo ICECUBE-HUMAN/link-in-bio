@@ -42,22 +42,19 @@ const ROLLING_DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 const PROFILE_DEMO_PAGES = [
 	{
-		handle: "founder",
-		name: "wooky",
-		image:
-			"https://cdn.grabbin.me/users/m7u6wTOAJvOJLfH2aFP9yHIOWDgCjdms/8482ef70-083b-4c67-ba30-e3457ba35030/profile/232d1e6a-5bcf-466a-8714-5f75aeb23f2e.jpg",
+		handle: "developer",
+		name: "developer",
+		image: "/favicon.svg",
 	},
 	{
-		handle: "waldo",
-		name: "Waldo",
-		image:
-			"https://cdn.grabbin.me/users/m7u6wTOAJvOJLfH2aFP9yHIOWDgCjdms/b08d1240-8d57-40aa-aebb-a87b96b24172/profile/10d86fff-e86c-40a5-aaa6-980d40ae42c6.png",
+		handle: "writer",
+		name: "writer",
+		image: "/favicon.svg",
 	},
 	{
-		handle: "averymorgan",
-		name: "Morgan",
-		image:
-			"https://cdn.grabbin.me/users/m7u6wTOAJvOJLfH2aFP9yHIOWDgCjdms/2e809dce-a8d5-43af-be9f-04cd9d758524/profile/7b167b58-f9f6-430a-ac39-78d7a9cb82d9.png",
+		handle: "photographer",
+		name: "photographer",
+		image: "/favicon.svg",
 	},
 ] as const;
 
@@ -175,7 +172,7 @@ export default function PlanSection() {
 				))}
 			</div>
 			<p className="text-center text-base text-gray-bright md:text-xl">
-				More features may be added based on users needs.
+				More features may be added over time.
 			</p>
 		</section>
 	);

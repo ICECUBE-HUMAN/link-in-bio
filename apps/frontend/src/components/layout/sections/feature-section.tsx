@@ -127,84 +127,44 @@ const FEATURE_LAYOUTS: Record<FeatureViewport, Record<string, ItemLayout>> = {
 	},
 };
 
-// Captured from the shared backend link-provider enrichers on 2026-08-05.
 const FEATURE_LINK_METADATA = {
 	github: {
-		title: "milla-jovovich (Milla J) · GitHub",
-		description:
-			"Milla Jovovich-Creator/Architect of MemPalace-an open-source platform using structure to save your thoughts, verbatim. Lumi is my CLI agent aka Lu_Code✨ - milla-jovovich",
+		title: "Example GitHub project",
+		description: "A project link on your page.",
 		faviconUrl: `${FEATURE_LINK_ICON_BASE_URL}/github.svg`,
-		imageUrl: "https://avatars.githubusercontent.com/u/232237854?v=4?s=400",
 		provider: "github",
 		providerData: {
-			githubUsername: "milla-jovovich",
-			followers: 10006,
 			githubContributionGraph: GITHUB_CONTRIBUTION_GRAPH,
 		},
 	},
 	x: {
-		title: "X (@X) on X",
-		description: "what's happening?!",
+		title: "Example social profile",
+		description: "A social profile link on your page.",
 		faviconUrl: `${FEATURE_LINK_ICON_BASE_URL}/x.svg`,
-		imageUrl:
-			"https://pbs.twimg.com/profile_images/1955359038532653056/OSHY3ewP_200x200.jpg",
 		provider: "x",
-		providerData: {
-			followerCount: 60782872,
-			followerCountLabel: "60782872",
-			followerCountApproximate: false,
-		},
 	},
 	youtube: {
-		title: "Warner Bros.",
-		description:
-			"Welcome to the official channel for Warner Bros. Subscribe now for all our latest movie trailers, clips and featurettes!",
+		title: "Example video channel",
+		description: "A video channel link on your page.",
 		faviconUrl: `${FEATURE_LINK_ICON_BASE_URL}/youtube.svg`,
-		imageUrl: "https://i.ytimg.com/vi/NEmy6vvmuvg/maxresdefault.jpg",
 		provider: "youtube",
-		providerData: {
-			channelId: "UCjmJDM5pRKbUlVIzDYYWb6g",
-			channelImageUrl:
-				"https://yt3.ggpht.com/yVXKYrUI8hckCQdyUuOWf5ZJk2keT8WO3TV2b8RYk3RKgjz5Rh8v1UsH7Yz2j_hbDQRk32rZ_rM=s800-c-k-c0x00ffffff-no-rj",
-			subscriberCount: 12900000,
-			recentVideoThumbnailUrls: [
-				"https://i.ytimg.com/vi/NEmy6vvmuvg/maxresdefault.jpg",
-				"https://i.ytimg.com/vi/ciyj_BvQftM/maxresdefault.jpg",
-				"https://i.ytimg.com/vi/viZVbe_sZuE/maxresdefault.jpg",
-				"https://i.ytimg.com/vi/imDtMzj0k9Y/maxresdefault.jpg",
-			],
-		},
 	},
 	appStore: {
-		title: "Spotify: Music and Podcasts App",
-		description:
-			"Download Spotify: Music and Podcasts by Spotify on the App Store. See screenshots, ratings and reviews, user tips, and more apps like Spotify and…",
+		title: "Example app",
+		description: "An app link on your page.",
 		faviconUrl: `${FEATURE_LINK_ICON_BASE_URL}/app-store.svg`,
-		imageUrl:
-			"https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/7c/05/8e/7c058ecf-b386-15ac-9765-31e2d624ec22/Placeholder.mill/1200x630wa.jpg",
 		provider: "app-store",
 	},
 	instagram: {
-		title: "Mrs. GREEN APPLE (@mgaband)",
-		description:
-			"2M Followers, 3 Following, 252 Posts - See photos and videos from Mrs. GREEN APPLE (@mgaband)",
+		title: "Example photo profile",
+		description: "A photo profile link on your page.",
 		faviconUrl: `${FEATURE_LINK_ICON_BASE_URL}/instagram.svg`,
-		imageUrl:
-			"https://scontent-ssn1-1.cdninstagram.com/v/t51.82787-19/608826023_18419236633137558_6099778976477500782_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=1&ccb=7-5&_nc_sid=bf7eb4&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=bx6ddADZFXcQ7kNvwEGCmU4&_nc_oc=AdpeKM8wuQyIRrooGKMNb-i9P5Iw_dgnkWBnfgSzytThg1wSBl7ylWs7I5rpND-Gjf4&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_gid=oeY5s8_YvLYtukTExS2Mbw&_nc_ss=7e60f&oh=00_AQF7yGd1_my45lb1phm4Wm7n0LEokoWGUJM33SExzJ8mRA&oe=6A78D312",
 		provider: "instagram",
-		providerData: {
-			followerCount: 2000000,
-			followerCountLabel: "2M",
-			followerCountApproximate: true,
-		},
 	},
 	web: {
-		title: "Mobbin — UI & UX design inspiration for mobile & web apps",
-		description:
-			"Save hours of UI & UX research with our library of 400,000+ fully searchable mobile & web app screenshots.",
-		faviconUrl: "https://icons.duckduckgo.com/ip3/mobbin.com.ico",
-		imageUrl:
-			"https://framerusercontent.com/assets/FE3uqmxi41SxsiiVq9JNJC1Pwc.png",
+		title: "Example website",
+		description: "A website link on your page.",
+		faviconUrl: "https://icons.duckduckgo.com/ip3/example.com.ico",
 		provider: "generic-web",
 	},
 } satisfies Record<string, PageItemLinkMetadata>;
@@ -315,42 +275,42 @@ function createFeatureItems(): GridItem[] {
 			id: "feature-link-github",
 			itemType: "link" as const,
 			preset: "landscape" as const,
-			url: "https://github.com/milla-jovovich",
-			metadata: { ...FEATURE_LINK_METADATA.github, title: "my project" },
+			url: "https://github.com/example",
+			metadata: { ...FEATURE_LINK_METADATA.github, title: "Example project" },
 		},
 		{
 			id: "feature-link-x",
 			itemType: "link" as const,
 			preset: "squareSmall" as const,
-			url: "https://x.com/X",
-			metadata: { ...FEATURE_LINK_METADATA.x, title: "@maynard" },
+			url: "https://x.com/example",
+			metadata: { ...FEATURE_LINK_METADATA.x, title: "@example" },
 		},
 		{
 			id: "feature-link-youtube",
 			itemType: "link" as const,
 			preset: "squareLarge" as const,
-			url: "https://www.youtube.com/@WarnerBros",
-			metadata: { ...FEATURE_LINK_METADATA.youtube, title: "Warner Bros" },
+			url: "https://www.youtube.com/@example",
+			metadata: { ...FEATURE_LINK_METADATA.youtube, title: "Example channel" },
 		},
 		{
 			id: "feature-link-app-store",
 			itemType: "link" as const,
 			preset: "squareSmall" as const,
-			url: "https://apps.apple.com/us/app/spotify-music-and-podcasts/id324684580",
+			url: "https://apps.apple.com/app/example/id000000000",
 			metadata: FEATURE_LINK_METADATA.appStore,
 		},
 		{
 			id: "feature-link-instagram",
 			itemType: "link" as const,
 			preset: "portrait" as const,
-			url: "https://www.instagram.com/mgaband",
+			url: "https://www.instagram.com/example",
 			metadata: FEATURE_LINK_METADATA.instagram,
 		},
 		{
 			id: "feature-link-web",
 			itemType: "link" as const,
 			preset: "squareLarge" as const,
-			url: "https://mobbin.com/",
+			url: "https://example.com/",
 			metadata: FEATURE_LINK_METADATA.web,
 		},
 	] as const;
@@ -457,7 +417,7 @@ export default function FeatureSection() {
 				)}
       </div>
       <p className="text-center text-base text-gray-bright md:text-xl">
-				More features may be added based on users needs.
+				More features may be added over time.
 			</p>
 		</section>
 	);
@@ -915,19 +875,19 @@ function createEverythingPreviewItems(): GridItem[] {
 		{
 			id: "everything-github",
 			preset: "portrait" as const,
-			url: "https://github.com/milla-jovovich",
+			url: "https://github.com/example",
 			metadata: { ...FEATURE_LINK_METADATA.github, title: "GitHub" },
 		},
 		{
 			id: "everything-instagram",
 			preset: "squareSmall" as const,
-			url: "https://www.instagram.com/mgaband",
+			url: "https://www.instagram.com/example",
 			metadata: { ...FEATURE_LINK_METADATA.instagram, title: "Instagram" },
 		},
 		{
 			id: "everything-youtube",
 			preset: "squareSmall" as const,
-			url: "https://www.youtube.com/@WarnerBros",
+			url: "https://www.youtube.com/@example",
 			metadata: { ...FEATURE_LINK_METADATA.youtube, title: "YouTube" },
 		},
 	] as const) {
