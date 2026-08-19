@@ -1,6 +1,5 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
-import Footer from "@/components/layout/footer";
 import JsonLd from "@/components/seo/json-ld";
 import { getBlogPosts } from "@/lib/content";
 import { createWebPageJsonLd } from "@/lib/seo/json-ld";
@@ -98,9 +97,6 @@ export default function BlogPage() {
           ))}
         </section>
       </main>
-      <div className="px-5">
-        <Footer />
-      </div>
     </>
   );
 }

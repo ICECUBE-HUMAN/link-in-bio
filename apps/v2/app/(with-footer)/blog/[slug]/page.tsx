@@ -9,8 +9,6 @@ import {
   DEFAULT_SOCIAL_IMAGE,
 } from "@/lib/seo/metadata";
 
-export const dynamicParams = false;
-
 type PageProps = { params: Promise<{ slug: string }> };
 
 export function generateStaticParams() {
