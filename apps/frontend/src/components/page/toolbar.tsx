@@ -368,10 +368,10 @@ export default function Toolbar({
 										<Button
 											variant="brand"
 											size="default"
-											className="surface-line w-28 px-8"
+											className="w-28 px-8 rounded-lg"
 											disabled
 										>
-											<Loader className="size-4 animate-spin text-primary" />
+											<Loader className="size-4 animate-spin" />
 											Saving
 										</Button>
 									) : (
