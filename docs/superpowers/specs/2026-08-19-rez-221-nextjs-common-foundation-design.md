@@ -8,6 +8,7 @@
 
 - 기존 전역 CSS 본문은 옮기지 않고, 필요한 import만 `apps/v2` 전역 스타일에 반영한다.
 - Next.js 루트 레이아웃에 HTML/body/main 구조와 기본 메타데이터·아이콘·매니페스트 링크를 둔다.
+- 기존 `apps/frontend/public`의 아이콘·매니페스트 자산을 V2 `public`에서 재사용한다.
 - 툴팁과 알림을 V2 공통 제공자로 제공한다.
 - Next.js의 없는 페이지와 오류 화면을 추가한다.
 - Simple Analytics 스크립트는 자동 수집을 끄고, `grabbin.me` 호스트에서만 경로 조회를 수동 기록한다.
@@ -81,6 +82,7 @@
 - `apps/v2/app/globals.css` (기존 본문 유지, 필요한 import만 추가)
 - `apps/v2/app/not-found.tsx`
 - `apps/v2/app/error.tsx`
+- `apps/v2/public/favicon.svg`, `apps/v2/public/apple-touch-icon.png`, `apps/v2/public/manifest.json`, `apps/v2/public/logo192.png`, `apps/v2/public/logo512.png`
 - `apps/v2/components/providers.tsx` 또는 같은 역할의 단일 Provider 파일
 - `apps/v2/components/ui/tooltip.tsx`
 - `apps/v2/components/ui/sonner.tsx`

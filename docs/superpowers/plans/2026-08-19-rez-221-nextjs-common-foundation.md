@@ -73,6 +73,11 @@
 **Files:**
 - Modify: `apps/v2/app/layout.tsx`
 - Modify: `apps/v2/app/globals.css` only for import lines
+- Create: `apps/v2/public/favicon.svg`
+- Create: `apps/v2/public/apple-touch-icon.png`
+- Create: `apps/v2/public/manifest.json`
+- Create: `apps/v2/public/logo192.png`
+- Create: `apps/v2/public/logo512.png`
 
 **Interfaces:**
 - Consumes: `apps/frontend/src/routes/__root.tsx` document structure and `apps/frontend/src/lib/seo/metadata.ts` default values.
@@ -96,6 +101,8 @@
   ```
 
   Keep page-specific canonical, Open Graph, JSON-LD, and article metadata out of this task.
+
+  Reuse the five matching files from `apps/frontend/public` in `apps/v2/public`; do not redraw or resize the assets.
 
 - [ ] **Step 2: Implement the stable root element structure**
 
@@ -272,7 +279,7 @@
   ```tsx
   "use client";
 
-  export default function Error({
+  export default function ErrorState({
     error,
     reset,
   }: { error: Error & { digest?: string }; reset: () => void }) {
