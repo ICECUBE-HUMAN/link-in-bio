@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+
+case "$1" in
+  "$PWD"/apps/v2/*)
+    exec "$PWD/apps/v2/node_modules/.bin/biome" format --config-path "$PWD/apps/v2/biome.json" --stdin-file-path "$1"
+    ;;
+esac
+
+exec "$PWD/node_modules/.bin/biome" format --stdin-file-path "$1"

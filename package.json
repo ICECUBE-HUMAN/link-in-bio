@@ -12,6 +12,7 @@
     "dev:backend": "bun run --filter @grabbin/backend dev",
     "dev:v2": "bun run --filter @grabbin/v2 dev",
     "build": "bun run --filter @grabbin/frontend build",
+    "build:v2": "bun run --filter @grabbin/v2 build",
     "check": "bun run --workspaces check",
     "deploy:frontend": "bun run --filter @grabbin/frontend deploy",
     "deploy:backend": "bun run --filter @grabbin/backend deploy",

@@ -1,54 +1,50 @@
 {
   "languages": {
+    "CSS": {
+      "formatter": {
+        "external": {
+          "command": "./.zed/format-biome",
+          "arguments": ["{buffer_path}"],
+        },
+      },
+    },
     "JavaScript": {
       "formatter": {
         "external": {
-          "command": "bunx",
-          "arguments": [
-            "biome",
-            "format",
-            "--stdin-file-path",
-            "{buffer_path}",
-          ],
+          "command": "./.zed/format-biome",
+          "arguments": ["{buffer_path}"],
         },
       },
     },
     "TypeScript": {
       "formatter": {
         "external": {
-          "command": "bunx",
-          "arguments": [
-            "biome",
-            "format",
-            "--stdin-file-path",
-            "{buffer_path}",
-          ],
+          "command": "./.zed/format-biome",
+          "arguments": ["{buffer_path}"],
+        },
+      },
+    },
+    "TSX": {
+      "formatter": {
+        "external": {
+          "command": "./.zed/format-biome",
+          "arguments": ["{buffer_path}"],
         },
       },
     },
     "JSON": {
       "formatter": {
         "external": {
-          "command": "bunx",
-          "arguments": [
-            "biome",
-            "format",
-            "--stdin-file-path",
-            "{buffer_path}",
-          ],
+          "command": "./.zed/format-biome",
+          "arguments": ["{buffer_path}"],
         },
       },
     },
     "JSONC": {
       "formatter": {
         "external": {
-          "command": "bunx",
-          "arguments": [
-            "biome",
-            "format",
-            "--stdin-file-path",
-            "{buffer_path}",
-          ],
+          "command": "./.zed/format-biome",
+          "arguments": ["{buffer_path}"],
         },
       },
     },
