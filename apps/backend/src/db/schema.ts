@@ -1,5 +1,5 @@
 import type { CreemWebhookState } from "@core/creem-webhook";
-import type { ProfileImageCrop } from "@sinabro/api";
+import type { ProfileImageCrop } from "@grabbin/api";
 import { relations } from "drizzle-orm";
 import {
 	boolean,

@@ -1,4 +1,4 @@
-import type { PageByHandleResponse } from "@sinabro/api";
+import type { PageByHandleResponse } from "@grabbin/api";
 
 const DEMO_PAGE = {
 	page: {

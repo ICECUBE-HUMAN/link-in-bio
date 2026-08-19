@@ -3,7 +3,7 @@ import {
 	gridContainerPadding,
 	gridMargin,
 	gridRowHeight,
-} from "@sinabro/grid-layout";
+} from "@grabbin/grid-layout";
 import {
 	useCallback,
 	useEffect,

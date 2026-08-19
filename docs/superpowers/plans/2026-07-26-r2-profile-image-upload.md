@@ -28,7 +28,7 @@
 - Produce `profileImageCompleteRequestSchema` / `ProfileImageCompleteRequest` with `objectKey`.
 
 - [ ] Add Valibot schemas and inferred types without importing backend/runtime dependencies.
-- [ ] Run `bun run --filter @sinabro/api check` and confirm the contract package passes.
+- [ ] Run `bun run --filter @grabbin/api check` and confirm the contract package passes.
 
 ### Task 2: Configure R2 and implement presigning helpers
 

@@ -4,7 +4,7 @@ import {
 	type ProfileImageUploadRequest,
 	profileImageCompleteResponseSchema,
 	profileImageUploadResponseSchema,
-} from "@sinabro/api";
+} from "@grabbin/api";
 import * as v from "valibot";
 import { env } from "@/env";
 

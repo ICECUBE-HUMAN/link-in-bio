@@ -1,8 +1,8 @@
-import type { PageItemUploadRequest } from "@sinabro/api";
+import type { PageItemUploadRequest } from "@grabbin/api";
 import {
 	MAX_ITEM_MEDIA_SIZE as SHARED_MAX_ITEM_MEDIA_SIZE,
 	MAX_PROFILE_IMAGE_SIZE as SHARED_MAX_PROFILE_IMAGE_SIZE,
-} from "@sinabro/api";
+} from "@grabbin/api";
 
 export const LEGACY_PROFILE_IMAGE_PREFIX =
 	"users/profile/";

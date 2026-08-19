@@ -1,7 +1,7 @@
 import {
 	type PageItemMetadataRequest,
 	pageItemMetadataResponseSchema,
-} from "@sinabro/api";
+} from "@grabbin/api";
 import * as v from "valibot";
 import { getApiBaseUrl } from "@/lib/site/api-base-url";
 

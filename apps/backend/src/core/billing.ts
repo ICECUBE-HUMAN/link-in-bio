@@ -3,7 +3,7 @@ import {
 	creemSubscription,
 	pages,
 } from "@db/schema";
-import { PRO_PRODUCT_IDS } from "@sinabro/plan";
+import { PRO_PRODUCT_IDS } from "@grabbin/plan";
 import {
 	and,
 	eq,

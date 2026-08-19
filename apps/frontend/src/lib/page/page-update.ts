@@ -3,7 +3,7 @@ import {
 	pageResponseSchema,
 	type UpdatePageRequest,
 	updatePageResponseSchema,
-} from "@sinabro/api";
+} from "@grabbin/api";
 import * as v from "valibot";
 
 export type EditablePageFields = Pick<

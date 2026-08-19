@@ -1,4 +1,4 @@
-import type { HandleAvailabilityResponse } from "@sinabro/api";
+import type { HandleAvailabilityResponse } from "@grabbin/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import {

@@ -1,4 +1,4 @@
-import type { ProfileImageCrop } from "@sinabro/api";
+import type { ProfileImageCrop } from "@grabbin/api";
 import { motion, useReducedMotion } from "motion/react";
 import { type RefObject, useEffect, useState } from "react";
 import type { ProfileImageSourceSize } from "@/lib/image/crop-image";

@@ -3,7 +3,7 @@ import type {
 	PageByHandleResponse,
 	PageResponse,
 	UpdatePageRequest,
-} from "@sinabro/api";
+} from "@grabbin/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MY_PAGE_QUERY_KEY } from "@/lib/api/pages.functions";

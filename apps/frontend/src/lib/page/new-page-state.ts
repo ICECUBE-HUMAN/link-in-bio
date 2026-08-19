@@ -1,7 +1,7 @@
 import {
 	type HandleAvailabilityResponse,
 	normalizePageHandle,
-} from "@sinabro/api";
+} from "@grabbin/api";
 
 const handleAvailabilityMessages = {
 	invalid: "Enter a valid handle.",

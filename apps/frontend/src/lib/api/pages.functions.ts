@@ -9,7 +9,7 @@ import {
 	ownedPageListResponseSchema,
 	type PageByHandleResponse,
 	pageByHandleResponseSchema,
-} from "@sinabro/api";
+} from "@grabbin/api";
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";

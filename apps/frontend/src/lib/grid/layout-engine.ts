@@ -7,7 +7,7 @@ import {
 	resolveAxisAwareSwap,
 	validateLayout,
 	validateLayoutForItem,
-} from "@sinabro/grid-layout";
+} from "@grabbin/grid-layout";
 import { fastVerticalCompactor } from "react-grid-layout/extras";
 import type {
 	Breakpoint,

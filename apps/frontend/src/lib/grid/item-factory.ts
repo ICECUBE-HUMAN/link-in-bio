@@ -1,10 +1,10 @@
-import { createInitialLinkMetadata } from "@sinabro/api";
+import { createInitialLinkMetadata } from "@grabbin/api";
 import {
 	getColumns,
 	getDefaultPreset,
 	getPresetGeometry,
 	placeAtFirstAvailable,
-} from "@sinabro/grid-layout";
+} from "@grabbin/grid-layout";
 import { DEFAULT_MAP_LOCATION, DEFAULT_MAP_ZOOM } from "../map/map-config";
 import { toLayoutMap } from "./layout-engine";
 import type { Breakpoint, GridItem, ItemType } from "./types";

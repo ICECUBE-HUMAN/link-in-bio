@@ -11,7 +11,7 @@ import {
 	resolveAxisAwareSwap,
 	validateLayout,
 	validateLayoutForItem,
-} from "@sinabro/grid-layout";
+} from "@grabbin/grid-layout";
 
 describe("grid layout domain", () => {
 	it("returns the planned preset matrix and breakpoint geometry", () => {

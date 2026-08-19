@@ -3,8 +3,8 @@ import type {
 	PageItemBatchRequest,
 	PageItemBatchResponse,
 	PageItemResponse,
-} from "@sinabro/api";
-import { hasPageItemContent, pageItemBatchResponseSchema } from "@sinabro/api";
+} from "@grabbin/api";
+import { hasPageItemContent, pageItemBatchResponseSchema } from "@grabbin/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as v from "valibot";

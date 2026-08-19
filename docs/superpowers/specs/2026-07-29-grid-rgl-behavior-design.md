@@ -38,7 +38,7 @@
 
 RGL을 화면상의 레이아웃 동작 권위자로 사용한다. 드래그 중 좌표 계산, placeholder, 충돌 밀어내기, overlap 방지, vertical compaction을 RGL에 맡긴다. 드래그 종료 시 현재 breakpoint의 전체 RGL layout을 `LayoutMap`으로 변환해 editor command로 전달한다.
 
-### `@sinabro/grid-layout`
+### `@grabbin/grid-layout`
 
 도메인 패키지는 breakpoint 열 수, preset geometry, 아이템 생성 위치, 저장 경계의 layout 형식·범위·overlap 검증을 담당한다. `resolveAxisAwareSwap`은 새 드래그 흐름에서 사용하지 않는다. 생성 위치 계산과 preset 검증에 필요한 기존 helper는 유지한다.
 

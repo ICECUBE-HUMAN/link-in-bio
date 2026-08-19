@@ -17,7 +17,7 @@ import {
 	type UpdatePageResponse,
 	updatePageRequestSchema,
 	updatePageResponseSchema,
-} from "@sinabro/api";
+} from "@grabbin/api";
 import type { Context } from "hono";
 import { Hono } from "hono";
 import * as v from "valibot";

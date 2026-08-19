@@ -10,7 +10,7 @@ import {
 	pageItemSectionDataSchema,
 	pageItemTextDataSchema,
 	pageItemUpsertSchema,
-} from "@sinabro/api/grid";
+} from "@grabbin/api/grid";
 import * as v from "valibot";
 
 export const itemDataSchemas = {

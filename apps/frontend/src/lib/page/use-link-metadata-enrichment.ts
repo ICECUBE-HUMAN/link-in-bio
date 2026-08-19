@@ -1,4 +1,4 @@
-import type { PageItemResponse } from "@sinabro/api";
+import type { PageItemResponse } from "@grabbin/api";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { enrichPageItemMetadata } from "@/lib/api/link-metadata-api";

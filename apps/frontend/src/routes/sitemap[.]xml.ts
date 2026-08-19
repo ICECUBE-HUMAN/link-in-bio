@@ -1,4 +1,4 @@
-import { pageHandleSchema } from "@sinabro/api";
+import { pageHandleSchema } from "@grabbin/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { allPosts } from "content-collections";
 import * as v from "valibot";

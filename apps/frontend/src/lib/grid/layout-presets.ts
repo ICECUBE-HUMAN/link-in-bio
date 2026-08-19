@@ -3,4 +3,4 @@ export {
 	getAllowedPresets,
 	getDefaultPreset,
 	getPresetGeometry,
-} from "@sinabro/grid-layout";
+} from "@grabbin/grid-layout";

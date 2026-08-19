@@ -3,7 +3,7 @@ import {
 	expect,
 	it,
 } from "bun:test";
-import { PRO_MONTHLY_PRODUCT_ID } from "@sinabro/plan";
+import { PRO_MONTHLY_PRODUCT_ID } from "@grabbin/plan";
 import {
 	buildPlanAccess,
 	getPlanAccess,

@@ -15,5 +15,5 @@ Common commands:
 - `bun run deploy:backend`
 
 When deploying the profile-image crop change, run
-`bun run --filter @sinabro/backend db:migrate` before
+`bun run --filter @grabbin/backend db:migrate` before
 `bun run deploy:backend`.

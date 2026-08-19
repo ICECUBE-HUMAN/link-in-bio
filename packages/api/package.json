@@ -1,5 +1,5 @@
 {
-  "name": "@sinabro/api",
+  "name": "@grabbin/api",
   "private": true,
   "type": "module",
   "exports": {

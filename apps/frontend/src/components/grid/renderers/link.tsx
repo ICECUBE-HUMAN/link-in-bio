@@ -1,4 +1,4 @@
-import { getLinkProviderPresentation } from "@sinabro/api";
+import { getLinkProviderPresentation } from "@grabbin/api";
 import { TriangleIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { type ReactNode, useEffect, useRef, useState } from "react";

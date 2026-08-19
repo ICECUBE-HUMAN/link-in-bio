@@ -1,1 +1,1 @@
-export * from "@sinabro/grid-layout";
+export * from "@grabbin/grid-layout";

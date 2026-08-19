@@ -1,4 +1,4 @@
-import type { PageItemLinkMetadata } from "@sinabro/api";
+import type { PageItemLinkMetadata } from "@grabbin/api";
 import type { LinkProvider } from "./link-providers";
 
 const PRODUCT_HUNT_HOSTNAMES = new Set([

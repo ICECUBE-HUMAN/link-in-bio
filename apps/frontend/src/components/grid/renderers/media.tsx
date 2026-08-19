@@ -1,4 +1,4 @@
-import type { NormalizedCrop } from "@sinabro/api";
+import type { NormalizedCrop } from "@grabbin/api";
 import {
 	type CSSProperties,
 	type PointerEvent as ReactPointerEvent,

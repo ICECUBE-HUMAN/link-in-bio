@@ -18,6 +18,6 @@ Extract business logic from `pages.controller.ts` and `page-items.controller.ts`
 - The controllers contain no Drizzle transaction or R2 metadata logic.
 - Services do not depend on Hono route objects.
 - Existing endpoints and status codes remain unchanged.
-- `bun run --filter @sinabro/backend check` passes.
-- `bun run --filter @sinabro/backend test` passes.
-- `bun run --filter @sinabro/api check` and frontend build pass.
+- `bun run --filter @grabbin/backend check` passes.
+- `bun run --filter @grabbin/backend test` passes.
+- `bun run --filter @grabbin/api check` and frontend build pass.

@@ -8,7 +8,7 @@
 
 - `PlanSection`은 Free/Pro 가격과 기능을 정적으로 표시한다.
 - 비로그인 사용자가 Pro 결제를 시작하면 `/log-in`으로 이동한다.
-- 로그인 사용자가 Pro 결제를 시작하면 `@sinabro/plan`의 상품 ID를 사용해 `authClient.creem.createCheckout({ productId })`를 호출한다.
+- 로그인 사용자가 Pro 결제를 시작하면 `@grabbin/plan`의 상품 ID를 사용해 `authClient.creem.createCheckout({ productId })`를 호출한다.
 - `PlanSection`에서는 구독 상태를 조회하지 않으며 활성 구독 여부에 따라 버튼 문구를 바꾸지 않는다.
 - `PageSettingsMenu`는 기존 `getOwnedPages` 응답의 `hasAccess`를 현재 플랜 표시의 기준으로 사용한다. `true`는 Pro, `false`는 Free로 표시한다.
 - Free 사용자에게는 `Manage page` 메뉴를 표시하지 않는다.

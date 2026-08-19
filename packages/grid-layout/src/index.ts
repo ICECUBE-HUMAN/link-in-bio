@@ -3,7 +3,7 @@ import type {
 	ItemLayout,
 	ItemType,
 	PageItemLayouts,
-} from "@sinabro/api/grid";
+} from "@grabbin/api/grid";
 
 export type { Breakpoint, ItemLayout, ItemType, PageItemLayouts };
 export type PresetName =

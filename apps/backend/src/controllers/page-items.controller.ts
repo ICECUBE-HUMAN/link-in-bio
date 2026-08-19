@@ -4,7 +4,7 @@ import {
 	pageItemMetadataRequestSchema,
 	pageItemUploadCompleteRequestSchema,
 	pageItemUploadRequestSchema,
-} from "@sinabro/api";
+} from "@grabbin/api";
 import type { Context } from "hono";
 import { Hono } from "hono";
 import * as v from "valibot";

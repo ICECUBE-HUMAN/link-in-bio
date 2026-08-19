@@ -51,8 +51,8 @@
 - Modify: `apps/backend/src/controllers/page-items.controller.test.ts`
 
 **Interfaces:**
-- Produces: `normalizedCropSchema`, `NormalizedCrop`, `pageItemMediaCropSchema`, and `PageItemMediaCrop` from `@sinabro/api/grid`.
-- Preserves: `profileImageCropSchema` and `ProfileImageCrop` from `@sinabro/api` as aliases backed by the shared schema.
+- Produces: `normalizedCropSchema`, `NormalizedCrop`, `pageItemMediaCropSchema`, and `PageItemMediaCrop` from `@grabbin/api/grid`.
+- Preserves: `profileImageCropSchema` and `ProfileImageCrop` from `@grabbin/api` as aliases backed by the shared schema.
 - Persists: `PageItemMediaData.crop?: { wide?: NormalizedCrop; compact?: NormalizedCrop }`.
 
 - [ ] **Step 1: Extract the common normalized crop schema**
@@ -114,9 +114,9 @@ Extend `apps/backend/src/controllers/page-items.controller.test.ts` with one val
 Run:
 
 ```bash
-bun run --filter @sinabro/api check
-bun run --filter @sinabro/backend test
-bun run --filter @sinabro/backend check
+bun run --filter @grabbin/api check
+bun run --filter @grabbin/backend test
+bun run --filter @grabbin/backend check
 ```
 
 Expected: all commands exit `0`; backend tests include valid persistence and invalid normalized-crop rejection.
@@ -129,7 +129,7 @@ Expected: all commands exit `0`; backend tests include valid persistence and inv
 - Create: `apps/frontend/src/lib/grid/media-crop.ts`
 
 **Interfaces:**
-- Consumes: `NormalizedCrop` from `@sinabro/api/grid`.
+- Consumes: `NormalizedCrop` from `@grabbin/api/grid`.
 - Produces:
   - `type MediaSize = { width: number; height: number }`
   - `getCenteredMediaCrop(sourceSize, frameSize): NormalizedCrop`
@@ -200,7 +200,7 @@ Do not add a frontend test file. Run:
 
 ```bash
 bunx biome check apps/frontend/src/lib/grid/media-crop.ts
-bun run --filter @sinabro/frontend typecheck
+bun run --filter @grabbin/frontend typecheck
 ```
 
 Expected: both commands exit `0`.
@@ -278,7 +278,7 @@ bunx biome check \
   apps/frontend/src/lib/grid/item-registry.ts \
   apps/frontend/src/components/grid/item-controls.tsx \
   apps/frontend/src/components/grid/grid-item-shell.tsx
-bun run --filter @sinabro/frontend typecheck
+bun run --filter @grabbin/frontend typecheck
 ```
 
 Expected: both commands exit `0`; no frontend test files are created.
@@ -351,8 +351,8 @@ Run:
 
 ```bash
 bunx biome check apps/frontend/src/components/grid/renderers/media.tsx
-bun run --filter @sinabro/frontend typecheck
-bun run --filter @sinabro/frontend build
+bun run --filter @grabbin/frontend typecheck
+bun run --filter @grabbin/frontend build
 ```
 
 Expected: all commands exit `0`.
@@ -390,11 +390,11 @@ Do not send `mediaUrl`. Do not change the pending-item filter or upload completi
 Run:
 
 ```bash
-bun run --filter @sinabro/api check
-bun run --filter @sinabro/backend test
-bun run --filter @sinabro/backend check
-bun run --filter @sinabro/frontend typecheck
-bun run --filter @sinabro/frontend build
+bun run --filter @grabbin/api check
+bun run --filter @grabbin/backend test
+bun run --filter @grabbin/backend check
+bun run --filter @grabbin/frontend typecheck
+bun run --filter @grabbin/frontend build
 ```
 
 Expected: every command exits `0`. If a broad frontend check reports known unrelated baseline diagnostics, record them separately and run Biome against every changed frontend file.

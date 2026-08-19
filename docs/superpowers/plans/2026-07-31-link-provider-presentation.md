@@ -28,7 +28,7 @@
 - `linkProviderDefinitions` matches each provider's primary hostname or protocol.
 
 - [ ] Add the requested provider IDs and definitions while preserving priority ordering and generic fallback.
-- [ ] Run `bun run --filter @sinabro/api check` if available, otherwise use the package's scoped check command.
+- [ ] Run `bun run --filter @grabbin/api check` if available, otherwise use the package's scoped check command.
 
 ### Task 2: Add frontend presentation registry
 

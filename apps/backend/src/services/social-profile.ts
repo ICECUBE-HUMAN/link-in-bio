@@ -1,4 +1,4 @@
-import type { PageItemLinkMetadata } from "@sinabro/api";
+import type { PageItemLinkMetadata } from "@grabbin/api";
 import type { LinkProviderContext } from "./link-providers";
 
 const PROFILE_FETCH_TIMEOUT_MS = 2500;

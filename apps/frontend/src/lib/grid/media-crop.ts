@@ -1,4 +1,4 @@
-import type { NormalizedCrop } from "@sinabro/api";
+import type { NormalizedCrop } from "@grabbin/api";
 
 export type MediaSourceSize = {
 	width: number;

@@ -16,6 +16,6 @@
 - Evidence: 브라우저 URL, `main.page-scroll-container.scrollTop`,
   `#page-profile`/`#page-grid` 위치, 화면 캡처 또는 DOM 상태
 
-정적 검증은 `bun run --filter @sinabro/frontend typecheck`,
+정적 검증은 `bun run --filter @grabbin/frontend typecheck`,
 `bunx biome check apps/frontend/src/routes/$handle.tsx`,
-`bun run --filter @sinabro/frontend build`, `git diff --check`로 수행한다.
+`bun run --filter @grabbin/frontend build`, `git diff --check`로 수행한다.

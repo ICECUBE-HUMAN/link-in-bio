@@ -107,7 +107,7 @@ Apply the Drizzle migration before deploying the Worker. The Worker reads the
 new `pages.image_source` and `pages.image_crop` columns during page queries:
 
 ```sh
-bun run --filter @sinabro/backend db:migrate
+bun run --filter @grabbin/backend db:migrate
 bun run deploy:backend
 ```
 

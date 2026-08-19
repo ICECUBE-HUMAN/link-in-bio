@@ -1,6 +1,6 @@
 import { CircleArrowOutUpRightIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { MAX_PROFILE_IMAGE_SIZE, type ProfileImageCrop } from "@sinabro/api";
+import { MAX_PROFILE_IMAGE_SIZE, type ProfileImageCrop } from "@grabbin/api";
 import { CropIcon, TrashIcon } from "lucide-react";
 import {
 	type ChangeEvent,

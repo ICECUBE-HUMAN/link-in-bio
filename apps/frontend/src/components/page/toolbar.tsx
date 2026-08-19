@@ -4,13 +4,13 @@ import {
 	Smartphone,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import type { OwnedPageSummary, PageResponse } from "@sinabro/api";
+import type { OwnedPageSummary, PageResponse } from "@grabbin/api";
 import {
 	ITEM_MEDIA_ACCEPT,
 	MAX_ITEM_MEDIA_SIZE,
 	normalizeLinkUrl,
-} from "@sinabro/api";
-import { PRO_PAGE_LIMIT } from "@sinabro/plan";
+} from "@grabbin/api";
+import { PRO_PAGE_LIMIT } from "@grabbin/plan";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { BadgeCheckIcon, PlusIcon } from "lucide-react";

@@ -51,9 +51,9 @@
 
 ### 정적 검증
 
-- `bun run --filter @sinabro/frontend typecheck`
+- `bun run --filter @grabbin/frontend typecheck`
 - `bunx biome check apps/frontend/src/routes/$handle.tsx apps/frontend/src/styles/motion.css`
-- `bun run --filter @sinabro/frontend build`
+- `bun run --filter @grabbin/frontend build`
 - `git diff --check`
 
 ### 브라우저 검증

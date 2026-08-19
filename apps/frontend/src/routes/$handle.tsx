@@ -1,5 +1,5 @@
-import type { PageItemResponse, PageResponse } from "@sinabro/api";
-import { MAX_ITEM_MEDIA_SIZE } from "@sinabro/api";
+import type { PageItemResponse, PageResponse } from "@grabbin/api";
+import { MAX_ITEM_MEDIA_SIZE } from "@grabbin/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	createFileRoute,

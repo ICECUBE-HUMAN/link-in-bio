@@ -2,7 +2,7 @@ import {
 	type PageItemUploadRequest,
 	pageItemUploadCompleteResponseSchema,
 	pageItemUploadResponseSchema,
-} from "@sinabro/api";
+} from "@grabbin/api";
 import * as v from "valibot";
 
 async function parseResponse<T>(

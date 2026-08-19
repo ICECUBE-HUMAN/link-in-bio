@@ -1,4 +1,4 @@
-import type { LinkProviderId } from "@sinabro/api";
+import type { LinkProviderId } from "@grabbin/api";
 import type { CSSProperties } from "react";
 
 export type ConfiguredLinkProviderId = Exclude<

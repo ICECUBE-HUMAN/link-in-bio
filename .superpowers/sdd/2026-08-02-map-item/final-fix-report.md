@@ -70,9 +70,9 @@ unchanged.
 | --- | --- | --- |
 | Focused Biome | Pass | `bunx biome check apps/frontend/src/components/grid/map/mapbox-map-surface.tsx` — one file checked, no fixes |
 | Diff whitespace | Pass | `git diff --check` |
-| Frontend typecheck | Blocked by pre-existing failure | `bun run --filter @sinabro/frontend typecheck` fails on missing `framer-motion` in `src/components/layout/sections/feature-section.tsx`; no map surface diagnostic was reported |
-| Frontend check | Blocked by pre-existing repository diagnostics | `bun run --filter @sinabro/frontend check` reports existing `grid-motion.css` `!important`/specificity findings, formatting/import findings, and existing hook diagnostics; no map surface diagnostic was reported |
-| Frontend build | Blocked by pre-existing failure | `bun run --filter @sinabro/frontend build` transforms 1217 modules and emits the Mapbox chunk, then fails resolving missing `framer-motion` from `feature-section.tsx` |
+| Frontend typecheck | Blocked by pre-existing failure | `bun run --filter @grabbin/frontend typecheck` fails on missing `framer-motion` in `src/components/layout/sections/feature-section.tsx`; no map surface diagnostic was reported |
+| Frontend check | Blocked by pre-existing repository diagnostics | `bun run --filter @grabbin/frontend check` reports existing `grid-motion.css` `!important`/specificity findings, formatting/import findings, and existing hook diagnostics; no map surface diagnostic was reported |
+| Frontend build | Blocked by pre-existing failure | `bun run --filter @grabbin/frontend build` transforms 1217 modules and emits the Mapbox chunk, then fails resolving missing `framer-motion` from `feature-section.tsx` |
 | Frontend tests | Not run | Explicitly excluded by workspace instructions |
 | Backend checks/tests | Not run | No backend files or contracts changed |
 | Browser Mapbox QA | Not run | No live authenticated Mapbox browser boundary was available in this wave |

@@ -1,4 +1,4 @@
-import type { PageResponse } from "@sinabro/api";
+import type { PageResponse } from "@grabbin/api";
 import { Cuer } from "cuer";
 import { Check, ChevronLeftIcon, QrCode } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";

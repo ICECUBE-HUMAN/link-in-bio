@@ -1,7 +1,7 @@
 import {
 	linkProviderDefinitions,
 	type PageItemLinkMetadata,
-} from "@sinabro/api";
+} from "@grabbin/api";
 import { createChzzkEnricher } from "./chzzk-link-provider";
 import { createDiscordEnricher } from "./discord-link-provider";
 import { createGithubEnricher } from "./github-link-provider";

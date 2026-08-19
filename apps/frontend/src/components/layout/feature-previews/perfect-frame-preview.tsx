@@ -1,5 +1,5 @@
 import { Player } from "@remotion/player";
-import { gridMargin, gridRowHeight } from "@sinabro/grid-layout";
+import { gridMargin, gridRowHeight } from "@grabbin/grid-layout";
 import { CropIcon } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 import {

@@ -1,5 +1,5 @@
 import { Player } from "@remotion/player";
-import { type PlanPeriod, PRO_PAGE_LIMIT, PRO_PLANS } from "@sinabro/plan";
+import { type PlanPeriod, PRO_PAGE_LIMIT, PRO_PLANS } from "@grabbin/plan";
 import { useNavigate } from "@tanstack/react-router";
 import { BadgeCheck } from "lucide-react";
 import { type ReactNode, useLayoutEffect, useRef, useState } from "react";

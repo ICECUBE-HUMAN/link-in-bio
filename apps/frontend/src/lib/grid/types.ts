@@ -1,4 +1,4 @@
-import type { PageItemResponse } from "@sinabro/api";
+import type { PageItemResponse } from "@grabbin/api";
 import type {
 	Breakpoint,
 	DragDelta,
@@ -7,7 +7,7 @@ import type {
 	LayoutMap,
 	PageItemLayouts,
 	PresetName,
-} from "@sinabro/grid-layout";
+} from "@grabbin/grid-layout";
 
 export type {
 	Breakpoint,

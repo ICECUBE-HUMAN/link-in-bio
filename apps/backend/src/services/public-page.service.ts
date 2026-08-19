@@ -3,7 +3,7 @@ import { pages } from "@db/schema";
 import {
 	pageByHandleResponseSchema,
 	pageHandleSchema,
-} from "@sinabro/api";
+} from "@grabbin/api";
 import { eq, isNull } from "drizzle-orm";
 import * as v from "valibot";
 import { getPlanAccess } from "../core/billing";

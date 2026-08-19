@@ -4,12 +4,12 @@ import {
 	type PageItemLinkMetadata,
 	type PageItemUpsert,
 	pageItemLinkDataSchema,
-} from "@sinabro/api";
+} from "@grabbin/api";
 
 export {
 	createInitialLinkMetadata,
 	normalizeLinkUrl,
-} from "@sinabro/api";
+} from "@grabbin/api";
 
 import { getPublicR2ObjectUrl } from "@core/r2";
 import type { DatabaseClient } from "@db/index";

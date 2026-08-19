@@ -134,7 +134,7 @@ In `apps/backend/src/db/schema.ts`, add `lifecycleStatus` mapped to `lifecycle_s
 Run:
 
 ```bash
-bun run --filter @sinabro/backend db:generate
+bun run --filter @grabbin/backend db:generate
 ```
 
 Inspect the next migration under `apps/backend/drizzle/`. It must only add the two `pages` columns, apply the `active` default, and add the deletion-schedule lookup index. Do not alter the existing `user.primaryPageId`, subscription tables, or old migration checksums.
@@ -166,8 +166,8 @@ Validate the result with `ownedPageSummarySchema` at the controller boundary. Le
 Run:
 
 ```bash
-bun run --filter @sinabro/backend check
-bun run --filter @sinabro/frontend typecheck
+bun run --filter @grabbin/backend check
+bun run --filter @grabbin/frontend typecheck
 ```
 
 Expected: both pass with the new shared types and no public response contract changes.
@@ -282,7 +282,7 @@ Run:
 
 ```bash
 bun test apps/backend/src/core/plan-access.test.ts apps/backend/src/services/page-lifecycle.service.test.ts
-bun run --filter @sinabro/backend check
+bun run --filter @grabbin/backend check
 ```
 
 Expected: all new tests pass and no controller has its own independent Pro-status rules.
@@ -378,7 +378,7 @@ Run:
 
 ```bash
 bun test apps/backend/src/controllers/pages.controller.test.ts
-bun run --filter @sinabro/backend check
+bun run --filter @grabbin/backend check
 ```
 
 Expected: existing first-page behavior remains green and new direct HTTP bypass tests pass.
@@ -441,7 +441,7 @@ Run:
 
 ```bash
 bun test apps/backend/src/controllers/pages.controller.test.ts apps/backend/src/controllers/page-items.controller.test.ts
-bun run --filter @sinabro/backend check
+bun run --filter @grabbin/backend check
 ```
 
 Expected: every read-only mutation is denied while public reads and primary writes remain correct.
@@ -526,7 +526,7 @@ Run:
 
 ```bash
 bun test apps/backend/src/core/creem-webhook.test.ts apps/backend/src/core/plan-access.test.ts apps/backend/src/services/page-lifecycle.service.test.ts
-bun run --filter @sinabro/backend check
+bun run --filter @grabbin/backend check
 ```
 
 Expected: accepted, duplicate, stale, expired, restore, and repeated cleanup cases pass without changing existing REZ-175 behavior.
@@ -550,7 +550,7 @@ git commit -m "feat(REZ-174): reconcile page lifecycle from billing events"
 - Modify: `apps/frontend/src/lib/page/use-page-auto-save.ts`
 
 **Interfaces:**
-- Consumes `OwnedPageListResponse` from `@sinabro/api`.
+- Consumes `OwnedPageListResponse` from `@grabbin/api`.
 - Produces `getOwnedPages`, `changePrimaryPage`, and `deletePage` client helpers.
 - Produces a `readOnly` capability derived from the server page summary and current primary ID.
 
@@ -594,9 +594,9 @@ Do not rely only on disabled controls: the backend gate from Task 4 remains auth
 Run:
 
 ```bash
-bun run --filter @sinabro/frontend check
-bun run --filter @sinabro/frontend typecheck
-bun run --filter @sinabro/frontend build
+bun run --filter @grabbin/frontend check
+bun run --filter @grabbin/frontend typecheck
+bun run --filter @grabbin/frontend build
 ```
 
 Do not add or run new frontend tests. Manually inspect that public page rendering and the existing editor motion remain intact.
@@ -654,8 +654,8 @@ Create `docs/qa/2026-08-13-rez-174-plan-permissions-qa.md` with:
 Run:
 
 ```bash
-bun run --filter @sinabro/backend test
-bun run --filter @sinabro/backend check
+bun run --filter @grabbin/backend test
+bun run --filter @grabbin/backend check
 ```
 
 Expected: all existing and new backend tests pass. If a baseline test fails outside this feature, record the exact command and failure in the QA document instead of changing unrelated code.
@@ -712,11 +712,11 @@ Attach the final QA document to REZ-174 Resources and add a comment linking the 
 ## Verification Command Summary
 
 ```bash
-bun run --filter @sinabro/backend test
-bun run --filter @sinabro/backend check
-bun run --filter @sinabro/frontend check
-bun run --filter @sinabro/frontend typecheck
-bun run --filter @sinabro/frontend build
+bun run --filter @grabbin/backend test
+bun run --filter @grabbin/backend check
+bun run --filter @grabbin/frontend check
+bun run --filter @grabbin/frontend typecheck
+bun run --filter @grabbin/frontend build
 bun run check
 bun run build
 ```

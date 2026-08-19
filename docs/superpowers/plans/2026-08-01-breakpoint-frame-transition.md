@@ -80,7 +80,7 @@ Expected: the diff contains only `layout="size"` → `layout` and removal of CSS
 Run:
 
 ```bash
-bun run --filter @sinabro/frontend typecheck
+bun run --filter @grabbin/frontend typecheck
 ```
 
 Expected: exit code 0.
@@ -100,7 +100,7 @@ Expected: exit code 0. Do not use `--write` unless the check reports formatting 
 Run:
 
 ```bash
-bun run --filter @sinabro/frontend build
+bun run --filter @grabbin/frontend build
 ```
 
 Expected: exit code 0 and a generated Vite production bundle.
@@ -131,7 +131,7 @@ Expected: no whitespace errors and only the two implementation files plus the tw
 Run the repository's existing frontend dev command if no healthy server is available:
 
 ```bash
-bun run --filter @sinabro/frontend dev
+bun run --filter @grabbin/frontend dev
 ```
 
 Use the existing authenticated editor session and page handle; do not alter saved page data during QA.

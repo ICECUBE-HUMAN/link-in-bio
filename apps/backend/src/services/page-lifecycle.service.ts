@@ -8,7 +8,7 @@ import {
 	pages,
 	user as userTable,
 } from "@db/schema";
-import { PRO_PRODUCT_IDS } from "@sinabro/plan";
+import { PRO_PRODUCT_IDS } from "@grabbin/plan";
 import {
 	and,
 	eq,

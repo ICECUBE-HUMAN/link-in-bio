@@ -1,5 +1,5 @@
 {
-  "name": "@sinabro/frontend",
+  "name": "@grabbin/frontend",
   "private": true,
   "type": "module",
   "scripts": {
@@ -26,10 +26,10 @@
     "@remotion/player": "^4.0.512",
     "@resvg/resvg-wasm": "2.4.1",
     "@shadcn/react": "^0.2.0",
-    "@sinabro/api": "workspace:*",
-    "@sinabro/backend": "workspace:*",
-    "@sinabro/grid-layout": "workspace:*",
-    "@sinabro/plan": "workspace:*",
+    "@grabbin/api": "workspace:*",
+    "@grabbin/backend": "workspace:*",
+    "@grabbin/grid-layout": "workspace:*",
+    "@grabbin/plan": "workspace:*",
     "@t3-oss/env-core": "^0.13.10",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",

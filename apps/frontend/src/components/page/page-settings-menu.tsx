@@ -3,9 +3,9 @@ import type {
 	MyPageResponse,
 	PageByHandleResponse,
 	PageResponse,
-} from "@sinabro/api";
-import { isReservedPageHandle, pageHandleSchema } from "@sinabro/api";
-import { PRO_MONTHLY_PRODUCT_ID } from "@sinabro/plan";
+} from "@grabbin/api";
+import { isReservedPageHandle, pageHandleSchema } from "@grabbin/api";
+import { PRO_MONTHLY_PRODUCT_ID } from "@grabbin/plan";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ChevronLeftIcon, Settings2Icon } from "lucide-react";

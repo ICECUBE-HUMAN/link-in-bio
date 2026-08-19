@@ -6,7 +6,7 @@ import {
 	isReservedPageHandle,
 	normalizePageHandle,
 	pageHandleSchema,
-} from "@sinabro/api";
+} from "@grabbin/api";
 import { eq } from "drizzle-orm";
 import * as v from "valibot";
 

@@ -11,8 +11,8 @@ import {
 	type CreatePageRequest,
 	pageHandleSchema,
 	type UpdatePageRequest,
-} from "@sinabro/api";
-import { PRO_PAGE_LIMIT } from "@sinabro/plan";
+} from "@grabbin/api";
+import { PRO_PAGE_LIMIT } from "@grabbin/plan";
 import {
 	and,
 	eq,

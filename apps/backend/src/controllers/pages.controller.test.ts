@@ -6,7 +6,7 @@ import {
 import { pagesController } from "@controllers/pages.controller";
 import type { AppEnv } from "@core/app-factory";
 import { errorHandler } from "@middlewares/error-handler.middleware";
-import { PRO_MONTHLY_PRODUCT_ID } from "@sinabro/plan";
+import { PRO_MONTHLY_PRODUCT_ID } from "@grabbin/plan";
 import { Hono } from "hono";
 
 type TestUser = {

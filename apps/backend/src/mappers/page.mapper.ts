@@ -2,7 +2,7 @@ import type { pages } from "@db/schema";
 import type {
 	OwnedPageSummary,
 	PageResponse,
-} from "@sinabro/api";
+} from "@grabbin/api";
 
 export const mapPageResponse = (
 	page: typeof pages.$inferSelect,

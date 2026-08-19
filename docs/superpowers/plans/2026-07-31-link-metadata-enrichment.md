@@ -36,7 +36,7 @@
 - [ ] Update the shared link schema and URL helper types for HTTPS and `mailto:`.
 - [ ] Add tests for protocol insertion, protocol preservation, invalid protocols, mailto initial metadata, and DuckDuckGo favicon URL construction.
 - [ ] Run the focused backend service test and observe the expected failure before implementation, then implement the smallest passing behavior.
-- [ ] Run `bun run --filter @sinabro/backend check`.
+- [ ] Run `bun run --filter @grabbin/backend check`.
 
 ### Task 2: Provider registry and bounded enrichment
 

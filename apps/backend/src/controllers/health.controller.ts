@@ -2,7 +2,7 @@ import type { AppEnv } from "@core/app-factory";
 import {
 	healthResponseSchema,
 	type HealthResponse,
-} from "@sinabro/api";
+} from "@grabbin/api";
 import { Hono } from "hono";
 import { parse } from "valibot";
 

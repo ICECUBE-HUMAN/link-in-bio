@@ -12,7 +12,7 @@ import {
 	pageItemUploadCompleteResponseSchema,
 	pageItemUploadRequestSchema,
 	pageItemUploadResponseSchema,
-} from "@sinabro/api";
+} from "@grabbin/api";
 import * as v from "valibot";
 import { UnprocessableEntityError } from "../exceptions/http-exceptions";
 

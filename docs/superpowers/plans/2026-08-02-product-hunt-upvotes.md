@@ -85,7 +85,7 @@ Expected: PASS.
 
 - [x] **Step 5: Run backend static verification**
 
-Run: `bun run --filter @sinabro/backend typecheck`
+Run: `bun run --filter @grabbin/backend typecheck`
 
 Expected: exit code 0.
 
@@ -123,7 +123,7 @@ the new action without modifying persistent data.
 
 - [x] **Step 2: Run focused frontend static checks**
 
-Run: `bunx biome check src/components/grid/renderers/link.tsx && bun run --filter @sinabro/frontend typecheck`
+Run: `bunx biome check src/components/grid/renderers/link.tsx && bun run --filter @grabbin/frontend typecheck`
 
 Expected: both commands exit 0. No frontend test is added.
 

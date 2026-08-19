@@ -13,7 +13,7 @@ import type {
 	ProfileImageCompleteRequest,
 	ProfileImageState,
 	ProfileImageUploadRequest,
-} from "@sinabro/api";
+} from "@grabbin/api";
 import {
 	and,
 	eq,

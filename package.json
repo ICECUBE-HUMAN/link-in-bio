@@ -7,13 +7,15 @@
     "qr": "0.5.5"
   },
   "scripts": {
-    "dev": "bun run --parallel --filter @sinabro/frontend --filter @sinabro/backend dev",
-    "dev:frontend": "bun run --filter @sinabro/frontend dev",
-    "dev:backend": "bun run --filter @sinabro/backend dev",
-    "build": "bun run --filter @sinabro/frontend build",
+    "dev": "bun run --parallel --filter @grabbin/frontend --filter @grabbin/backend dev",
+    "dev:frontend": "bun run --filter @grabbin/frontend dev",
+    "dev:backend": "bun run --filter @grabbin/backend dev",
+    "dev:v2": "bun run --filter @grabbin/v2 dev",
+    "build": "bun run --filter @grabbin/frontend build",
     "check": "bun run --workspaces check",
-    "deploy:frontend": "bun run --filter @sinabro/frontend deploy",
-    "deploy:backend": "bun run --filter @sinabro/backend deploy"
+    "deploy:frontend": "bun run --filter @grabbin/frontend deploy",
+    "deploy:backend": "bun run --filter @grabbin/backend deploy",
+    "deploy:v2": "bun run --filter @grabbin/v2 deploy"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.5",

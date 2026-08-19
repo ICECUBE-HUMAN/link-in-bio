@@ -1,7 +1,7 @@
 import { Computer, Smartphone } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Player } from "@remotion/player";
-import type { PageItemLinkMetadata } from "@sinabro/api";
+import type { PageItemLinkMetadata } from "@grabbin/api";
 import { type CSSProperties, useMemo } from "react";
 import {
 	AbsoluteFill,

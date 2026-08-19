@@ -30,7 +30,7 @@
 
 **Verification:**
 
-- Run `bun run --filter @sinabro/frontend check`.
+- Run `bun run --filter @grabbin/frontend check`.
 - Inspect the diff and confirm only the requested copy/layout lines plus the two documentation files changed.
 - In a browser at a narrow viewport, confirm the initial form remains reachable and scrollable.
 - Trigger a pending provider state and a resend error to confirm the crossfades and reserved error line.

@@ -1,4 +1,4 @@
-import { getLinkProviderPresentation } from "@sinabro/api";
+import { getLinkProviderPresentation } from "@grabbin/api";
 import {
 	type CSSProperties,
 	type ReactNode,

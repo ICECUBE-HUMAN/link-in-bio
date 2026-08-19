@@ -13,7 +13,7 @@
 - Do not add frontend tests unless explicitly requested.
 - Do not add dependencies or backend billing endpoints.
 - `PlanSection` must not call `/billing/status` or switch its label based on subscription state.
-- Use `@sinabro/plan` for product IDs and call `authClient.creem.createCheckout({ productId })`; keep the anonymous `/log-in` redirect.
+- Use `@grabbin/plan` for product IDs and call `authClient.creem.createCheckout({ productId })`; keep the anonymous `/log-in` redirect.
 - Remove the unused `/billing/checkout` backend route and its request schema.
 - Use `getOwnedPages().hasAccess` for Free/Pro display and keep the server as the authority for page permissions.
 - Do not add separate expired, canceled, or grace-period UI, and do not add upgrade guidance for limit errors.
@@ -26,7 +26,7 @@
 - Modify: `apps/frontend/src/components/layout/sections/plan-section.tsx`
 
 **Interfaces:**
-- Consumes: existing `authClient.getSession`, `authClient.creem.createCheckout`, `PlanPeriod`, and `PRO_PLANS` from `@sinabro/plan`.
+- Consumes: existing `authClient.getSession`, `authClient.creem.createCheckout`, `PlanPeriod`, and `PRO_PLANS` from `@grabbin/plan`.
 - Produces: a static Free/Pro pricing display whose Pro action starts checkout without reading billing status.
 
 - [ ] **Step 1: Remove billing-status state and request**

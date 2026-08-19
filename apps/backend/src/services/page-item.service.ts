@@ -8,12 +8,12 @@ import {
 	type PageItemUpsert,
 	pageItemBatchResponseSchema,
 	pageItemResponseSchema,
-} from "@sinabro/api";
+} from "@grabbin/api";
 import {
 	getAllowedPresets,
 	getPresetGeometry,
 	validateLayout,
-} from "@sinabro/grid-layout";
+} from "@grabbin/grid-layout";
 import {
 	and,
 	eq,

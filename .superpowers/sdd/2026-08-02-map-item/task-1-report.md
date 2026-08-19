@@ -27,17 +27,17 @@ Task: Mapbox dependency와 공유 camera contract 추가
 
 Commands requested by the brief:
 
-1. `bun run --filter @sinabro/frontend typecheck`
+1. `bun run --filter @grabbin/frontend typecheck`
    - Failed due to a pre-existing unrelated error:
    - `src/components/layout/sections/feature-section.tsx(1,42): error TS2307: Cannot find module 'framer-motion'`
-2. `bun run --filter @sinabro/frontend check`
+2. `bun run --filter @grabbin/frontend check`
    - Failed due to pre-existing unrelated frontend Biome/format issues in files outside this task, including:
    - `src/components/grid/grid-motion.css`
    - `src/components/auth/cta-button.tsx`
    - `src/components/grid/renderers/map.tsx`
    - `src/components/layout/sections/cta-section.tsx`
    - `vite.config.ts`
-3. `bun run --filter @sinabro/backend check`
+3. `bun run --filter @grabbin/backend check`
    - Passed
 4. `bun --cwd apps/backend test src/controllers/page-items.controller.test.ts`
    - Passed: 13 tests, 0 failures
@@ -92,8 +92,8 @@ Checked 4 files in 6ms. No fixes applied.
 2. Backend check
 
 ```text
-$ bun run --filter @sinabro/backend check
-@sinabro/backend check: Exited with code 0
+$ bun run --filter @grabbin/backend check
+@grabbin/backend check: Exited with code 0
 ```
 
 3. Page items controller test
@@ -126,7 +126,7 @@ Ran 13 tests across 1 file.
 
 ### Typecheck note
 
-- I did not rerun `bun run --filter @sinabro/frontend typecheck` because the previous Task 1 run already showed an unrelated pre-existing blocker outside this fix:
+- I did not rerun `bun run --filter @grabbin/frontend typecheck` because the previous Task 1 run already showed an unrelated pre-existing blocker outside this fix:
   - `src/components/layout/sections/feature-section.tsx(1,42): error TS2307: Cannot find module 'framer-motion' or its corresponding type declarations.`
 
 ### Self-review

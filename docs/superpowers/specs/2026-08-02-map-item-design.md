@@ -315,9 +315,9 @@ provider 오류를 지도 renderer 전체 오류로 전파하지 않고 검색 �
 
 ### Static check
 
-- `bun run --filter @sinabro/frontend typecheck`
-- `bun run --filter @sinabro/frontend check`
-- `bun run --filter @sinabro/frontend build`
+- `bun run --filter @grabbin/frontend typecheck`
+- `bun run --filter @grabbin/frontend check`
+- `bun run --filter @grabbin/frontend build`
 - shared API schema와 backend response validation check
 
 ### Manual QA checklist

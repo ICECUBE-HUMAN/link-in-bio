@@ -2,7 +2,7 @@ import {
 	normalizePageHandle,
 	type UpdatePageRequest,
 	type UpdatePageResponse,
-} from "@sinabro/api";
+} from "@grabbin/api";
 import { parsePageUpdateResponse } from "@/lib/page/page-update";
 
 export async function updatePage(

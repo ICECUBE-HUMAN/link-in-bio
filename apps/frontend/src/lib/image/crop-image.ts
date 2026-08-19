@@ -1,4 +1,4 @@
-import type { ProfileImageCrop } from "@sinabro/api";
+import type { ProfileImageCrop } from "@grabbin/api";
 
 export type ProfileImageSourceSize = {
 	width: number;
