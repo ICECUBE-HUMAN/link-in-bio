@@ -36,7 +36,6 @@ import {
 import { getProfileImageUrl } from "@/lib/api/profile-image-api";
 import { getSessionQueryOptions } from "@/lib/api/session.functions";
 import { getPublicViewsQueryOptions } from "@/lib/api/visitors.functions";
-import { getDemoPage } from "@/lib/demo/demo-page.functions";
 import { useGridEditorStore } from "@/lib/grid/editor-store";
 import type { Breakpoint } from "@/lib/grid/types";
 import { getPageLayoutClasses } from "@/lib/page/page-layout";
@@ -148,17 +147,6 @@ export const Route = createFileRoute("/$handle")({
 	loader: async ({ context, params }): Promise<HandleLoaderData> => {
 		if (["explore", "update"].includes(params.handle.trim().toLowerCase())) {
 			throw notFound({ routeId: Route.id });
-		}
-
-		if (params.handle.trim().toLowerCase() === "demo") {
-			const demoPage = await getDemoPage();
-			return {
-				page: demoPage.page,
-				items: demoPage.items,
-				isCurrentUserPage: true,
-				isDemo: true,
-				visitorsEnabled: false,
-			};
 		}
 
 		const [{ data: session }, result] = await Promise.all([
