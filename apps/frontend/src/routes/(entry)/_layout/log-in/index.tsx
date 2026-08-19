@@ -52,7 +52,6 @@ export const Route = createFileRoute("/(entry)/_layout/log-in/")({
 			title: "Log in",
 			description: LOG_IN_DESCRIPTION,
 			canonicalPath: "/log-in",
-			noIndex: true,
 			jsonLd: createWebPageJsonLd({
 				title: "Log in",
 				description: LOG_IN_DESCRIPTION,
@@ -72,7 +71,7 @@ function LogInRoute() {
 			data-page={flow.otpSent ? "2" : "1"}
 			noValidate
 			onSubmit={(event) => void flow.handleSendOtp(event)}
-    >
+		>
 			<LogInEmailStep flow={flow} />
 			<LogInOtpStep flow={flow} />
 		</form>

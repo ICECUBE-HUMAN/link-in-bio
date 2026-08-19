@@ -4,7 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
-import { type Plugin, defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 
 export function tanstackRouterHMR(): Plugin {
     return {
@@ -24,9 +24,6 @@ export function tanstackRouterHMR(): Plugin {
     }
 }
 
-const appUrl =
-	process.env.VITE_APP_URL?.replace(/\/+$/, "") || "http://localhost:3000";
-
 const config = defineConfig({
 	resolve: { tsconfigPaths: true },
 	plugins: [
@@ -39,11 +36,7 @@ const config = defineConfig({
 				enabled: true,
 				crawlLinks: true,
 			},
-			sitemap: {
-				enabled: true,
-				host: appUrl,
-			},
-    }),
+		}),
 		tanstackRouterHMR(),
 		viteReact(),
 	],

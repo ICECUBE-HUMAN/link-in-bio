@@ -4,7 +4,7 @@ import {
 	pageByHandleResponseSchema,
 	pageHandleSchema,
 } from "@sinabro/api";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import * as v from "valibot";
 import { getPlanAccess } from "../core/billing";
 import { NotFoundError } from "../exceptions/http-exceptions";
@@ -16,6 +16,20 @@ import {
 	listPageItems,
 	mapPageItemResponse,
 } from "./page-item.service";
+
+export const listPublicPageHandles = async ({
+	db,
+}: {
+	db: DatabaseClient;
+}) => {
+	const result = await db.query.pages.findMany({
+		where: isNull(pages.deletionScheduledAt),
+		columns: { handle: true },
+		orderBy: (page, { asc }) => [asc(page.handle)],
+	});
+
+	return result.map((page) => page.handle);
+};
 
 export const getPublicPage = async ({
 	db,

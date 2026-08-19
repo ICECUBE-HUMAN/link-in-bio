@@ -45,7 +45,10 @@ import {
 	completeProfileImageUpload,
 	createProfileImageUpload,
 } from "../services/profile-image.service";
-import { getPublicPage } from "../services/public-page.service";
+import {
+	getPublicPage,
+	listPublicPageHandles,
+} from "../services/public-page.service";
 
 const getPrimaryPageId = (
 	user: unknown,
@@ -139,6 +142,11 @@ export const pagesController =
 				),
 			);
 		})
+		.get("/_sitemap", async (c) =>
+			c.json(await listPublicPageHandles({ db: c.get("db") }), 200, {
+				"Cache-Control": "public, max-age=0, s-maxage=3600",
+			}),
+		)
 		.patch(
 			"/:handle/primary",
 			async (c) => {
