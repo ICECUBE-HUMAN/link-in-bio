@@ -24,6 +24,28 @@ import {
 } from "@/lib/map/map-config";
 import { cn } from "@/lib/utils";
 
+const MAPBOX_STYLE_CONFIG = {
+	basemap: {
+		show3dObjects: false,
+		show3dBuildings: false,
+		show3dFacades: false,
+		show3dTrees: false,
+		show3dLandmarks: false,
+		showLandmarkIcons: false,
+		showLandmarkIconLabels: false,
+		showPointOfInterestLabels: false,
+		showTransitLabels: false,
+		showAdminBoundaries: false,
+		showPedestrianRoads: false,
+		showRoadLabels: false,
+	},
+} as const;
+
+const mapboxLib = import("mapbox-gl").then((module) => {
+	if (typeof window !== "undefined") module.default.prewarm();
+	return module;
+});
+
 export type MapboxMapSurfaceHandle = {
 	flyTo(camera: MapCamera): void;
 	suspendInteractions(): void;
@@ -118,6 +140,7 @@ export const MapboxMapSurface = forwardRef<
 	const mapLoadedRef = useRef(false);
 	const pendingCameraRef = useRef<MapCamera | null>(null);
 	const interactionsSuspendedRef = useRef(false);
+	const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const [isContainerSized, setIsContainerSized] = useState(false);
 
 	useEffect(() => {
@@ -134,11 +157,26 @@ export const MapboxMapSurface = forwardRef<
 			const hasSize = width > 0 && height > 0;
 			setIsContainerSized(hasSize);
 
-			if (hasSize) mapRef.current?.getMap().resize();
+			if (!hasSize) return;
+
+			if (resizeTimeoutRef.current) {
+				clearTimeout(resizeTimeoutRef.current);
+			}
+
+			resizeTimeoutRef.current = setTimeout(() => {
+				resizeTimeoutRef.current = null;
+				mapRef.current?.getMap().resize();
+			}, 120);
 		});
 		observer.observe(container);
 
-		return () => observer.disconnect();
+		return () => {
+			observer.disconnect();
+			if (resizeTimeoutRef.current) {
+				clearTimeout(resizeTimeoutRef.current);
+				resizeTimeoutRef.current = null;
+			}
+		};
 	}, []);
 
 	useImperativeHandle(
@@ -223,6 +261,7 @@ export const MapboxMapSurface = forwardRef<
 	}
 
 	function handleMapLoad(event: MapEvent) {
+		event.target.setTerrain(null);
 		setMapInteractions(event.target as MapboxMapWithHandlers, interactive);
 		removeMapboxControls(event.target);
 		mapLoadedRef.current = true;
@@ -249,7 +288,8 @@ export const MapboxMapSurface = forwardRef<
 			{isContainerSized ? (
 				<MapboxMap
 					ref={mapRef}
-					mapLib={import("mapbox-gl")}
+					mapLib={mapboxLib}
+					{...({ config: MAPBOX_STYLE_CONFIG } as const)}
 					mapboxAccessToken={accessToken}
 					mapStyle={MAPBOX_STYLE_URL}
 					attributionControl={false}
