@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { DEFAULT_SEO_DESCRIPTION, DEFAULT_SITE_NAME } from "@/lib/seo/metadata";
+import { DEFAULT_SITE_NAME } from "@/lib/seo/metadata";
 import { collectRoutes, type StaticRoute } from "@/lib/site/routes";
 import { routeTree } from "@/routeTree.gen";
 
@@ -45,6 +45,20 @@ export function Footer() {
 						</p>
 					</div>
 				</div>
+
+				<a
+					href="https://ko-fi.com/I3Z525CTG8"
+					target="_blank"
+					rel="noreferrer"
+					className="inline-flex min-w-40 items-center justify-center rounded-[7px] bg-[#72a4f2] px-3 py-0.5 my-6 text-sm font-bold leading-9 text-white transition-opacity hover:opacity-85"
+				>
+					<img
+						src="https://storage.ko-fi.com/cdn/cup-border.png"
+						alt=""
+						className="mr-1.5 h-[15px] w-[22px]"
+					/>
+					Support me on Ko-fi
+				</a>
 
 				<nav aria-label="Footer">
 					<ul className="flex flex-col items-center gap-5 text-lg font-medium sm:flex-row">
