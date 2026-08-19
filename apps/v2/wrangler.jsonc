@@ -13,5 +13,11 @@
       "pattern": "v2.grabbin.me",
       "custom_domain": true
     }
-  ]
+  ],
+  "vars": {
+    "NEXT_PUBLIC_APP_TITLE": "Grabbin",
+    "NEXT_PUBLIC_APP_DOMAIN": "grabbin.me",
+    "NEXT_PUBLIC_R2_PUBLIC_URL": "https://cdn.grabbin.me",
+    "NEXT_PUBLIC_ENABLE_ANNOUNCEMENT": "false"
+  }
 }
