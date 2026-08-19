@@ -36,11 +36,7 @@ const isStarterSiteName = ["cream", "service"].includes(
 );
 
 export const DEFAULT_SITE_NAME =
-	configuredSiteName?.toLowerCase() === "grabbin"
-		? "Grabbin"
-		: configuredSiteName && !isStarterSiteName
-			? configuredSiteName
-			: "Grabbin";
+	configuredSiteName && !isStarterSiteName ? configuredSiteName : "Grabbin";
 
 export const DEFAULT_APP_LOGO = "/favicon.svg";
 
