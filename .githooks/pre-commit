@@ -1,0 +1,36 @@
+#!/bin/bash
+
+set -euo pipefail
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+run_biome() {
+	config_path=$1
+	scope=$2
+	files=$(git diff --cached --name-only --diff-filter=ACMR -- "$scope" | grep -E '\.(c|m)?[jt]sx?$|\.jsonc?$|\.css$|\.html$' || true)
+
+	[ -n "$files" ] || return 0
+
+	paths=()
+	while IFS= read -r file; do
+		paths+=("$file")
+	done <<< "$files"
+
+	for file in "${paths[@]}"; do
+		if ! git diff --quiet -- "$file"; then
+			echo "Biome pre-commit: stage or stash unstaged changes in $file" >&2
+			return 1
+		fi
+	done
+
+	bunx biome check --write --config-path "$config_path" "${paths[@]}"
+
+	for file in "${paths[@]}"; do
+		git add -- "$file"
+	done
+}
+
+run_biome biome.json apps/frontend
+run_biome apps/backend/biome.json apps/backend
+run_biome apps/v2/biome.json apps/v2
