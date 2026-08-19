@@ -201,7 +201,7 @@ export function ShareDialog({ page }: ShareDialogProps) {
 				type="button"
 				variant="brand"
 				size="default"
-				className="w-28 px-8"
+				className="w-28 px-8 rounded-lg font-semibold text-base"
 				disabled={false}
 				onClick={() => setOpen(true)}
 			>
@@ -322,7 +322,7 @@ export function ShareDialog({ page }: ShareDialogProps) {
 								type="button"
 								size="lg"
 								variant="brand"
-								className="t-copy-button h-14 w-full text-base rounded-full"
+								className="t-copy-button h-14 w-full text-lg font-semibold rounded-full"
 								data-state={copyState}
 								onClick={() => void copyPage()}
 							>

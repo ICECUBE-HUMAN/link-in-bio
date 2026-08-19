@@ -7,14 +7,13 @@ import {
 	notFound,
 	redirect,
 } from "@tanstack/react-router";
-import { motion, useReducedMotion } from "motion/react";
+import { useReducedMotion } from "motion/react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { GridSection } from "@/components/grid/grid-section";
 import { EditableParagraph } from "@/components/page/editable-paragraph";
 import { MyPageButton } from "@/components/page/my-page-button";
 import { PageImageEditor } from "@/components/page/page-image-editor";
-import { PageManagementMenu } from "@/components/page/page-management-menu";
 import { PageSettingsMenu } from "@/components/page/page-settings-menu";
 import Toolbar from "@/components/page/toolbar";
 import { Button } from "@/components/ui/button";
@@ -426,7 +425,6 @@ export function HandlePageContent({
 		previewBreakpoint,
 		setPreviewBreakpoint,
 		shouldReduceMotion,
-		flushPendingChanges,
 	});
 
 	useEffect(() => {
@@ -493,23 +491,14 @@ export function HandlePageContent({
 
 	const layoutClasses = getPageLayoutClasses(previewBreakpoint);
 	const isCompactPreview = previewBreakpoint === "compact";
-	const isFrameResizing = breakpointTransition === "frame";
-	const showCompactCanvas = isCompactPreview || isFrameResizing;
-	const frameLayoutTransition = shouldReduceMotion
-		? { duration: 0 }
-		: {
-				duration: 0.35,
-				ease: [0.22, 1, 0.36, 1] as const,
-			};
+	const showCompactCanvas = isCompactPreview;
 
 	return (
 		<main
 			ref={pageScrollRef}
 			className={`page-scroll-container relative box-border min-h-dvh w-full ${isCompactPreview ? "overscroll-y-none" : ""} no-scrollbar ${isCompactPreview ? "overflow-y-hidden" : "overflow-y-auto"} ${showCompactCanvas ? "bg-secondary" : "bg-background"} min-[90rem]:flex min-[90rem]:h-dvh ${isCompactPreview ? "min-[90rem]:items-center" : "min-[90rem]:items-start"} min-[90rem]:justify-center`}
 		>
-			<motion.div
-				layout
-				transition={{ layout: frameLayoutTransition }}
+			<div
 				className={`t-breakpoint-frame ${isCompactPreview ? "overscroll-y-none" : ""} flex w-full flex-col items-center gap-8 ${isCompactPreview ? "min-[90rem]:h-[calc(100dvh-14rem)] min-[90rem]:min-h-0 min-[90rem]:overflow-y-auto no-scrollbar" : "min-[90rem]:h-auto min-[90rem]:min-h-dvh overflow-visible"} min-[90rem]:max-w-none ${layoutClasses.shell} ${showCompactCanvas ? "bg-background min-[90rem]:rounded-[3.5rem] min-[90rem]:py-4 shadow-float-lg" : "min-[90rem]:bg-transparent min-[90rem]:rounded-none"} ${isCompactPreview ? "min-[90rem]:w-120 min-[90rem]:max-w-[calc(100vw-2rem)] " : ""}`}
 			>
 				<div
@@ -518,7 +507,7 @@ export function HandlePageContent({
 					<aside
 						id="page-profile"
 						data-breakpoint-transition={breakpointTransition}
-						className={`t-breakpoint-crossfade t-stagger flex min-h-0 w-full flex-1 flex-col gap-8 p-6 px-12 pt-12 ${layoutClasses.profileAside} ${isAsideShown ? "is-shown" : ""}`}
+						className={`t-breakpoint-content t-stagger flex min-h-0 w-full flex-1 flex-col gap-8 p-6 px-12 pt-12 ${layoutClasses.profileAside} ${isAsideShown ? "is-shown" : ""}`}
 					>
 						<div className="t-stagger-line t-stagger-line--1">
 							<PageImageEditor
@@ -600,7 +589,7 @@ export function HandlePageContent({
 				<section
 					id="page-grid"
 					data-breakpoint-transition={breakpointTransition}
-					className={`t-breakpoint-crossfade grid-content-scroll-shell min-h-[calc(100dvh-3rem)] w-full overflow-visible p-0 pt-0 sm:max-w-md no-scrollbar min-[90rem]:px-0 min-[90rem]:pb-24 ${layoutClasses.content}`}
+					className={`t-breakpoint-content grid-content-scroll-shell min-h-[calc(100dvh-3rem)] w-full overflow-visible p-0 pt-0 sm:max-w-md no-scrollbar min-[90rem]:px-0 min-[90rem]:pb-24 ${layoutClasses.content}`}
 				>
 					<div className="flex flex-col gap-4">
 						<GridSection
@@ -614,7 +603,7 @@ export function HandlePageContent({
 						/>
 					</div>
 				</section>
-			</motion.div>
+			</div>
 
 			{!loaderData.isDemo ? (
 				<aside
@@ -708,29 +697,16 @@ export function HandlePageContent({
 								<Skeleton className="h-8 w-24 rounded-md" />
 							) : null}
 						</div>
-						<div
-							className={
-								isSignedIn
-									? "order-1 flex flex-row items-center justify-center gap-1 min-[90rem]:order-none min-[90rem]:contents"
-									: "contents"
-							}
-						>
-							{isSignedIn ? (
-								isCurrentUserPage ? (
-									<PageManagementMenu triggerPage={{ ...page, ...draft }} />
-								) : (
-									<MyPageButton />
-								)
-							) : null}
-						</div>
+						{isSignedIn && !isCurrentUserPage ? <MyPageButton /> : null}
 					</div>
 				</aside>
 			) : null}
 
 			{editorMode === "edit" ? (
 				<Toolbar
-					page={page}
+					page={{ ...page, ...draft }}
 					readOnly={readOnly}
+					showPagePicker={!loaderData.isDemo}
 					breakpoint={previewBreakpoint}
 					isSaving={status === "saving" || gridStatus === "saving"}
 					onItemAdd={(itemType, url) => {
