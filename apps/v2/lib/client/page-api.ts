@@ -4,6 +4,9 @@ import {
   createPageResponseSchema,
   type HandleAvailabilityResponse,
   handleAvailabilityResponseSchema,
+  type UpdatePageRequest,
+  type UpdatePageResponse,
+  updatePageResponseSchema,
 } from "@grabbin/api";
 import * as v from "valibot";
 
@@ -41,6 +44,20 @@ export async function createPage(
     createPageResponseSchema,
     await requestJson("/api/pages", {
       method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(input),
+    }),
+  );
+}
+
+export async function updatePage(
+  handle: string,
+  input: UpdatePageRequest,
+): Promise<UpdatePageResponse> {
+  return v.parse(
+    updatePageResponseSchema,
+    await requestJson(`/api/pages/${encodeURIComponent(handle)}`, {
+      method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(input),
     }),

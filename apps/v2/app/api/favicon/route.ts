@@ -1,11 +1,4 @@
-import { pageByHandleResponseSchema } from "@grabbin/api";
 import { env } from "@/lib/env";
-import { getPublicImageUrl } from "@/lib/seo-responses";
-import { fetchBackend } from "@/lib/server/backend";
-
-export const size = { width: 64, height: 64 };
-export const contentType = "image/svg+xml";
-export const dynamic = "force-dynamic";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
@@ -16,33 +9,19 @@ function fallbackIcon() {
   });
 }
 
-async function getPageImageUrl(handle: string) {
-  try {
-    const result = await fetchBackend(
-      `/pages/${encodeURIComponent(handle.trim().toLowerCase())}`,
-      { signal: AbortSignal.timeout(3000) },
-      pageByHandleResponseSchema,
-    );
-    if (!result.ok) return null;
-
-    const image = result.data.page.image;
-    const updatedAt = result.data.page.updatedAt;
-    if (typeof image !== "string" || typeof updatedAt !== "string") {
-      return null;
-    }
-
-    return getPublicImageUrl(image, updatedAt);
-  } catch {
-    return null;
-  }
-}
-
 function isAllowedImageUrl(imageUrl: URL) {
   const publicBaseUrl = env.NEXT_PUBLIC_R2_PUBLIC_URL?.trim();
   if (!publicBaseUrl) return false;
 
   try {
-    return imageUrl.origin === new URL(publicBaseUrl).origin;
+    const baseUrl = new URL(publicBaseUrl);
+    const basePath = baseUrl.pathname.replace(/\/+$/, "");
+
+    return (
+      imageUrl.origin === baseUrl.origin &&
+      (imageUrl.pathname === basePath ||
+        imageUrl.pathname.startsWith(`${basePath}/`))
+    );
   } catch {
     return false;
   }
@@ -73,17 +52,13 @@ function toBase64(bytes: Uint8Array) {
   return btoa(binary);
 }
 
-export default async function Icon({
-  params,
-}: {
-  params: Promise<{ handle: string }>;
-}) {
-  const imageUrlString = await getPageImageUrl((await params).handle);
-  if (!imageUrlString) return fallbackIcon();
+export async function GET(request: Request) {
+  const imageParameter = new URL(request.url).searchParams.get("image");
+  if (!imageParameter) return fallbackIcon();
 
   let imageUrl: URL;
   try {
-    imageUrl = new URL(imageUrlString);
+    imageUrl = new URL(imageParameter);
   } catch {
     return fallbackIcon();
   }
@@ -133,7 +108,7 @@ export default async function Icon({
 
   return new Response(svg, {
     headers: {
-      "cache-control": "public, max-age=3600",
+      "cache-control": "no-cache, must-revalidate",
       "content-type": "image/svg+xml",
     },
   });

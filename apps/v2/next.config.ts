@@ -3,6 +3,8 @@ import createMDX from "@next/mdx";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 import type { NextConfig } from "next";
 
+initOpenNextCloudflareForDev();
+
 const require = createRequire(import.meta.url);
 const mdxPlugin = (name: string) => require.resolve(name);
 
@@ -10,7 +12,14 @@ const nextConfig: NextConfig = {
   /* config options here */
   typedRoutes: true,
   reactCompiler: true,
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "cdn.grabbin.me" },
+      { protocol: "https", hostname: "**.r2.dev" },
+    ],
+  },
   experimental: {
+    optimizePackageImports: ["@base-ui/react", "lucide-react"],
     turbopackRustReactCompiler: true,
   },
 };
@@ -30,5 +39,3 @@ const withMDX = createMDX({
 });
 
 export default withMDX(nextConfig);
-
-initOpenNextCloudflareForDev();

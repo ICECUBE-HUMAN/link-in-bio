@@ -34,6 +34,33 @@ export function createWebPageJsonLd(input: {
   };
 }
 
+export function createProfilePageJsonLd(input: {
+  title: string;
+  handle: string;
+  description?: string;
+  path: string;
+  image?: string;
+}): JsonLdNode {
+  const url = withSiteUrl(input.path);
+  const image = input.image ? withSiteUrl(input.image) : undefined;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    name: input.title,
+    url,
+    ...(input.description ? { description: input.description } : {}),
+    mainEntity: {
+      "@type": "Person",
+      name: input.title,
+      alternateName: `@${input.handle}`,
+      url,
+      ...(input.description ? { description: input.description } : {}),
+      ...(image ? { image } : {}),
+    },
+  };
+}
+
 export function createBlogPostingJsonLd(input: {
   title: string;
   description?: string;

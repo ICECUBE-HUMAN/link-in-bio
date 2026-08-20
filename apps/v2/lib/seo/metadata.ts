@@ -11,6 +11,7 @@ type PageMetadataInput = {
   title: string;
   description: string;
   canonicalPath: string;
+  includeSiteName?: boolean;
   noIndex?: boolean;
   image?: string;
   keywords?: string[];
@@ -20,14 +21,18 @@ type PageMetadataInput = {
 
 export function createMetadata(input: PageMetadataInput): Metadata {
   const image = input.image ? [{ url: input.image }] : undefined;
+  const title =
+    input.includeSiteName === false
+      ? input.title
+      : `${input.title} | ${DEFAULT_SITE_NAME}`;
 
   return {
-    title: `${input.title} | ${DEFAULT_SITE_NAME}`,
+    title,
     description: input.description,
     keywords: input.keywords,
     alternates: { canonical: input.canonicalPath },
     openGraph: {
-      title: `${input.title} | ${DEFAULT_SITE_NAME}`,
+      title,
       description: input.description,
       type: input.type ?? "website",
       url: input.canonicalPath,
@@ -36,7 +41,7 @@ export function createMetadata(input: PageMetadataInput): Metadata {
     },
     twitter: {
       card: image ? "summary_large_image" : "summary",
-      title: `${input.title} | Grabbin`,
+      title,
       description: input.description,
       images: input.image ? [input.image] : undefined,
     },
@@ -52,6 +57,7 @@ export function createHomeMetadata() {
     title: HOME_TITLE,
     description: DEFAULT_SEO_DESCRIPTION,
     canonicalPath: "/",
+    includeSiteName: false,
     image: DEFAULT_SOCIAL_IMAGE,
     keywords: [
       "link in bio",

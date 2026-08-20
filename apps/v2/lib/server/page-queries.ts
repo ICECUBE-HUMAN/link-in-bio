@@ -4,6 +4,7 @@ import {
   handleAvailabilityResponseSchema,
   myPageResponseSchema,
   normalizePageHandle,
+  ownedPageListResponseSchema,
   pageByHandleResponseSchema,
 } from "@grabbin/api";
 import { headers } from "next/headers";
@@ -80,6 +81,14 @@ export async function getMyPage(request?: Request) {
     "/pages/me",
     readInit(await getReadHeaders(request)),
     myPageResponseSchema,
+  );
+}
+
+export async function getOwnedPages(request?: Request) {
+  return fetchBackend(
+    "/pages",
+    readInit(await getReadHeaders(request)),
+    ownedPageListResponseSchema,
   );
 }
 

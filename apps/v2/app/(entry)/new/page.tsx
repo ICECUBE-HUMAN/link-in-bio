@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { EntryPageShell } from "@/components/layout/entry-page-shell";
 import { NewPage } from "@/components/page/new-page";
 import JsonLd from "@/components/seo/json-ld";
 import { env } from "@/lib/env";
@@ -40,9 +39,7 @@ export default async function NewPageRoute() {
   return (
     <>
       <JsonLd nodes={[newPageJsonLd]} />
-      <EntryPageShell>
-        <NewPage appDomain={env.NEXT_PUBLIC_APP_DOMAIN} />
-      </EntryPageShell>
+      <NewPage appDomain={env.NEXT_PUBLIC_APP_DOMAIN} />
     </>
   );
 }

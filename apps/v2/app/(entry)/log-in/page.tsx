@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { LogInForm } from "@/components/auth/log-in-form";
-import { EntryPageShell } from "@/components/layout/entry-page-shell";
 import JsonLd from "@/components/seo/json-ld";
 import { env } from "@/lib/env";
 import { createWebPageJsonLd } from "@/lib/seo/json-ld";
@@ -69,12 +68,10 @@ export default async function LogInPage({
   return (
     <>
       <JsonLd nodes={[logInJsonLd]} />
-      <EntryPageShell>
-        <LogInForm
-          apiBaseUrl={env.NEXT_PUBLIC_API_BASE_URL}
-          redirectTo={getSafeRedirect(redirectTo)}
-        />
-      </EntryPageShell>
+      <LogInForm
+        apiBaseUrl={env.NEXT_PUBLIC_API_BASE_URL}
+        redirectTo={getSafeRedirect(redirectTo)}
+      />
     </>
   );
 }
