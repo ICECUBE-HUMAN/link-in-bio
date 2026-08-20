@@ -2,7 +2,7 @@ import Image from "next/image";
 import CTAButton from "@/components/landing/cta-button";
 import TryDemoButton from "@/components/landing/demo-button";
 
-export default function HeroSection({ ctaHref }: { ctaHref: string }) {
+export default function HeroSection() {
   return (
     <section className="flex min-h-svh flex-col items-center justify-center gap-16 max-w-4xl mx-auto">
       <div className="flex flex-col justify-between items-center gap-12 w-full">
@@ -31,7 +31,7 @@ export default function HeroSection({ ctaHref }: { ctaHref: string }) {
           </header>
         </div>
         <div className="flex flex-col items-center justify-center gap-2 w-3xs md:w-xs">
-          <CTAButton href={ctaHref} title="Join for free" />
+          <CTAButton href="/log-in" title="Join for free" />
           <TryDemoButton />
         </div>
       </div>

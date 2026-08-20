@@ -2,7 +2,6 @@
 
 import { type PlanPeriod, PRO_PAGE_LIMIT, PRO_PLANS } from "@grabbin/plan";
 import { Player } from "@remotion/player";
-import Link from "next/link";
 import {
   type ReactNode,
   useEffect,
@@ -18,7 +17,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { Button } from "@/components/ui/button";
+import CTAButton from "@/components/landing/cta-button";
 
 type PlanFeature = {
   label: string;
@@ -90,15 +89,7 @@ export default function PlanSection() {
           price={selectedPrice.price}
           suffix={selectedPrice.suffix}
           features={PRO_FEATURES}
-          action={
-            <Button
-              size="lg"
-              variant="brand"
-              className="w-full rounded-xl h-13 text-lg"
-              nativeButton={false}
-              render={<Link href="/log-in">Get started</Link>}
-            />
-          }
+          action={<CTAButton href="/log-in" title="Get started" />}
         />
       </div>
 
