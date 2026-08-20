@@ -1,6 +1,7 @@
 import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { env } from "@/lib/env";
 
 type FooterLink =
   | {
@@ -35,7 +36,7 @@ export const footerLinks = [
 ] as const satisfies readonly FooterLink[];
 
 export default function Footer() {
-  const appTitle = process.env.NEXT_PUBLIC_APP_TITLE ?? "Grabbin";
+  const appTitle = env.NEXT_PUBLIC_APP_TITLE || "Grabbin";
 
   return (
     <footer className="relative overflow-hidden bg-background px-5">

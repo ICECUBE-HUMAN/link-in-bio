@@ -14,8 +14,16 @@
       "custom_domain": true
     }
   ],
+  "services": [
+    {
+      "binding": "BACKEND",
+      "service": "grabbin-api"
+    }
+  ],
   "vars": {
+    "NEXT_PUBLIC_APP_URL": "https://grabbin.me",
     "NEXT_PUBLIC_APP_TITLE": "Grabbin",
+    "NEXT_PUBLIC_API_BASE_URL": "https://api.grabbin.me",
     "NEXT_PUBLIC_APP_DOMAIN": "grabbin.me",
     "NEXT_PUBLIC_R2_PUBLIC_URL": "https://cdn.grabbin.me",
     "NEXT_PUBLIC_ENABLE_ANNOUNCEMENT": "false"

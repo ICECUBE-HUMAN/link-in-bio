@@ -5,7 +5,7 @@ export const DEFAULT_SEO_DESCRIPTION =
 export const DEFAULT_SITE_NAME = "Grabbin";
 export const HOME_TITLE =
   "A Link in Bio, the most beautiful and clean you've ever seen";
-export const DEFAULT_SOCIAL_IMAGE = "/logo512.png";
+export const DEFAULT_SOCIAL_IMAGE = "/opengraph-image";
 
 type PageMetadataInput = {
   title: string;
