@@ -27,5 +27,24 @@
     "NEXT_PUBLIC_APP_DOMAIN": "grabbin.me",
     "NEXT_PUBLIC_R2_PUBLIC_URL": "https://cdn.grabbin.me",
     "NEXT_PUBLIC_ENABLE_ANNOUNCEMENT": "false"
+  },
+  "env": {
+    "local": {
+      "routes": [],
+      "vars": {
+        "NEXT_PUBLIC_APP_URL": "http://localhost:3000",
+        "NEXT_PUBLIC_APP_TITLE": "Grabbin",
+        "NEXT_PUBLIC_API_BASE_URL": "http://localhost:8787",
+        "NEXT_PUBLIC_APP_DOMAIN": "grabbin.me",
+        "NEXT_PUBLIC_R2_PUBLIC_URL": "https://cdn.grabbin.me",
+        "NEXT_PUBLIC_ENABLE_ANNOUNCEMENT": "false"
+      },
+      "services": [
+        {
+          "binding": "BACKEND",
+          "service": "grabbin-api"
+        }
+      ]
+    }
   }
 }

@@ -5,6 +5,7 @@ export const corsMiddleware = cors({
 		return [
 			c.env?.FRONTEND_URL,
 			"http://localhost:3000",
+			"https://v2.grabbin.me",
 		].includes(origin)
 			? origin
 			: undefined;

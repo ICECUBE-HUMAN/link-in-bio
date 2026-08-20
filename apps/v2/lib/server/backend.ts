@@ -25,22 +25,29 @@ type BackendFailure = {
 
 export type BackendResult<T> = BackendSuccess<T> | BackendFailure;
 
-export async function fetchBackend<S extends v.GenericSchema>(
+export async function fetchBackendResponse(
   path: string,
   init: RequestInit,
-  responseSchema: S,
-): Promise<BackendResult<v.InferOutput<S>>> {
+): Promise<Response> {
   const backendInit =
     init?.body === null || init?.body === undefined
       ? init
       : { ...init, duplex: "half" as const };
   const response = await env.BACKEND.fetch(getBackendUrl(path), backendInit);
 
-  const normalizedResponse = new Response(response.body, {
+  return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
     headers: response.headers,
   });
+}
+
+export async function fetchBackend<S extends v.GenericSchema>(
+  path: string,
+  init: RequestInit,
+  responseSchema: S,
+): Promise<BackendResult<v.InferOutput<S>>> {
+  const normalizedResponse = await fetchBackendResponse(path, init);
 
   if (!normalizedResponse.ok) {
     return { ok: false, response: normalizedResponse };

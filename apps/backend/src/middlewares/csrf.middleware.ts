@@ -5,5 +5,6 @@ export const csrfMiddleware = csrf({
 		[
 			c.env?.FRONTEND_URL,
 			"http://localhost:3000",
+			"https://v2.grabbin.me",
 		].includes(origin),
 });

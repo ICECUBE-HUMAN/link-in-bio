@@ -9,6 +9,7 @@
   "scripts": {
     "prepare": "git config core.hooksPath .githooks",
     "dev": "bun run --parallel --filter @grabbin/frontend --filter @grabbin/backend dev",
+    "dev:good": "bun run --parallel --filter @grabbin/v2 --filter @grabbin/backend dev",
     "dev:frontend": "bun run --filter @grabbin/frontend dev",
     "dev:backend": "bun run --filter @grabbin/backend dev",
     "dev:v2": "bun run --filter @grabbin/v2 dev",

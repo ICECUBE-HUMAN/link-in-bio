@@ -43,6 +43,7 @@ export const createAuth = (
 		secret: env.BETTER_AUTH_SECRET,
 		trustedOrigins: [
 			"http://localhost:3000",
+			"https://v2.grabbin.me",
 			env.FRONTEND_URL,
 			env.BETTER_AUTH_URL,
 		],
