@@ -3,6 +3,8 @@ import { Pool } from "pg";
 import type { AppBindings } from "types/type";
 import * as schema from "./schema";
 
+let localPool: Pool | undefined;
+
 export const createDatabaseClient = (
 	env: AppBindings,
 ) => {
@@ -16,13 +18,26 @@ export const createDatabaseClient = (
 		);
 	}
 
-	const client = new Pool({
+	const isLocalDirectConnection =
+		env.HYPERDRIVE?.connectionString ===
+		env.DATABASE_URL;
+	const poolConfig = {
 		connectionString,
 		max: 1,
 		connectionTimeoutMillis: 5_000,
-	});
+	};
+	if (isLocalDirectConnection) {
+		localPool ??= new Pool(poolConfig);
+		return drizzle({
+			client: localPool,
+			schema,
+		});
+	}
 
-	return drizzle({ client, schema });
+	return drizzle({
+		client: new Pool(poolConfig),
+		schema,
+	});
 };
 
 export type DatabaseClient = ReturnType<
