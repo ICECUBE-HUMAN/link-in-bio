@@ -1,5 +1,6 @@
 import { env } from "@/lib/env";
 import { getPublicImageUrl } from "@/lib/seo-responses";
+import { fetchBackend } from "@/lib/server/backend";
 
 export const size = { width: 64, height: 64 };
 export const contentType = "image/svg+xml";
@@ -21,11 +22,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 async function getPageImageUrl(handle: string) {
   let response: Response;
   try {
-    const url = new URL(
+    response = await fetchBackend(
       `/pages/${encodeURIComponent(handle.trim().toLowerCase())}`,
-      env.NEXT_PUBLIC_API_BASE_URL,
+      { signal: AbortSignal.timeout(3000) },
     );
-    response = await fetch(url, { signal: AbortSignal.timeout(3000) });
   } catch {
     return null;
   }
