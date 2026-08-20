@@ -2,9 +2,9 @@
 
 import { type PlanPeriod, PRO_PAGE_LIMIT, PRO_PLANS } from "@grabbin/plan";
 import { Player } from "@remotion/player";
-import { BadgeCheck } from "lucide-react";
 import Link from "next/link";
 import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
+import { Verified } from "reicon-react";
 import {
   Easing,
   interpolate,
@@ -453,8 +453,8 @@ function PlanCard({
           <ul className="flex flex-col gap-1 text-lg font-medium">
             {features.map((feature) => (
               <li key={feature.label} className="flex items-center gap-2">
-                <BadgeCheck
-                  className="size-5 shrink-0 fill-brand stroke-white"
+                <Verified
+                  className="size-5 shrink-0 text-brand"
                   aria-hidden="true"
                 />
                 <span>{feature.label}</span>
