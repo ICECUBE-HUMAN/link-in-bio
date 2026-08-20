@@ -108,7 +108,7 @@ export async function GET(request: Request) {
 
   return new Response(svg, {
     headers: {
-      "cache-control": "no-cache, must-revalidate",
+      "cache-control": "public, max-age=31536000, immutable",
       "content-type": "image/svg+xml",
     },
   });

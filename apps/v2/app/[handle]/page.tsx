@@ -51,7 +51,7 @@ export async function generateMetadata({
       icon: [
         {
           url: image
-            ? `/api/favicon?image=${encodeURIComponent(image)}`
+            ? `/api/favicon?image=${encodeURIComponent(image)}&version=2`
             : "/icon.svg",
           type: "image/svg+xml",
           sizes: "64x64",
