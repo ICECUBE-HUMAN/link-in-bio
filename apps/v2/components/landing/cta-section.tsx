@@ -1,5 +1,5 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import CTAButton from "@/components/landing/cta-button";
+import TryDemoButton from "@/components/landing/demo-button";
 
 export default function CTASection() {
   return (
@@ -15,20 +15,8 @@ export default function CTASection() {
           </p>
         </header>
         <div className="flex flex-col items-center justify-center gap-2 w-3xs md:w-xs">
-          <Button
-            size="lg"
-            variant="brand"
-            className="rounded-xl w-full py-5.5 h-13 text-lg md:text-lg md:h-14"
-            nativeButton={false}
-            render={<Link href="/log-in">Get started</Link>}
-          />
-          <Button
-            size="lg"
-            variant="secondary"
-            className="rounded-xl w-full py-5.5 h-13 text-lg md:text-lg md:h-14 text-muted-foreground"
-            nativeButton={false}
-            render={<Link href={"/demo" as never}>Try demo</Link>}
-          />
+          <CTAButton href="/log-in" title="Get started" />
+          <TryDemoButton />
           <p className="text-sm font-medium text-gray-bright md:text-base">
             Create your page in seconds.
           </p>
