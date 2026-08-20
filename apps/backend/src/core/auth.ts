@@ -9,6 +9,7 @@ import { betterAuth } from "better-auth/minimal";
 import type { ExecutionContext } from "hono";
 import type { AppBindings } from "types/type";
 import { betterAuthOptions } from "./auth.options";
+import { getAllowedOrigins } from "./origins";
 
 type AuthExecutionContext = {
 	waitUntil: ExecutionContext["waitUntil"];
@@ -42,9 +43,9 @@ export const createAuth = (
 		baseURL: env.BETTER_AUTH_URL,
 		secret: env.BETTER_AUTH_SECRET,
 		trustedOrigins: [
-			"http://localhost:3000",
-			"https://v2.grabbin.me",
-			env.FRONTEND_URL,
+			...getAllowedOrigins(
+				env.FRONTEND_URL,
+			),
 			env.BETTER_AUTH_URL,
 		],
 	});

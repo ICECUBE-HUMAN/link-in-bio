@@ -1,10 +1,9 @@
+import { getAllowedOrigins } from "@core/origins";
 import { csrf } from "hono/csrf";
 
 export const csrfMiddleware = csrf({
 	origin: (origin, c) =>
-		[
+		getAllowedOrigins(
 			c.env?.FRONTEND_URL,
-			"http://localhost:3000",
-			"https://v2.grabbin.me",
-		].includes(origin),
+		).includes(origin),
 });
