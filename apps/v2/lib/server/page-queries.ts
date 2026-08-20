@@ -1,4 +1,7 @@
 import {
+  createPageRequestSchema,
+  createPageResponseSchema,
+  handleAvailabilityResponseSchema,
   myPageResponseSchema,
   normalizePageHandle,
   pageByHandleResponseSchema,
@@ -85,5 +88,30 @@ export async function getPageByHandle(handle: string, request?: Request) {
     `/pages/${encodeURIComponent(normalizePageHandle(handle))}`,
     readInit(await getReadHeaders(request)),
     pageByHandleResponseSchema,
+  );
+}
+
+export async function checkPageHandle(handle: string, request?: Request) {
+  const params = new URLSearchParams({ handle });
+  return fetchBackend(
+    `/pages/check?${params.toString()}`,
+    readInit(await getReadHeaders(request)),
+    handleAvailabilityResponseSchema,
+  );
+}
+
+export async function createPage(input: unknown, request?: Request) {
+  const parsed = v.parse(createPageRequestSchema, input);
+  const requestHeaders = await getReadHeaders(request);
+  requestHeaders.set("content-type", "application/json");
+
+  return fetchBackend(
+    "/pages",
+    {
+      method: "POST",
+      headers: requestHeaders,
+      body: JSON.stringify(parsed),
+    },
+    createPageResponseSchema,
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { LogInForm } from "@/components/auth/log-in-form";
+import { EntryPageShell } from "@/components/layout/entry-page-shell";
 import JsonLd from "@/components/seo/json-ld";
 import { env } from "@/lib/env";
 import { createWebPageJsonLd } from "@/lib/seo/json-ld";
@@ -68,23 +69,12 @@ export default async function LogInPage({
   return (
     <>
       <JsonLd nodes={[logInJsonLd]} />
-      <main className="relative mx-auto flex h-lvh w-full grow items-center justify-between px-5 py-6">
-        <aside className="flex basis-0 flex-1 justify-center">
-          <section className="relative flex w-full max-w-sm flex-col gap-10">
-            <LogInForm
-              apiBaseUrl={env.NEXT_PUBLIC_API_BASE_URL}
-              redirectTo={getSafeRedirect(redirectTo)}
-            />
-          </section>
-        </aside>
-        <aside className="hidden h-full basis-0 flex-1 xl:block">
-          <img
-            src="https://cdn.grabbin.me/assets/features/5.jpg"
-            alt=""
-            className="h-full w-full rounded-[2rem] object-cover"
-          />
-        </aside>
-      </main>
+      <EntryPageShell>
+        <LogInForm
+          apiBaseUrl={env.NEXT_PUBLIC_API_BASE_URL}
+          redirectTo={getSafeRedirect(redirectTo)}
+        />
+      </EntryPageShell>
     </>
   );
 }

@@ -11,6 +11,7 @@ type PageMetadataInput = {
   title: string;
   description: string;
   canonicalPath: string;
+  noIndex?: boolean;
   image?: string;
   keywords?: string[];
   type?: "website" | "article";
@@ -38,6 +39,10 @@ export function createMetadata(input: PageMetadataInput): Metadata {
       title: `${input.title} | Grabbin`,
       description: input.description,
       images: input.image ? [input.image] : undefined,
+    },
+    robots: {
+      index: !input.noIndex,
+      follow: !input.noIndex,
     },
   };
 }

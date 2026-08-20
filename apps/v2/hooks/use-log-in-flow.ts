@@ -74,6 +74,7 @@ export function useLogInFlow(redirectTo: string, apiBaseUrl: string) {
       await authClient.signIn.social({
         provider,
         callbackURL: new URL(redirectTo, window.location.origin).toString(),
+        newUserCallbackURL: new URL("/new", window.location.origin).toString(),
       });
     } finally {
       setPendingProvider(null);
