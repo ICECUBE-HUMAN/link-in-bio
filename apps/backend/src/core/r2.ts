@@ -3,6 +3,7 @@ import {
 	MAX_ITEM_MEDIA_SIZE as SHARED_MAX_ITEM_MEDIA_SIZE,
 	MAX_PROFILE_IMAGE_SIZE as SHARED_MAX_PROFILE_IMAGE_SIZE,
 } from "@grabbin/api";
+import { AwsClient } from "aws4fetch";
 
 export const LEGACY_PROFILE_IMAGE_PREFIX =
 	"users/profile/";
@@ -43,97 +44,6 @@ const displayImageTypesByExtension =
 
 const mediaTypePattern =
 	/^(image|video)\/[a-z0-9.+-]+$/i;
-
-const awsEncode = (value: string) =>
-	encodeURIComponent(value).replace(
-		/[!'()*]/g,
-		(character) =>
-			`%${character.charCodeAt(0).toString(16).toUpperCase()}`,
-	);
-
-const asArrayBuffer = (
-	bytes: Uint8Array<ArrayBufferLike>,
-) =>
-	bytes.buffer.slice(
-		bytes.byteOffset,
-		bytes.byteOffset + bytes.byteLength,
-	) as ArrayBuffer;
-
-const toHex = (bytes: ArrayBuffer) =>
-	Array.from(
-		new Uint8Array(bytes),
-		(byte) =>
-			byte
-				.toString(16)
-				.padStart(2, "0"),
-	).join("");
-
-const sha256 = async (value: string) =>
-	toHex(
-		await crypto.subtle.digest(
-			"SHA-256",
-			asArrayBuffer(
-				new TextEncoder().encode(value),
-			),
-		),
-	);
-
-const hmac = async (
-	key: Uint8Array,
-	value: string,
-) =>
-	new Uint8Array(
-		await crypto.subtle.sign(
-			"HMAC",
-			await crypto.subtle.importKey(
-				"raw",
-				asArrayBuffer(key),
-				{
-					name: "HMAC",
-					hash: "SHA-256",
-				},
-				false,
-				["sign"],
-			),
-			asArrayBuffer(
-				new TextEncoder().encode(value),
-			),
-		),
-	);
-
-const hmacChain = async (
-	secret: string,
-	date: string,
-	region: string,
-	service: string,
-) => {
-	const dateKey = await hmac(
-		new TextEncoder().encode(
-			`AWS4${secret}`,
-		),
-		date,
-	);
-	const regionKey = await hmac(
-		dateKey,
-		region,
-	);
-	const serviceKey = await hmac(
-		regionKey,
-		service,
-	);
-	return hmac(
-		serviceKey,
-		"aws4_request",
-	);
-};
-
-const encodeObjectKeyPath = (
-	objectKey: string,
-) =>
-	objectKey
-		.split("/")
-		.map(awsEncode)
-		.join("/");
 
 export const isProfileImageKey = (
 	value: string,
@@ -435,87 +345,42 @@ async function createSignedUploadUrl({
 	const amzDate = now
 		.toISOString()
 		.replace(/[:-]|\.\d{3}/g, "");
-	const shortDate = amzDate.slice(0, 8);
-	const credential = `${accessKeyId}/${shortDate}/${region}/${service}/aws4_request`;
-	const signedHeaders = cacheControl
-		? "cache-control;content-type;host"
-		: "content-type;host";
-	const query = new URLSearchParams([
-		[
-			"X-Amz-Algorithm",
-			"AWS4-HMAC-SHA256",
-		],
-		["X-Amz-Credential", credential],
-		["X-Amz-Date", amzDate],
-		[
-			"X-Amz-Expires",
-			String(ttlSeconds),
-		],
-		[
-			"X-Amz-SignedHeaders",
-			signedHeaders,
-		],
-	]);
-	const canonicalQueryString =
-		Array.from(query.entries())
-			.sort(([left], [right]) =>
-				left.localeCompare(right),
-			)
-			.map(
-				([key, value]) =>
-					`${awsEncode(key)}=${awsEncode(value)}`,
-			)
-			.join("&");
-	const canonicalUri = `/${bucket}/${encodeObjectKeyPath(objectKey)}`;
-	const canonicalHeaders = cacheControl
-		? `cache-control:${cacheControl}\ncontent-type:${contentType}\nhost:${host}\n`
-		: `content-type:${contentType}\nhost:${host}\n`;
-	const canonicalRequest = [
-		"PUT",
-		canonicalUri,
-		canonicalQueryString,
-		canonicalHeaders,
-		signedHeaders,
-		"UNSIGNED-PAYLOAD",
-	].join("\n");
-	const scope = `${shortDate}/${region}/${service}/aws4_request`;
-	const stringToSign = [
-		"AWS4-HMAC-SHA256",
-		amzDate,
-		scope,
-		await sha256(canonicalRequest),
-	].join("\n");
-	const signature = toHex(
-		asArrayBuffer(
-			await hmac(
-				await hmacChain(
-					secretAccessKey,
-					shortDate,
-					region,
-					service,
-				),
-				stringToSign,
-			),
-		),
+	const url = new URL(
+		`https://${host}/${bucket}/${objectKey}`,
 	);
-	query.set(
-		"X-Amz-Signature",
-		signature,
+	url.searchParams.set(
+		"X-Amz-Expires",
+		String(ttlSeconds),
 	);
+	const headers = new Headers({
+		"content-type": contentType,
+	});
+	if (cacheControl) {
+		headers.set(
+			"cache-control",
+			cacheControl,
+		);
+	}
+	const signedRequest =
+		await new AwsClient({
+			accessKeyId,
+			secretAccessKey,
+			region,
+			service,
+		}).sign(url, {
+			method: "PUT",
+			headers,
+			aws: {
+				datetime: amzDate,
+				signQuery: true,
+				allHeaders: true,
+			},
+		});
 
 	return {
 		objectKey,
-		uploadUrl: `https://${host}${canonicalUri}?${Array.from(
-			query.entries(),
-		)
-			.sort(([left], [right]) =>
-				left.localeCompare(right),
-			)
-			.map(
-				([key, value]) =>
-					`${awsEncode(key)}=${awsEncode(value)}`,
-			)
-			.join("&")}`,
+		uploadUrl:
+			signedRequest.url.toString(),
 		expiresAt: new Date(
 			now.getTime() + ttlSeconds * 1000,
 		).toISOString(),

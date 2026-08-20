@@ -1,3 +1,4 @@
+import { pageByHandleResponseSchema } from "@grabbin/api";
 import { env } from "@/lib/env";
 import { getPublicImageUrl } from "@/lib/seo-responses";
 import { fetchBackend } from "@/lib/server/backend";
@@ -15,36 +16,25 @@ function fallbackIcon() {
   });
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
 async function getPageImageUrl(handle: string) {
-  let response: Response;
   try {
-    response = await fetchBackend(
+    const result = await fetchBackend(
       `/pages/${encodeURIComponent(handle.trim().toLowerCase())}`,
       { signal: AbortSignal.timeout(3000) },
+      pageByHandleResponseSchema,
     );
+    if (!result.ok) return null;
+
+    const image = result.data.page.image;
+    const updatedAt = result.data.page.updatedAt;
+    if (typeof image !== "string" || typeof updatedAt !== "string") {
+      return null;
+    }
+
+    return getPublicImageUrl(image, updatedAt);
   } catch {
     return null;
   }
-
-  if (!response.ok) return null;
-
-  let payload: unknown;
-  try {
-    payload = await response.json();
-  } catch {
-    return null;
-  }
-
-  if (!isRecord(payload) || !isRecord(payload.page)) return null;
-  const image = payload.page.image;
-  const updatedAt = payload.page.updatedAt;
-  if (typeof image !== "string" || typeof updatedAt !== "string") return null;
-
-  return getPublicImageUrl(image, updatedAt);
 }
 
 function isAllowedImageUrl(imageUrl: URL) {
