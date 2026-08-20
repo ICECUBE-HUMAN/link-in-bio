@@ -2,6 +2,7 @@
 
 import { Player } from "@remotion/player";
 import { Monitor, Smartphone } from "lucide-react";
+import { useEffect, useState } from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -37,6 +38,10 @@ const FEATURE_ITEMS = [
 ] as const;
 
 export default function FeatureSection() {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => setIsMounted(true), []);
+
   return (
     <section className="mx-auto flex min-h-lvh max-w-6xl flex-col items-center gap-4 py-20">
       <header className="flex flex-col items-center gap-8 text-center mb-8">
@@ -85,19 +90,21 @@ export default function FeatureSection() {
                       : ""))
               }
             >
-              {preview === "drag-drop" ? (
-                <DragDropPreview />
-              ) : (
-                <>
-                  {/* Grid-based previews remain empty until the V2 Grid renderer is migrated.
-                  <GridItemShell ... />
-                  <ItemRenderer ... />
-                  <FlexibleWidgetSizesPreview />
-                  <PerfectFramePreview />
-                  */}
-                  <div aria-hidden="true" className="size-full" />
-                </>
-              )}
+              {isMounted ? (
+                preview === "drag-drop" ? (
+                  <DragDropPreview />
+                ) : (
+                  <>
+                    {/* Grid-based previews remain empty until the V2 Grid renderer is migrated.
+                    <GridItemShell ... />
+                    <ItemRenderer ... />
+                    <FlexibleWidgetSizesPreview />
+                    <PerfectFramePreview />
+                    */}
+                    <div aria-hidden="true" className="size-full" />
+                  </>
+                )
+              ) : null}
             </div>
           </article>
         ))}

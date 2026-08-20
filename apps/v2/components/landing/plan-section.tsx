@@ -3,7 +3,13 @@
 import { type PlanPeriod, PRO_PAGE_LIMIT, PRO_PLANS } from "@grabbin/plan";
 import { Player } from "@remotion/player";
 import Link from "next/link";
-import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { Verified } from "reicon-react";
 import {
   Easing,
@@ -49,7 +55,10 @@ const PROFILE_DEMO_PAGES = [
 
 export default function PlanSection() {
   const [billingPeriod, setBillingPeriod] = useState<PlanPeriod>("monthly");
+  const [isMounted, setIsMounted] = useState(false);
   const selectedPrice = PRO_PLANS[billingPeriod];
+
+  useEffect(() => setIsMounted(true), []);
 
   return (
     <section
@@ -103,11 +112,11 @@ export default function PlanSection() {
               className="aspect-4/3 rounded-2xl bg-background"
               data-feature-image={feature.key}
             >
-              {feature.key === "profiles" ? (
+              {isMounted && feature.key === "profiles" ? (
                 <ProfilesDemo />
-              ) : (
+              ) : isMounted ? (
                 <PageviewsDemo />
-              )}
+              ) : null}
             </div>
             <div className="flex flex-col gap-2">
               <h3 className="text-2xl font-medium tracking-tight">
