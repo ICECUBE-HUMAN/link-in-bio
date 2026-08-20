@@ -151,6 +151,7 @@
         "@mdx-js/react": "^3.1.1",
         "@next/mdx": "^16.3.1",
         "@remotion/player": "^4.0.512",
+        "@tanstack/react-query": "latest",
         "@types/mdx": "^2.0.14",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
