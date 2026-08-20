@@ -1,6 +1,6 @@
 import type { ProfileImageCrop } from "@grabbin/api";
-import { getProfileImageCropImageStyle } from "@/lib/image/crop-image";
 import Image from "next/image";
+import { getProfileImageCropImageStyle } from "@/lib/image/crop-image";
 
 export function ProfileImage({
   imageUrl,

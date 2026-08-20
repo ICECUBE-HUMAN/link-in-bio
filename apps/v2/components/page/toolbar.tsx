@@ -9,12 +9,12 @@ import {
 import { Smartphone } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import Image from "next/image";
 import { type ChangeEvent, useRef, useState } from "react";
 import {
   ChevronLeft,
   Desktop,
   Document2,
-  GalleryCircle,
   Globe,
   LinkCircle3,
   Loader,
@@ -37,7 +37,6 @@ import {
 import type { Breakpoint } from "@/lib/handle/page-layout";
 import { cn } from "@/lib/utils";
 import { ShareDialog } from "./share-dialog";
-import Image from "next/image";
 
 type ToolbarItemType = "link" | "section" | "text" | "map";
 
