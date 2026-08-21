@@ -1,18 +1,13 @@
 import {
   isReservedPageHandle,
   normalizePageHandle,
-  type OwnedPageListResponse,
   type PageItemResponse,
   type PageResponse,
+  type SessionResponse,
 } from "@grabbin/api";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import {
-  getMyPage,
-  getOwnedPages,
-  getPageByHandle,
-  getSession,
-} from "@/lib/server/page-queries";
+import { getPageByHandle, getSession } from "@/lib/server/page-queries";
 
 export type PublicHandleModel = {
   page: PageResponse;
@@ -20,9 +15,8 @@ export type PublicHandleModel = {
   visitorsEnabled: boolean;
   isSignedIn: boolean;
   isCurrentUserPage: boolean;
-  ownedPages: OwnedPageListResponse | null;
-  ownedPage: OwnedPageListResponse["pages"][number] | null;
-  primaryPage: PageResponse | null;
+  isPrimaryPage: boolean;
+  entitlements: NonNullable<SessionResponse>["entitlements"];
   readOnly: boolean;
   mode: "view" | "edit";
 };
@@ -53,36 +47,13 @@ export const getPublicHandleModel = cache(
     const isSignedIn = Boolean(session?.user);
     const page = pageResult.data.page;
     const isCurrentUserPage = session?.user.id === page.userId;
-    const ownedResult = isCurrentUserPage ? await getOwnedPages() : null;
-    const primaryPageResult =
-      isSignedIn && !isCurrentUserPage ? await getMyPage() : null;
-    if (ownedResult && !ownedResult.ok) {
-      if (ownedResult.response.status !== 401) {
-        throw new Error(
-          `Failed to load owned pages: ${ownedResult.response.status}`,
-        );
-      }
-    }
-    if (primaryPageResult && !primaryPageResult.ok) {
-      if (primaryPageResult.response.status !== 401) {
-        throw new Error(
-          `Failed to load primary page: ${primaryPageResult.response.status}`,
-        );
-      }
-    }
-
-    const ownedPages = ownedResult?.ok ? ownedResult.data : null;
-    const primaryPage = primaryPageResult?.ok
-      ? primaryPageResult.data.page
-      : null;
-    const ownedPage =
-      ownedPages?.pages.find((candidate) => candidate.handle === page.handle) ??
-      null;
+    const isPrimaryPage = session?.user.primaryPageId === page.id;
+    const entitlements = session?.entitlements ?? {
+      tier: "free" as const,
+      hasAccess: false,
+    };
     const readOnly =
-      isCurrentUserPage &&
-      (!ownedPages ||
-        !ownedPage ||
-        (!ownedPages.hasAccess && !ownedPage.isPrimary));
+      isCurrentUserPage && !entitlements.hasAccess && !isPrimaryPage;
 
     return {
       page,
@@ -90,9 +61,8 @@ export const getPublicHandleModel = cache(
       visitorsEnabled: pageResult.data.visitorsEnabled === true,
       isSignedIn,
       isCurrentUserPage,
-      ownedPages,
-      ownedPage,
-      primaryPage,
+      isPrimaryPage,
+      entitlements,
       readOnly,
       mode: isCurrentUserPage && !readOnly ? "edit" : "view",
     };

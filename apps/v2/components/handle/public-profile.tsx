@@ -49,7 +49,7 @@ export function PublicProfile({ model }: { model: PublicHandleModel }) {
             {model.page.bio.trim()}
           </p>
         ) : null}
-        {model.readOnly && model.ownedPage && !model.ownedPage.isPrimary ? (
+        {model.readOnly && !model.isPrimaryPage ? (
           <p className="text-base text-muted-foreground">
             Non-primary pages are read-only and will be deleted soon.
             <br />
@@ -57,9 +57,8 @@ export function PublicProfile({ model }: { model: PublicHandleModel }) {
           </p>
         ) : null}
         {model.isCurrentUserPage &&
-        model.ownedPages?.hasAccess &&
-        model.ownedPage &&
-        !model.ownedPage.isPrimary ? (
+        model.entitlements.hasAccess &&
+        !model.isPrimaryPage ? (
           <PrimaryPageAction handle={model.page.handle} />
         ) : null}
       </div>

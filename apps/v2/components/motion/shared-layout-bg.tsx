@@ -8,9 +8,7 @@ import {
 } from "motion/react";
 import {
   Children,
-  cloneElement,
   isValidElement,
-  type ReactElement,
   type ReactNode,
   useId,
   useState,
@@ -51,20 +49,13 @@ export function SharedLayoutBg({
       {Children.toArray(children)
         .filter(isValidElement)
         .map((child, index) => {
-          const element = child as ReactElement<{
-            className?: string;
-            onMouseEnter?: () => void;
-            children?: ReactNode;
-          }>;
-          const key = element.key ? String(element.key) : `item-${index}`;
-          return cloneElement(
-            element,
-            {
-              key,
-              className: cn("relative", element.props.className),
-              onMouseEnter: () => setActiveId(key),
-            },
-            <>
+          const key = child.key ? String(child.key) : `item-${index}`;
+          return (
+            <motion.div
+              key={key}
+              className="relative w-full"
+              onHoverStart={() => setActiveId(key)}
+            >
               <AnimatePresence custom={activeId !== null}>
                 {activeId !== null ? (
                   <motion.div
@@ -96,9 +87,9 @@ export function SharedLayoutBg({
                 ) : null}
               </AnimatePresence>
               <div className="relative z-10 flex flex-col items-start">
-                {element.props.children}
+                {child}
               </div>
-            </>,
+            </motion.div>
           );
         })}
     </motion.div>

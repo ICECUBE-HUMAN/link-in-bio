@@ -1,11 +1,9 @@
-import type { PageResponse } from "@grabbin/api";
 import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { env } from "@/lib/env";
 import { widePageLayout } from "@/lib/handle/page-layout";
-import { getPublicImageUrl } from "@/lib/seo-responses";
 import type { PublicHandleModel } from "@/lib/server/public-handle-model";
+import { MyPageLink } from "./my-page-link";
 import { OwnerControls } from "./owner-controls";
 import { PublicViews } from "./public-views";
 
@@ -32,9 +30,11 @@ export function PublicControls({ model }: { model: PublicHandleModel }) {
           {model.isCurrentUserPage ? (
             <OwnerControls
               page={model.page}
-              ownedPages={model.ownedPages}
+              hasAccess={model.entitlements.hasAccess}
+              isPrimaryPage={model.isPrimaryPage}
               readOnly={model.readOnly}
               apiBaseUrl={env.NEXT_PUBLIC_API_BASE_URL}
+              imageBaseUrl={env.NEXT_PUBLIC_R2_PUBLIC_URL}
               siteOrigin={env.NEXT_PUBLIC_APP_URL}
             />
           ) : !model.isSignedIn ? (
@@ -71,32 +71,10 @@ export function PublicControls({ model }: { model: PublicHandleModel }) {
             <PublicViews pageId={model.page.id} />
           ) : null}
         </div>
-        {model.isSignedIn && !model.isCurrentUserPage ? (
-          <MyPageLink page={model.primaryPage} />
+        {!model.isCurrentUserPage ? (
+          <MyPageLink enabled imageBaseUrl={env.NEXT_PUBLIC_R2_PUBLIC_URL} />
         ) : null}
       </div>
     </aside>
-  );
-}
-
-function MyPageLink({ page }: { page: PageResponse | null }) {
-  if (!page) return null;
-
-  const imageUrl = getPublicImageUrl(page.image, page.updatedAt);
-
-  return (
-    <Button
-      nativeButton={false}
-      render={<Link href={`/${encodeURIComponent(page.handle)}`} />}
-      variant="ghost"
-      size="sm"
-      className="gap-1.5 rounded-md"
-    >
-      <Avatar size="xs">
-        <AvatarImage src={imageUrl ?? undefined} alt="" />
-        <AvatarFallback />
-      </Avatar>
-      {page.name}
-    </Button>
   );
 }

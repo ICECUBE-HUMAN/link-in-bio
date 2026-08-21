@@ -6,11 +6,14 @@ import type {
   PageResponse,
 } from "@grabbin/api";
 import { PRO_MONTHLY_PRODUCT_ID } from "@grabbin/plan";
-import { ChevronLeftIcon, Settings2Icon } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronLeftIcon, PlusIcon, Settings2Icon } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle, Loader, XCircle } from "reicon-react";
 import { SharedLayoutBg } from "@/components/motion/shared-layout-bg";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   InputGroup,
@@ -24,15 +27,23 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
 import { createAuthClient } from "@/lib/auth/auth-client";
-import { checkPageHandle, updatePage } from "@/lib/client/page-api";
+import {
+  checkPageHandle,
+  getOwnedPages,
+  updatePage,
+} from "@/lib/client/page-api";
+import { createPublicImageUrl } from "@/lib/image/public-image-url";
 import { getHandleAvailabilityStatus } from "@/lib/page/new-page-state";
 
 type OwnerControlsProps = {
   page: PageResponse;
-  ownedPages: OwnedPageListResponse | null;
+  hasAccess: boolean;
+  isPrimaryPage: boolean;
   readOnly: boolean;
   apiBaseUrl: string;
+  imageBaseUrl?: string | null;
   siteOrigin: string;
 };
 
@@ -41,9 +52,11 @@ const DELETE_CONFIRMATION_CLICKS = 3;
 
 export function OwnerControls({
   page,
-  ownedPages,
+  hasAccess,
+  isPrimaryPage,
   readOnly,
   apiBaseUrl,
+  imageBaseUrl,
   siteOrigin,
 }: OwnerControlsProps) {
   const [open, setOpen] = useState(false);
@@ -53,8 +66,19 @@ export function OwnerControls({
   const [billingError, setBillingError] = useState(false);
   const [handle, setHandle] = useState(page.handle);
   const [handleSuccess, setHandleSuccess] = useState(false);
+  const [switchPageOpen, setSwitchPageOpen] = useState(false);
   const [pageDeleteOpen, setPageDeleteOpen] = useState(false);
   const router = useRouter();
+  const {
+    data: ownedPages,
+    isPending: isOwnedPagesPending,
+    error: ownedPagesError,
+  } = useQuery({
+    queryKey: ["pages"],
+    queryFn: getOwnedPages,
+    enabled: open && (switchPageOpen || pageDeleteOpen),
+    throwOnError: false,
+  });
   const primary = ownedPages?.pages.find((candidate) => candidate.isPrimary);
   const authClient = useMemo(() => createAuthClient(apiBaseUrl), [apiBaseUrl]);
 
@@ -68,7 +92,7 @@ export function OwnerControls({
     setError(null);
     setBillingError(false);
     try {
-      const result = ownedPages?.hasAccess
+      const result = hasAccess
         ? await authClient.creem.createPortal()
         : await authClient.creem.createCheckout({
             productId: PRO_MONTHLY_PRODUCT_ID,
@@ -84,7 +108,8 @@ export function OwnerControls({
   }
 
   async function deletePage() {
-    if (busy || !primary || primary.handle === page.handle) return;
+    if (busy || isPrimaryPage || !primary || primary.handle === page.handle)
+      return;
     setBusy(true);
     setError(null);
     try {
@@ -123,6 +148,46 @@ export function OwnerControls({
     }
   }
 
+  const deletePageControl = (
+    <Popover open={pageDeleteOpen} onOpenChange={setPageDeleteOpen}>
+      <PopoverTrigger
+        render={<button type="button" />}
+        disabled={busy || isPrimaryPage}
+        className="flex h-15 w-full items-center justify-start rounded-lg text-left font-medium text-gray-bright disabled:opacity-50"
+      >
+        Delete page
+      </PopoverTrigger>
+      <PopoverContent
+        side="right"
+        align="start"
+        sideOffset={12}
+        className="w-80 gap-1 rounded-2xl bg-background p-4"
+      >
+        <PopoverTitle className="text-xl font-semibold">
+          Delete page?
+        </PopoverTitle>
+        <PopoverDescription className="text-base text-primary">
+          Your contents will be permanently removed.
+        </PopoverDescription>
+        <Button
+          type="button"
+          variant="destructive"
+          size="lg"
+          className="mt-6 h-12 w-full rounded-lg text-base"
+          disabled={
+            busy ||
+            isOwnedPagesPending ||
+            !primary ||
+            primary.handle === page.handle
+          }
+          onClick={() => void deletePage()}
+        >
+          {busy ? <Loader className="animate-spin" /> : "Delete page"}
+        </Button>
+      </PopoverContent>
+    </Popover>
+  );
+
   return (
     <div className="contents">
       <div className="flex items-center gap-1">
@@ -132,6 +197,8 @@ export function OwnerControls({
             setOpen(nextOpen);
             if (nextOpen) {
               setView("menu");
+              setSwitchPageOpen(false);
+              setPageDeleteOpen(false);
               setHandleSuccess(false);
               setError(null);
               setBillingError(false);
@@ -154,7 +221,7 @@ export function OwnerControls({
               className="t-page-slide t-resize"
               data-page={view === "menu" ? "1" : "2"}
               data-view={view}
-              data-plan={ownedPages?.hasAccess ? "pro" : "free"}
+              data-plan={hasAccess ? "pro" : "free"}
               data-billing-error={billingError ? "true" : undefined}
               data-success={handleSuccess ? "true" : undefined}
             >
@@ -171,6 +238,34 @@ export function OwnerControls({
                       /{page.handle}
                     </span>
                   </button>
+                  <Popover
+                    open={switchPageOpen}
+                    onOpenChange={setSwitchPageOpen}
+                  >
+                    <PopoverTrigger
+                      render={<button type="button" />}
+                      className="relative flex h-15 w-full flex-col items-start justify-center gap-0 rounded-lg text-left font-medium"
+                    >
+                      <span>Switch page</span>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      side="right"
+                      align="start"
+                      sideOffset={12}
+                      className="w-64 gap-1 rounded-2xl bg-background p-2"
+                    >
+                      <SwitchPageContent
+                        pages={ownedPages?.pages ?? []}
+                        isPending={isOwnedPagesPending}
+                        error={ownedPagesError}
+                        imageBaseUrl={imageBaseUrl}
+                        onSelect={() => {
+                          setSwitchPageOpen(false);
+                          setOpen(false);
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <button
                     type="button"
                     disabled={busy}
@@ -195,7 +290,7 @@ export function OwnerControls({
                         >
                           {billingError
                             ? "Billing could not be opened."
-                            : ownedPages?.hasAccess
+                            : hasAccess
                               ? "Pro"
                               : "Free"}
                         </span>
@@ -217,53 +312,16 @@ export function OwnerControls({
                   >
                     Delete Account
                   </button>
-                  <Popover
-                    open={pageDeleteOpen}
-                    onOpenChange={setPageDeleteOpen}
-                  >
-                    <PopoverTrigger
-                      render={<button type="button" />}
-                      disabled={
-                        busy || !primary || primary.handle === page.handle
-                      }
-                      className="flex h-15 w-full items-center justify-start rounded-lg text-left font-medium text-gray-bright disabled:opacity-50"
-                    >
-                      Delete page
-                    </PopoverTrigger>
-                    <PopoverContent
-                      side="right"
-                      align="start"
-                      sideOffset={12}
-                      className="w-80 gap-1 rounded-2xl bg-background p-4"
-                    >
-                      <PopoverTitle className="text-xl font-semibold">
-                        Delete page?
-                      </PopoverTitle>
-                      <PopoverDescription className="text-base text-primary">
-                        Your contents will be permanently removed.
-                      </PopoverDescription>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="lg"
-                        className="mt-6 h-12 w-full rounded-lg text-base"
-                        disabled={busy}
-                        onClick={() => void deletePage()}
-                      >
-                        {busy ? (
-                          <Loader className="animate-spin" />
-                        ) : (
-                          "Delete page"
-                        )}
-                      </Button>
-                    </PopoverContent>
-                  </Popover>
+                  {!isPrimaryPage ? deletePageControl : null}
                   {error ? (
                     <div className="px-2 text-xs text-destructive" role="alert">
                       {error}
                     </div>
                   ) : null}
                 </SharedLayoutBg>
+                {isPrimaryPage ? (
+                  <div className="px-5">{deletePageControl}</div>
+                ) : null}
               </section>
               <section className="t-page" data-page-id="2">
                 {view === "handle" ? (
@@ -299,6 +357,85 @@ export function OwnerControls({
         </Popover>
       </div>
       {error ? <p className="mt-2 text-sm text-destructive">{error}</p> : null}
+    </div>
+  );
+}
+
+function SwitchPageContent({
+  pages,
+  isPending,
+  error,
+  imageBaseUrl,
+  onSelect,
+}: {
+  pages: OwnedPageListResponse["pages"];
+  isPending: boolean;
+  error: Error | null;
+  imageBaseUrl?: string | null;
+  onSelect: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      {isPending ? (
+        <div className="flex flex-col gap-1" aria-busy="true">
+          {[0, 1, 2].map((item) => (
+            <div
+              key={item}
+              className="flex h-15 flex-col justify-center gap-2 px-2"
+            >
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          ))}
+        </div>
+      ) : error ? (
+        <p className="px-2 py-3 text-sm text-destructive" role="alert">
+          Could not load pages.
+        </p>
+      ) : pages.length ? (
+        <SharedLayoutBg className="" inset={0}>
+          {pages.map((candidate) => (
+            <Link
+              key={candidate.id}
+              href={`/${encodeURIComponent(candidate.handle)}`}
+              onClick={onSelect}
+              className="flex min-h-15 w-full items-center gap-2 rounded-lg text-left font-medium px-2"
+            >
+              <Avatar size="default" className={"size-9"}>
+                <AvatarImage
+                  src={
+                    createPublicImageUrl(
+                      candidate.image,
+                      candidate.updatedAt,
+                      imageBaseUrl,
+                    ) ?? undefined
+                  }
+                  alt=""
+                />
+                <AvatarFallback />
+              </Avatar>
+              <span className="flex min-w-0 flex-col">
+                <span className="truncate">
+                  {candidate.name ?? candidate.handle}
+                </span>
+                <span className="text-muted-foreground/80">
+                  /{candidate.handle}
+                </span>
+              </span>
+            </Link>
+          ))}
+          <Link
+            href="/new"
+            onClick={onSelect}
+            className="flex min-h-15 w-full! justify-between items-center gap-2 rounded-lg font-medium px-2"
+          >
+            <span>Create page</span>
+            <PlusIcon className="size-4" aria-hidden="true" />
+          </Link>
+        </SharedLayoutBg>
+      ) : (
+        <p className="px-2 py-3 text-sm text-muted-foreground">No pages yet.</p>
+      )}
     </div>
   );
 }

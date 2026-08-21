@@ -4,6 +4,10 @@ import {
   createPageResponseSchema,
   type HandleAvailabilityResponse,
   handleAvailabilityResponseSchema,
+  type MyPageResponse,
+  myPageResponseSchema,
+  type OwnedPageListResponse,
+  ownedPageListResponseSchema,
   type UpdatePageRequest,
   type UpdatePageResponse,
   updatePageResponseSchema,
@@ -62,4 +66,12 @@ export async function updatePage(
       body: JSON.stringify(input),
     }),
   );
+}
+
+export async function getMyPage(): Promise<MyPageResponse> {
+  return v.parse(myPageResponseSchema, await requestJson("/api/pages/me"));
+}
+
+export async function getOwnedPages(): Promise<OwnedPageListResponse> {
+  return v.parse(ownedPageListResponseSchema, await requestJson("/api/pages"));
 }
