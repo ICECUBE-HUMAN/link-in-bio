@@ -7,6 +7,7 @@
 import { creem } from "@creem_io/better-auth";
 import type { DatabaseClient } from "@db/index";
 import type { BetterAuthOptions } from "better-auth/minimal";
+import { customSession } from "better-auth/plugins/custom-session";
 import { emailOTP } from "better-auth/plugins/email-otp";
 import type { AppBindings } from "types/type";
 import {
@@ -14,6 +15,7 @@ import {
 	restoreUserPagesAfterResubscribe,
 	scheduleUserPagesAfterCancellation,
 } from "../services/page-lifecycle.service";
+import { getPlanAccess } from "./billing";
 import { syncCreemWebhookState } from "./creem-webhook";
 import {
 	sendDeleteAccountVerificationEmail,
@@ -154,6 +156,25 @@ export const betterAuthOptions = (
 			enabled: true,
 		},
 		plugins: [
+			customSession(
+				async ({ user, session }) => {
+					const access =
+						await getPlanAccess({
+							db,
+							userId: user.id,
+						});
+
+					return {
+						user,
+						session,
+						entitlements: {
+							tier: access.tier,
+							hasAccess:
+								access.hasAccess,
+						},
+					};
+				},
+			),
 			emailOTP({
 				expiresIn: 5 * 60,
 				storeOTP: "hashed",

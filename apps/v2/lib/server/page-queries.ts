@@ -6,25 +6,13 @@ import {
   normalizePageHandle,
   ownedPageListResponseSchema,
   pageByHandleResponseSchema,
+  type SessionResponse,
+  sessionResponseSchema,
 } from "@grabbin/api";
 import { headers } from "next/headers";
 import { cache } from "react";
 import * as v from "valibot";
 import { type BackendResult, fetchBackend } from "@/lib/server/backend";
-
-const sessionUserSchema = v.object({
-  id: v.string(),
-  primaryPageId: v.optional(v.nullable(v.string())),
-});
-
-const sessionResponseSchema = v.nullable(
-  v.object({
-    session: v.unknown(),
-    user: sessionUserSchema,
-  }),
-);
-
-export type SessionResponse = v.InferOutput<typeof sessionResponseSchema>;
 
 const FORWARDED_HEADERS = ["cookie", "origin"] as const;
 

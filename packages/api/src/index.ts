@@ -92,6 +92,32 @@ export const healthResponseSchema = v.object({
 
 export type HealthResponse = v.InferOutput<typeof healthResponseSchema>;
 
+export const sessionEntitlementsSchema = v.object({
+	tier: v.picklist(["free", "pro"]),
+	hasAccess: v.boolean(),
+});
+
+export type SessionEntitlements = v.InferOutput<
+	typeof sessionEntitlementsSchema
+>;
+
+export const sessionUserSchema = v.object({
+	id: v.string(),
+	primaryPageId: v.optional(v.nullable(v.string())),
+});
+
+export type SessionUser = v.InferOutput<typeof sessionUserSchema>;
+
+export const sessionResponseSchema = v.nullable(
+	v.object({
+		session: v.unknown(),
+		user: sessionUserSchema,
+		entitlements: sessionEntitlementsSchema,
+	}),
+);
+
+export type SessionResponse = v.InferOutput<typeof sessionResponseSchema>;
+
 export const createPageRequestSchema = v.object({
 	handle: pageHandleSchema,
 	name: v.nullable(nullableTrimmedNameSchema),

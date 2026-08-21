@@ -1,12 +1,11 @@
 "use client";
 
-import type { MyPageResponse } from "@grabbin/api";
+import type { MyPageResponse, SessionResponse } from "@grabbin/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import type { SessionResponse } from "@/lib/server/page-queries";
 
 export default function CTAButton({
   href,
