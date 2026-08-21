@@ -41,7 +41,7 @@ function getLocalDates(timezone: string) {
 }
 
 async function getPageviews(pageId: string, timezone: string, date: string) {
-  const hostname = new URL(env.NEXT_PUBLIC_APP_URL).hostname;
+  const hostname = env.NEXT_PUBLIC_APP_DOMAIN;
   const url = new URL(`${SIMPLE_ANALYTICS_API_URL}/${hostname}.json`);
   url.searchParams.set("version", "6");
   url.searchParams.set("fields", "pageviews");

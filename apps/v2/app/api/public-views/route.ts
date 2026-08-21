@@ -11,6 +11,6 @@ export async function GET(request: Request) {
     );
 
   return Response.json(await getPublicViews(pageId, timezone), {
-    headers: { "cache-control": "private, max-age=900" },
+    headers: { "cache-control": "private, no-store" },
   });
 }
