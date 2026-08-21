@@ -8,6 +8,7 @@ import {
   pageByHandleResponseSchema,
 } from "@grabbin/api";
 import { headers } from "next/headers";
+import { cache } from "react";
 import * as v from "valibot";
 import { type BackendResult, fetchBackend } from "@/lib/server/backend";
 
@@ -92,13 +93,16 @@ export async function getOwnedPages(request?: Request) {
   );
 }
 
-export async function getPageByHandle(handle: string, request?: Request) {
+export const getPageByHandle = cache(async function getPageByHandle(
+  handle: string,
+  request?: Request,
+) {
   return fetchBackend(
     `/pages/${encodeURIComponent(normalizePageHandle(handle))}`,
     readInit(await getReadHeaders(request)),
     pageByHandleResponseSchema,
   );
-}
+});
 
 export async function checkPageHandle(handle: string, request?: Request) {
   const params = new URLSearchParams({ handle });

@@ -11,6 +11,7 @@ import { env } from "@/lib/env";
 import { createProfilePageJsonLd } from "@/lib/seo/json-ld";
 import { createMetadata, DEFAULT_SOCIAL_IMAGE } from "@/lib/seo/metadata";
 import { getPublicImageUrl } from "@/lib/seo-responses";
+import { getPageByHandle } from "@/lib/server/page-queries";
 import {
   getPublicHandleModel,
   requirePublicHandleModel,
@@ -31,13 +32,19 @@ export async function generateMetadata({
   params,
 }: RouteProps): Promise<Metadata> {
   const { handle } = await params;
-  const model = await getPublicHandleModel(handle);
-  if (!model) return {};
+  const result = await getPageByHandle(handle);
+  if (!result.ok) {
+    if (result.response.status === 404) return {};
+    throw new Error(
+      `Failed to load public page metadata: ${result.response.status}`,
+    );
+  }
 
-  const title = getPublicPageTitle(model.page);
-  const description = getPublicPageDescription(model.page);
-  const path = `/${encodeURIComponent(model.page.handle)}`;
-  const image = getPublicImageUrl(model.page.image, model.page.updatedAt);
+  const page = result.data.page;
+  const title = getPublicPageTitle(page);
+  const description = getPublicPageDescription(page);
+  const path = `/${encodeURIComponent(page.handle)}`;
+  const image = getPublicImageUrl(page.image, page.updatedAt);
 
   return {
     ...createMetadata({
