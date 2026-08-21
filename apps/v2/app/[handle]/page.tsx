@@ -16,6 +16,7 @@ import {
   getPublicHandleModel,
   requirePublicHandleModel,
 } from "@/lib/server/public-handle-model";
+import { SimpleAnalyticsTracker } from "@/lib/simple-analytics-tracker";
 
 type RouteProps = {
   params: Promise<{ handle: string }>;
@@ -78,6 +79,7 @@ export default async function PublicHandlePage({ params }: RouteProps) {
 
   return (
     <>
+      <SimpleAnalyticsTracker pageId={model.page.id} />
       <script type="application/ld+json">
         {JSON.stringify(
           createProfilePageJsonLd({
